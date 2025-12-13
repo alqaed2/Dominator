@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Dominator | سيطر على المحتوى</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Content <span class="highlight">Dominator</span></h1>
+            <p class="subtitle">حول أفكارك المملة إلى منشورات فيروسية تكتسح LinkedIn و X بضغطة زر.</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <textarea id="inputText" placeholder="ضع النص الخام أو الفكرة هنا... (مثال: نصائح للمدربين عن الانضباط)"></textarea>
+                <button id="generateBtn" onclick="remixContent()">🚀 سيطر الآن (Remix)</button>
+            </div>
+
+            <div class="output-section" id="outputSection" style="display: none;">
+                <h3>✨ النتيجة الفيروسية:</h3>
+                <div class="result-box" id="resultText"></div>
+                <button class="copy-btn" onclick="copyText()">نسخ النص</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by <strong>Secret AI Engine</strong> © 2024</p>
+        </footer>
+    </div>
+
+    <script>
+        async function remixContent() {
+            const text = document.getElementById('inputText').value;
+            const btn = document.getElementById('generateBtn');
+            const resultBox = document.getElementById('resultText');
+            const outputSection = document.getElementById('outputSection');
+
+            if(!text) return alert("الرجاء كتابة نص أولاً!");
+
+            // تأثير التحميل
+            btn.innerText = "جاري المعالجة الذكية...";
+            btn.disabled = true;
+            resultBox.innerHTML = '<div class="loader"></div>';
+            outputSection.style.display = 'block';
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: text})
+                });
+                const data = await response.json();
+
+                if(data.error) {
+                    resultBox.innerText = "خطأ: " + data.error;
+                } else {
+                    // تحويل فواصل الأسطر إلى HTML
+                    resultBox.innerHTML = data.result.replace(/\n/g, '<br>');
+                }
+            } catch (err) {
+                resultBox.innerText = "فشل الاتصال بالسيرفر.";
+            }
+
+            btn.innerText = "🚀 سيطر الآن (Remix)";
+            btn.disabled = false;
+        }
+
+        function copyText() {
+            const text = document.getElementById('resultText').innerText;
+            navigator.clipboard.writeText(text);
+            alert("تم النسخ! جاهز للنشر.");
+        }
+    </script>
+</body>
+</html>
