@@ -4,54 +4,95 @@ import os
 
 app = Flask(__name__)
 
-# قراءة مفتاح Gemini من متغيرات البيئة
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# --- إعدادات المدير التقني ---
+# قراءة المفتاح من بيئة السيرفر الآمنة
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-if GEMINI_API_KEY:
+# التحقق من وجود المفتاح
+if not GEMINI_API_KEY:
+    # هذا مجرد حل مؤقت لكي لا يتوقف السيرفر، لكن يجب ضبط المفتاح في Render
+    print("⚠️ تحذير: لم يتم العثور على مفتاح API في البيئة!")
+
+# إعداد المحرك
+try:
     genai.configure(api_key=GEMINI_API_KEY)
-else:
-    print("⚠️ GEMINI_API_KEY غير مضبوط – سيتم رفض الطلبات")
+    # نستخدم موديل سريع وذكي للعمليات المتسلسلة
+    model = genai.GenerativeModel('gemini-1.5-flash')
+except Exception as e:
+    print(f"❌ خطأ في إعداد Gemini: {e}")
 
-# اختيار نموذج مدعوم رسميًا من القائمة المتاحة
-MODEL_NAME = "models/gemini-2.5-flash"
-model = genai.GenerativeModel(MODEL_NAME)
+# --- الموظفون الافتراضيون (The AI Agents) ---
 
-SYSTEM_PROMPT = """
-أنت خبير محتوى فيروسي (Viral Content Expert).
-مهمتك إعادة صياغة النص ليناسب LinkedIn و X.
-
-القواعد:
-1. ابدأ بـ Hook قوي.
-2. فقرات قصيرة وسهلة القراءة.
-3. استخدم Emojis بذكاء.
-4. أضف هاشتاغات مناسبة في النهاية.
-5. أضف التوقيع: ⚡ Remixed by AI Dominator
+# 1. الكاتب المبدع
+CREATOR_PROMPT = """
+أنت كاتب محتوى فيروسي (Viral Content Creator) لمنصات LinkedIn و Twitter.
+مهمتك: كتابة مسودة أولية بناءً على فكرة المستخدم.
+الأسلوب: جريء، يستخدم القصص (Storytelling)، ويبدأ بجملة خاطفة (Hook).
+لا تهتم بالتنسيق الآن، ركز فقط على قوة الفكرة والعاطفة.
 """
 
-@app.route("/")
+# 2. الناقد الشرس (سر الجودة)
+CRITIC_PROMPT = """
+أنت خبير خوارزميات ومنتقد محتوى شرس.
+مهمتك: قراءة المسودة وتقييمها بصرامة.
+لا تعد كتابة النص. فقط قدم تقريراً قصيراً جداً (نقاط محددة):
+1. هل الـ Hook قوي بما يكفي لإيقاف الـ Scroll؟
+2. هل النص سهل القراءة (Skimmable)؟
+3. ما هي الكلمات الضعيفة التي يجب حذفها؟
+أعطِ توجيهات مباشرة للمحرر.
+"""
+
+# 3. المحرر النهائي
+EDITOR_PROMPT = """
+أنت المحرر التنفيذي (Executive Editor).
+مهمتك: أخذ "المسودة" و "ملاحظات الناقد" وصياغة المنشور النهائي المثالي.
+القواعد:
+1. طبق نصائح الناقد فوراً.
+2. استخدم تنسيقاً مريحاً للعين (فراغات بين الأسطر).
+3. أضف إيموجي مناسب (بدون مبالغة).
+4. أضف 3-5 هاشتاغات قوية في النهاية.
+5. أضف التوقيع: "⚡ Engineered by AI Dominator"
+"""
+
+@app.route('/')
 def home():
-    return render_template("index.html")
+    return render_template('index.html')
 
-@app.route("/generate", methods=["POST"])
+@app.route('/generate', methods=['POST'])
 def generate():
-    if not GEMINI_API_KEY:
-        return jsonify({"error": "GEMINI_API_KEY غير مضبوط"}), 500
-
-    data = request.get_json(silent=True) or {}
-    original_text = data.get("text", "").strip()
-
-    if not original_text:
-        return jsonify({"error": "النص فارغ"}), 400
-
-    full_prompt = f"{SYSTEM_PROMPT}\n\nالنص المراد إعادة صياغته:\n{original_text}"
-
     try:
-        response = model.generate_content(full_prompt)
-        return jsonify({"result": response.text})
+        data = request.json
+        original_text = data.get('text', '')
+
+        if not original_text:
+            return jsonify({'error': 'النص فارغ! اكتب فكرة لنبدأ.'}), 400
+
+        # المرحلة 1: الكاتب
+        print("🧠 1. الكاتب يبدأ العمل...")
+        creator_resp = model.generate_content(f"{CREATOR_PROMPT}\n\nفكرة المستخدم: {original_text}")
+        draft = creator_resp.text
+
+        # المرحلة 2: الناقد
+        print("🧐 2. الناقد يحلل النص...")
+        critic_resp = model.generate_content(f"{CRITIC_PROMPT}\n\nالمسودة للقراءة:\n{draft}")
+        feedback = critic_resp.text
+
+        # المرحلة 3: المحرر
+        print("✨ 3. المحرر يضع اللمسات الأخيرة...")
+        final_prompt = f"{EDITOR_PROMPT}\n\nالمسودة الأصلية:\n{draft}\n\nتوجيهات الناقد الصارمة:\n{feedback}"
+        final_resp = model.generate_content(final_prompt)
+        viral_content = final_resp.text
+
+        # إرجاع النتيجة + تقرير الناقد (ليراه المستخدم)
+        return jsonify({
+            'result': viral_content,
+            'debug': feedback
+        })
+
     except Exception as e:
-        print("❌ Gemini Error:", e)
-        return jsonify({"error": "فشل توليد المحتوى"}), 500
+        print(f"❌ Error: {e}")
+        return jsonify({'error': f"حدث خطأ في النظام: {str(e)}"}), 500
 
-
-if __name__ == "__main__":
-    app.run(port=5000)
+if __name__ == '__main__':
+    # تشغيل التطبيق (Render سيتجاهل هذا ويستخدم Gunicorn)
+    app.run(debug=True)
