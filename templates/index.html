@@ -3,95 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Dominator | غرفة العمليات الذكية</title>
+    <title>AI Dominator | استوديو العلامة التجارية</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>AI Content <span class="highlight">Dominator</span> <span style="font-size:0.5em; vertical-align: super; color: #ff0055;">2.0</span></h1>
-            <p class="subtitle">نظام ذكاء اصطناعي مركب (Multi-Agent) لتحويل الأفكار إلى محتوى فيروسي.</p>
+            <div class="logo">AI Dominator <span class="version">PRO</span></div>
+            <p class="subtitle">نظام الهيمنة على المحتوى الرقمي</p>
         </header>
 
         <main>
-            <div class="input-section">
-                <textarea id="inputText" placeholder="عن ماذا تريد أن تتحدث اليوم؟ (مثال: مستقبل التجارة الإلكترونية في اليمن...)"></textarea>
-                <button id="generateBtn" onclick="remixContent()">⚡ تفعيل غرفة العمليات (Deploy Agents)</button>
+            <div class="identity-section">
+                <h3><i class="fas fa-fingerprint"></i> تعريف بصمة الأسلوب (Brand DNA)</h3>
+                
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('text')"><i class="fas fa-paste"></i> لصق نماذج (الأدق)</button>
+                    <button class="tab-btn" onclick="switchTab('link')"><i class="fab fa-twitter"></i> رابط الحساب (Beta)</button>
+                </div>
+
+                <div id="textTab" class="tab-content active">
+                    <textarea id="sampleText" placeholder="الصق هنا أفضل 3 منشورات كتبتها سابقاً... النظام سيقوم بتحليل عقلك واستنساخ أسلوبك."></textarea>
+                    <button class="analyze-btn" onclick="analyzeStyle()">🧬 استخراج الـ DNA وتفعيله</button>
+                </div>
+
+                <div id="linkTab" class="tab-content">
+                    <div class="coming-soon">
+                        <input type="text" placeholder="مثال: @elonmusk" disabled>
+                        <button disabled>جاري التطوير...</button>
+                        <p class="note">⚠️ هذه الميزة تتطلب ربط API مدفوع. استخدم "لصق نماذج" حالياً للحصول على أفضل دقة.</p>
+                    </div>
+                </div>
+
+                <div id="styleStatus" class="status-msg"></div>
+            </div>
+
+            <input type="hidden" id="styleDNA" value="">
+
+            <div class="generation-section">
+                <h3><i class="fas fa-pen-nib"></i> غرفة العمليات</h3>
+                <textarea id="inputText" placeholder="عن ماذا تريد أن تتحدث اليوم؟ (مثال: درس تعلمته من فشل مشروع...)"></textarea>
+                <button id="generateBtn" onclick="remixContent()">🚀 إطلاق العملاء الأذكياء</button>
             </div>
 
             <div class="output-section" id="outputSection" style="display: none;">
-                
                 <div class="insight-box" id="insightBox">
-                    <h4>🧐 تقرير "الناقد الذكي" (Analysis):</h4>
+                    <h4><i class="fas fa-microscope"></i> تقرير الجودة:</h4>
                     <p id="insightText"></p>
                 </div>
 
-                <h3>✨ النتيجة النهائية:</h3>
-                <div class="result-box" id="resultText"></div>
-                
-                <div class="actions">
-                    <button class="copy-btn" onclick="copyText()">نسخ النص</button>
-                    <button class="retry-btn" onclick="remixContent()">محاولة أخرى ↻</button>
+                <div class="result-card">
+                    <div class="card-header">
+                        <span>✨ النتيجة الفيروسية</span>
+                        <button class="icon-btn" onclick="copyText()"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="result-box" id="resultText"></div>
                 </div>
             </div>
         </main>
 
         <footer>
-            <p>Powered by <strong>Advanced Agentic AI</strong> © 2025</p>
+            <p>Engineered by <strong>Alhothaify Tech</strong> © 2025</p>
         </footer>
     </div>
 
     <script>
-        async function remixContent() {
-            const text = document.getElementById('inputText').value;
-            const btn = document.getElementById('generateBtn');
-            const resultBox = document.getElementById('resultText');
-            const insightBox = document.getElementById('insightBox');
-            const insightText = document.getElementById('insightText');
-            const outputSection = document.getElementById('outputSection');
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if(tab === 'text') {
+                document.querySelector('.tabs button:nth-child(1)').classList.add('active');
+                document.getElementById('textTab').classList.add('active');
+            } else {
+                document.querySelector('.tabs button:nth-child(2)').classList.add('active');
+                document.getElementById('linkTab').classList.add('active');
+            }
+        }
 
-            if(!text) return alert("الرجاء إدخال فكرة للنظام!");
-
-            // تأثير التحميل الاحترافي
-            btn.innerText = "جاري استدعاء العملاء الأذكياء...";
-            btn.disabled = true;
-            resultBox.innerHTML = '<div class="loader"></div>';
-            insightBox.style.display = 'none'; // إخفاء التحليل مؤقتاً
-            outputSection.style.display = 'block';
+        async function analyzeStyle() {
+            const text = document.getElementById('sampleText').value;
+            const status = document.getElementById('styleStatus');
+            
+            if(!text || text.length < 20) return alert("الرجاء لصق نص كافٍ للتحليل!");
+            
+            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري فك شفرة الأسلوب...';
+            status.className = "status-msg processing";
 
             try {
-                const response = await fetch('/generate', {
+                const response = await fetch('/analyze-style', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({text: text})
                 });
                 const data = await response.json();
+                
+                if(data.style_dna) {
+                    document.getElementById('styleDNA').value = data.style_dna;
+                    status.innerHTML = '✅ <strong>تم الاستنساخ!</strong> النظام جاهز للكتابة بأسلوبك.';
+                    status.className = "status-msg success";
+                } else {
+                    status.innerText = "فشل التحليل: " + (data.error || "غير معروف");
+                    status.className = "status-msg error";
+                }
+            } catch (e) {
+                status.innerText = "خطأ في الاتصال.";
+                status.className = "status-msg error";
+            }
+        }
+
+        async function remixContent() {
+            const text = document.getElementById('inputText').value;
+            const style = document.getElementById('styleDNA').value;
+            const btn = document.getElementById('generateBtn');
+            const resultBox = document.getElementById('resultText');
+            
+            if(!text) return alert("اكتب فكرة أولاً!");
+
+            btn.innerHTML = '<i class="fas fa-cog fa-spin"></i> جاري العمل...';
+            btn.disabled = true;
+            document.getElementById('outputSection').style.display = 'block';
+            resultBox.innerHTML = '<div class="loader"></div>';
+            document.getElementById('insightBox').style.display = 'none';
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: text, style: style})
+                });
+                const data = await response.json();
 
                 if(data.error) {
-                    resultBox.innerText = "خطأ: " + data.error;
+                    resultBox.innerHTML = `<span style="color:red">خطأ: ${data.error}</span>`;
                 } else {
-                    // عرض النتيجة النهائية
                     resultBox.innerHTML = data.result.replace(/\n/g, '<br>');
-                    
-                    // عرض تقرير الناقد إذا وجد
                     if(data.debug) {
-                        insightBox.style.display = 'block';
-                        insightText.innerText = data.debug;
+                        document.getElementById('insightBox').style.display = 'block';
+                        document.getElementById('insightText').innerText = data.debug;
                     }
                 }
             } catch (err) {
-                resultBox.innerText = "فشل الاتصال بالسيرفر. تأكد من الإنترنت.";
+                resultBox.innerText = "فشل الاتصال بالسيرفر.";
             }
 
-            btn.innerText = "⚡ تفعيل غرفة العمليات (Deploy Agents)";
+            btn.innerHTML = '🚀 إطلاق العملاء الأذكياء';
             btn.disabled = false;
         }
 
         function copyText() {
             const text = document.getElementById('resultText').innerText;
             navigator.clipboard.writeText(text);
-            alert("تم النسخ! جاهز للسيطرة.");
+            alert("تم النسخ!");
         }
     </script>
 </body>
