@@ -3,153 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Dominator | الوكالة الإبداعية</title>
+    <title>AI Dominator | 2050 Edition</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">AI Dominator <span class="version" style="background: linear-gradient(45deg, #ff0055, #ff9900);">AGENCY</span></div>
-            <p class="subtitle">وكالتك الإبداعية المتكاملة بالذكاء الاصطناعي (نص + صورة)</p>
+    <div class="matrix-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="app-container">
+        
+        <header class="glass-header" data-tilt>
+            <div class="logo-glitch" data-text="AI DOMINATOR">AI DOMINATOR</div>
+            <div class="status-badge"><span class="pulse"></span> ONLINE V6.0</div>
         </header>
 
         <main>
-            <div class="identity-section">
-                <h3><i class="fas fa-fingerprint"></i> بصمة الأسلوب (DNA)</h3>
-                <textarea id="sampleText" placeholder="الصق أفضل 3 منشورات لك هنا لاستنساخ أسلوبك..."></textarea>
-                <button class="analyze-btn" onclick="analyzeStyle()">🧬 استخراج وتفعيل الـ DNA</button>
-                <div id="styleStatus" class="status-msg"></div>
-                <input type="hidden" id="styleDNA" value="">
-            </div>
-
-            <div class="generation-section">
-                <h3><i class="fas fa-brain"></i> غرفة العمليات الإبداعية</h3>
-                <textarea id="inputText" placeholder="اكتب فكرة المنشور هنا... وسنقوم بتأليف النص وتصميم الصورة."></textarea>
-                <button id="generateBtn" onclick="remixContent()">🎨🚀 إطلاق الوكالة الإبداعية</button>
-            </div>
-
-            <div class="output-section" id="outputSection" style="display: none;">
+            <div class="control-deck">
                 
-                <div class="insight-box" id="insightBox" style="display:none;">
-                    <h4><i class="fas fa-microscope"></i> تقرير الناقد:</h4>
-                    <p id="insightText"></p>
+                <div class="card holographic" data-tilt>
+                    <div class="card-content">
+                        <h3><i class="fas fa-fingerprint"></i> استنساخ الروح (DNA)</h3>
+                        <textarea id="sampleText" placeholder="الصق عينة من أسلوبك هنا للتحليل..."></textarea>
+                        <button class="cyber-btn" onclick="analyzeStyle()">
+                            <span class="btn-glitch"></span>
+                            <span class="btn-content">🧬 تفعيل الاستنساخ</span>
+                        </button>
+                        <div id="styleStatus" class="status-line"></div>
+                        <input type="hidden" id="styleDNA" value="">
+                    </div>
                 </div>
 
-                <div class="creative-studio">
-                    <div class="image-card">
-                        <div class="card-header">✨ الصورة الحصرية (AI Generated)</div>
-                        <div class="image-container" id="imageContainer">
-                            <div class="placeholder-image">
-                                <i class="fas fa-image fa-3x"></i>
-                                <p>جاري تصميم الصورة...</p>
+                <div class="card holographic primary-card" data-tilt>
+                    <div class="card-content">
+                        <h3><i class="fas fa-meteor"></i> مركز القيادة</h3>
+                        
+                        <div class="style-selector">
+                            <label><i class="fas fa-palette"></i> نمط الصورة:</label>
+                            <select id="imageStyle" class="cyber-select">
+                                <option value="Cinematic Photorealistic, 8k, detailed texture">📸 واقعي سينمائي (Realistic)</option>
+                                <option value="Cyberpunk, Neon Lights, Futuristic, Sci-fi">🔮 سايبر بانك (Cyberpunk)</option>
+                                <option value="3D Render, Pixar Style, Cute, Colorful">🧸 كرتون 3D (Pixar Style)</option>
+                                <option value="Minimalist, Vector Art, Flat Design">✏️ رسم مبسط (Minimalist)</option>
+                                <option value="Luxury, Gold and Black, Elegant">👑 فخامة (Luxury)</option>
+                                <option value="Anime Style, Studio Ghibli, Vibrant">🇯🇵 أنمي (Anime)</option>
+                            </select>
+                        </div>
+
+                        <textarea id="inputText" placeholder="أدخل بيانات المهمة هنا... (الموضوع)"></textarea>
+                        
+                        <button id="generateBtn" class="cyber-btn mega-btn" onclick="remixContent()">
+                            <span class="btn-glitch"></span>
+                            <span class="btn-content">🚀 إطلاق المحرك النووي</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="outputSection" class="output-deck" style="display: none;">
+                
+                <div class="insight-terminal" id="insightBox" style="display:none;">
+                    <div class="terminal-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="terminal-title">AI_CRITIC_LOGS.txt</span>
+                    </div>
+                    <p id="insightText" class="terminal-body"></p>
+                </div>
+
+                <div class="result-grid">
+                    <div class="frame-3d" data-tilt>
+                        <div class="frame-content">
+                            <div class="glow-effect"></div>
+                            <div class="image-wrapper" id="imageContainer">
+                                <div class="loading-scanner">
+                                    <div class="scan-line"></div>
+                                    <i class="fas fa-eye fa-2x"></i>
+                                    <p>RENDERING...</p>
+                                </div>
                             </div>
                         </div>
-                        <p id="imagePromptHint" class="prompt-hint"></p>
                     </div>
 
-                    <div class="text-card">
-                        <div class="card-header">
-                            <span>📝 النص الفيروسي</span>
-                            <button class="icon-btn" onclick="copyText()"><i class="fas fa-copy"></i></button>
+                    <div class="frame-3d text-frame" data-tilt>
+                        <div class="frame-content">
+                            <div class="card-tools">
+                                <span>VIRAL_CONTENT_GENERATED</span>
+                                <button onclick="copyText()"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <div class="result-text" id="resultText"></div>
                         </div>
-                        <div class="result-box" id="resultText"></div>
                     </div>
                 </div>
 
             </div>
         </main>
-
-        <footer>
-            <p>Engineered by <strong>Alhothaify Tech</strong> © 2025</p>
-        </footer>
     </div>
 
     <script>
-        // --- دوال التحليل والنسخ (كما هي) ---
+        // تأثير Tilt 3D (حركة البطاقات مع الماوس)
+        document.addEventListener('mousemove', (e) => {
+            document.querySelectorAll('[data-tilt]').forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((y - centerY) / centerY) * -5; // عكس المحور لتبدو طبيعية
+                const rotateY = ((x - centerX) / centerX) * 5;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            });
+        });
+
+        // إعادة البطاقات لوضعها الطبيعي
+        document.addEventListener('mouseout', () => {
+            document.querySelectorAll('[data-tilt]').forEach(card => {
+                card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
+            });
+        });
+
+        // --- دوال النظام ---
         async function analyzeStyle() {
             const text = document.getElementById('sampleText').value;
             const status = document.getElementById('styleStatus');
-            if(!text || text.length < 20) return alert("الرجاء لصق نص كافٍ!");
-            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحليل...';
-            status.className = "status-msg processing";
+            if(!text || text.length < 20) return alert("البيانات غير كافية للتحليل!");
+            status.innerHTML = '<span class="blink">SCANNING DNA...</span>';
+            status.className = "status-line active";
+            
             try {
-                const response = await fetch('/analyze-style', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: text})});
-                const data = await response.json();
+                const res = await fetch('/analyze-style', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text})});
+                const data = await res.json();
                 if(data.style_dna) {
                     document.getElementById('styleDNA').value = data.style_dna;
-                    status.innerHTML = '✅ تم تفعيل الأسلوب.';
-                    status.className = "status-msg success";
-                } else { throw new Error(data.error); }
-            } catch (e) { status.innerText = "فشل التحليل."; status.className = "status-msg error"; }
+                    status.innerHTML = '<span style="color:#00ff88">✔ DNA SEQUENCE LOCKED</span>';
+                }
+            } catch(e) { status.innerHTML = 'ERROR'; }
         }
-        function copyText() { navigator.clipboard.writeText(document.getElementById('resultText').innerText); alert("تم النسخ!"); }
 
-        // --- الدالة الرئيسية المعدلة (توليد النص + الصورة) ---
         async function remixContent() {
             const text = document.getElementById('inputText').value;
             const style = document.getElementById('styleDNA').value;
+            const imageStyle = document.getElementById('imageStyle').value; // الستايل المختار
             const btn = document.getElementById('generateBtn');
-            
-            if(!text) return alert("اكتب فكرة!");
 
-            // إعداد الواجهة للتحميل
-            btn.innerHTML = '<i class="fas fa-palette fa-spin"></i> جاري الإبداع (نص + صورة)...';
+            if(!text) return alert("أدخل بيانات المهمة!");
+
+            btn.innerHTML = '<span class="btn-content">⚡ SYSTEM PROCESSING...</span>';
             btn.disabled = true;
             document.getElementById('outputSection').style.display = 'block';
-            document.getElementById('resultText').innerHTML = '<div class="loader"></div>';
-            document.getElementById('imageContainer').innerHTML = '<div class="loader-img"><i class="fas fa-spinner fa-spin"></i> جاري الرسم...</div>';
-            document.getElementById('insightBox').style.display = 'none';
-            document.getElementById('imagePromptHint').innerText = '';
+            document.getElementById('resultText').innerHTML = '<div class="matrix-loader">Decrypting...</div>';
+            document.getElementById('imageContainer').innerHTML = '<div class="loading-scanner"><div class="scan-line"></div><p>RENDERING PIXELS...</p></div>';
 
             try {
-                // 1. طلب النص ووصف الصورة من السيرفر
-                const response = await fetch('/generate', {
+                const res = await fetch('/generate', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: text, style: style})
+                    body: JSON.stringify({text: text, style: style, image_style: imageStyle})
                 });
-                const data = await response.json();
+                const data = await res.json();
 
-                if(data.error) {
-                    document.getElementById('resultText').innerHTML = `<span style="color:red">خطأ: ${data.error}</span>`;
-                    document.getElementById('imageContainer').innerHTML = '<i class="fas fa-exclamation-triangle"></i> فشل التوليد';
-                } else {
-                    // عرض النص
+                if(!data.error) {
                     document.getElementById('resultText').innerHTML = data.result.replace(/\n/g, '<br>');
                     if(data.debug) {
                         document.getElementById('insightBox').style.display = 'block';
                         document.getElementById('insightText').innerText = data.debug;
                     }
 
-                    // 2. توليد الصورة (الخدعة الذكية)
-                    // نستخدم وصف المحرر لطلب الصورة من خدمة خارجية سريعة
-                    const imagePrompt = encodeURIComponent(data.image_prompt);
-                    // نستخدم خدمة pollinations.ai كمثال للسرعة والجودة المجانية (تستخدم Flux/SDXL)
-                    const imageUrl = `https://image.pollinations.ai/prompt/${imagePrompt}?nologin=true&width=1024&height=1024&model=flux`;
-                    
-                    const imgElement = new Image();
-                    imgElement.onload = function() {
-                        document.getElementById('imageContainer').innerHTML = '';
-                        document.getElementById('imageContainer').appendChild(imgElement);
-                    };
-                    imgElement.onerror = function() {
-                        document.getElementById('imageContainer').innerHTML = '❌ تعذر تحميل الصورة.';
-                    };
-                    imgElement.src = imageUrl;
-                    imgElement.alt = "AI Generated Image";
-                    
-                    // (اختياري) عرض الوصف الذي تخيله الذكاء الاصطناعي
-                    // document.getElementById('imagePromptHint').innerText = "💡 تخيل الذكاء: " + data.image_prompt.substring(0, 50) + "...";
+                    // توليد الصورة بالستايل المختار
+                    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(data.image_prompt)}?nologin=true&width=1024&height=1024&model=flux&seed=${Math.floor(Math.random()*1000)}`;
+                    const img = new Image();
+                    img.onload = () => { document.getElementById('imageContainer').innerHTML = ''; document.getElementById('imageContainer').appendChild(img); };
+                    img.src = imgUrl;
                 }
-            } catch (err) {
-                document.getElementById('resultText').innerText = "فشل الاتصال بالسيرفر.";
-            }
-
-            btn.innerHTML = '🎨🚀 إطلاق الوكالة الإبداعية';
+            } catch(e) { document.getElementById('resultText').innerText = "SYSTEM FAILURE"; }
+            
+            btn.innerHTML = '<span class="btn-glitch"></span><span class="btn-content">🚀 إطلاق المحرك النووي</span>';
             btn.disabled = false;
         }
+
+        function copyText() { navigator.clipboard.writeText(document.getElementById('resultText').innerText); alert("COPIED TO CLIPBOARD"); }
     </script>
 </body>
 </html>
