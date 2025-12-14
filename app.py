@@ -17,7 +17,7 @@ if not GEMINI_API_KEY:
 try:
     genai.configure(api_key=GEMINI_API_KEY)
     # نستخدم موديل سريع وذكي للعمليات المتسلسلة
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
 except Exception as e:
     print(f"❌ خطأ في إعداد Gemini: {e}")
 
@@ -96,3 +96,4 @@ def generate():
 if __name__ == '__main__':
     # تشغيل التطبيق (Render سيتجاهل هذا ويستخدم Gunicorn)
     app.run(debug=True)
+
