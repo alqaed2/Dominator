@@ -14,7 +14,7 @@ try:
     genai.configure(api_key=GEMINI_API_KEY)
     # 🔥 الاكتشاف الذكي: نستخدم هذا الموديل لأنه ظهر في قائمتك وهو يمتلك حصة ضخمة
    # --- التعديل الذكي: قراءة الموديل من متغيرات البيئة ---
-model = genai.GenerativeModel('gemini-flash-latest')
+model = genai.GenerativeModel('gemini_model')
 
 try:
     genai.configure(api_key=GEMINI_API_KEY)
@@ -136,6 +136,7 @@ def generate():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
