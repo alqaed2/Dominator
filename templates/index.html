@@ -3,32 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Content Dominator | سيطر على المحتوى</title>
+    <title>AI Dominator | غرفة العمليات الذكية</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>AI Content <span class="highlight">Dominator</span></h1>
-            <p class="subtitle">حول أفكارك المملة إلى منشورات فيروسية تكتسح LinkedIn و X بضغطة زر.</p>
+            <h1>AI Content <span class="highlight">Dominator</span> <span style="font-size:0.5em; vertical-align: super; color: #ff0055;">2.0</span></h1>
+            <p class="subtitle">نظام ذكاء اصطناعي مركب (Multi-Agent) لتحويل الأفكار إلى محتوى فيروسي.</p>
         </header>
 
         <main>
             <div class="input-section">
-                <textarea id="inputText" placeholder="ضع النص الخام أو الفكرة هنا... (مثال: نصائح للمدربين عن الانضباط)"></textarea>
-                <button id="generateBtn" onclick="remixContent()">🚀 سيطر الآن (Remix)</button>
+                <textarea id="inputText" placeholder="عن ماذا تريد أن تتحدث اليوم؟ (مثال: مستقبل التجارة الإلكترونية في اليمن...)"></textarea>
+                <button id="generateBtn" onclick="remixContent()">⚡ تفعيل غرفة العمليات (Deploy Agents)</button>
             </div>
 
             <div class="output-section" id="outputSection" style="display: none;">
-                <h3>✨ النتيجة الفيروسية:</h3>
+                
+                <div class="insight-box" id="insightBox">
+                    <h4>🧐 تقرير "الناقد الذكي" (Analysis):</h4>
+                    <p id="insightText"></p>
+                </div>
+
+                <h3>✨ النتيجة النهائية:</h3>
                 <div class="result-box" id="resultText"></div>
-                <button class="copy-btn" onclick="copyText()">نسخ النص</button>
+                
+                <div class="actions">
+                    <button class="copy-btn" onclick="copyText()">نسخ النص</button>
+                    <button class="retry-btn" onclick="remixContent()">محاولة أخرى ↻</button>
+                </div>
             </div>
         </main>
 
         <footer>
-            <p>Powered by <strong>Secret AI Engine</strong> © 2024</p>
+            <p>Powered by <strong>Advanced Agentic AI</strong> © 2025</p>
         </footer>
     </div>
 
@@ -37,14 +47,17 @@
             const text = document.getElementById('inputText').value;
             const btn = document.getElementById('generateBtn');
             const resultBox = document.getElementById('resultText');
+            const insightBox = document.getElementById('insightBox');
+            const insightText = document.getElementById('insightText');
             const outputSection = document.getElementById('outputSection');
 
-            if(!text) return alert("الرجاء كتابة نص أولاً!");
+            if(!text) return alert("الرجاء إدخال فكرة للنظام!");
 
-            // تأثير التحميل
-            btn.innerText = "جاري المعالجة الذكية...";
+            // تأثير التحميل الاحترافي
+            btn.innerText = "جاري استدعاء العملاء الأذكياء...";
             btn.disabled = true;
             resultBox.innerHTML = '<div class="loader"></div>';
+            insightBox.style.display = 'none'; // إخفاء التحليل مؤقتاً
             outputSection.style.display = 'block';
 
             try {
@@ -58,21 +71,27 @@
                 if(data.error) {
                     resultBox.innerText = "خطأ: " + data.error;
                 } else {
-                    // تحويل فواصل الأسطر إلى HTML
+                    // عرض النتيجة النهائية
                     resultBox.innerHTML = data.result.replace(/\n/g, '<br>');
+                    
+                    // عرض تقرير الناقد إذا وجد
+                    if(data.debug) {
+                        insightBox.style.display = 'block';
+                        insightText.innerText = data.debug;
+                    }
                 }
             } catch (err) {
-                resultBox.innerText = "فشل الاتصال بالسيرفر.";
+                resultBox.innerText = "فشل الاتصال بالسيرفر. تأكد من الإنترنت.";
             }
 
-            btn.innerText = "🚀 سيطر الآن (Remix)";
+            btn.innerText = "⚡ تفعيل غرفة العمليات (Deploy Agents)";
             btn.disabled = false;
         }
 
         function copyText() {
             const text = document.getElementById('resultText').innerText;
             navigator.clipboard.writeText(text);
-            alert("تم النسخ! جاهز للنشر.");
+            alert("تم النسخ! جاهز للسيطرة.");
         }
     </script>
 </body>
