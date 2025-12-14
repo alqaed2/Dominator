@@ -3,160 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Dominator | 2050 Edition</title>
+    <title>AI Dominator | Pro Interface</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="matrix-bg"></div>
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
 
     <div class="app-container">
         
-        <header class="glass-header" data-tilt>
-            <div class="logo-glitch" data-text="AI DOMINATOR">AI DOMINATOR</div>
-            <div class="status-badge"><span class="pulse"></span> ONLINE V6.0</div>
+        <header class="glass-header">
+            <h1 class="logo-text"><span class="version-tag">V7.0 PRO</span> AI DOMINATOR</h1>
+            <p style="color: #666; margin-top: 10px;">نظام توليد المحتوى وتصميم الجرافيك المتكامل</p>
         </header>
 
-        <main>
-            <div class="control-deck">
-                
-                <div class="card holographic" data-tilt>
+        <main class="grid-system">
+            
+            <div class="sidebar">
+                <div class="spotlight-card" onmousemove="moveGlow(event)">
                     <div class="card-content">
-                        <h3><i class="fas fa-fingerprint"></i> استنساخ الروح (DNA)</h3>
-                        <textarea id="sampleText" placeholder="الصق عينة من أسلوبك هنا للتحليل..."></textarea>
-                        <button class="cyber-btn" onclick="analyzeStyle()">
-                            <span class="btn-glitch"></span>
-                            <span class="btn-content">🧬 تفعيل الاستنساخ</span>
+                        <h3><i class="fas fa-fingerprint"></i> بصمة الأسلوب</h3>
+                        <p style="font-size:0.85rem; color:#666; margin-bottom:10px;">انسخ نصاً سابقاً لتدريب النظام على أسلوبك.</p>
+                        <textarea id="sampleText" rows="3" placeholder="الصق النص هنا..."></textarea>
+                        <button class="action-btn" style="background:#222; color:#fff; padding:12px; font-size:0.9rem;" onclick="analyzeStyle()">
+                            <i class="fas fa-dna"></i> تحليل وتفعيل
                         </button>
-                        <div id="styleStatus" class="status-line"></div>
+                        <div id="styleStatus" style="margin-top:10px; font-size:0.8rem; color:var(--neon-green)"></div>
                         <input type="hidden" id="styleDNA" value="">
                     </div>
                 </div>
 
-                <div class="card holographic primary-card" data-tilt>
+                <div class="spotlight-card" style="margin-top: 20px;" onmousemove="moveGlow(event)">
                     <div class="card-content">
-                        <h3><i class="fas fa-meteor"></i> مركز القيادة</h3>
-                        
-                        <div class="style-selector">
-                            <label><i class="fas fa-palette"></i> نمط الصورة:</label>
-                            <select id="imageStyle" class="cyber-select">
-                                <option value="Cinematic Photorealistic, 8k, detailed texture">📸 واقعي سينمائي (Realistic)</option>
-                                <option value="Cyberpunk, Neon Lights, Futuristic, Sci-fi">🔮 سايبر بانك (Cyberpunk)</option>
-                                <option value="3D Render, Pixar Style, Cute, Colorful">🧸 كرتون 3D (Pixar Style)</option>
-                                <option value="Minimalist, Vector Art, Flat Design">✏️ رسم مبسط (Minimalist)</option>
-                                <option value="Luxury, Gold and Black, Elegant">👑 فخامة (Luxury)</option>
-                                <option value="Anime Style, Studio Ghibli, Vibrant">🇯🇵 أنمي (Anime)</option>
-                            </select>
-                        </div>
+                        <h3><i class="fas fa-palette"></i> النمط الفني</h3>
+                        <select id="imageStyle">
+                            <option value="Cinematic Photorealistic, 8k">📸 واقعي (Cinematic)</option>
+                            <option value="Cyberpunk, Neon, Futurism">🔮 سايبر بانك (Cyberpunk)</option>
+                            <option value="3D Pixar Style, Cute">🧸 كرتون (3D Render)</option>
+                            <option value="Minimalist Vector Art">✏️ رسم خطي (Minimalist)</option>
+                            <option value="Luxury Gold, Elegant">👑 فخامة (Luxury)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-                        <textarea id="inputText" placeholder="أدخل بيانات المهمة هنا... (الموضوع)"></textarea>
-                        
-                        <button id="generateBtn" class="cyber-btn mega-btn" onclick="remixContent()">
-                            <span class="btn-glitch"></span>
-                            <span class="btn-content">🚀 إطلاق المحرك النووي</span>
+            <div class="main-content">
+                
+                <div class="spotlight-card" onmousemove="moveGlow(event)">
+                    <div class="card-content">
+                        <h3><i class="fas fa-magic"></i> غرفة الإبداع</h3>
+                        <textarea id="inputText" rows="2" placeholder="اكتب فكرتك هنا... (مثال: مستقبل التعليم في 2030)"></textarea>
+                        <button id="generateBtn" class="action-btn" onclick="remixContent()">
+                            إطلاق المحرك الإبداعي <i class="fas fa-rocket"></i>
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <div id="outputSection" class="output-deck" style="display: none;">
-                
-                <div class="insight-terminal" id="insightBox" style="display:none;">
-                    <div class="terminal-header">
-                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-                        <span class="terminal-title">AI_CRITIC_LOGS.txt</span>
+                <div id="outputSection" style="display: none; margin-top: 30px;">
+                    
+                    <div id="insightBox" class="spotlight-card" style="border-color: rgba(255,0,85,0.3); display:none; margin-bottom:20px;">
+                         <p id="insightText" style="color:#ff88aa; font-size:0.9rem;"></p>
                     </div>
-                    <p id="insightText" class="terminal-body"></p>
-                </div>
 
-                <div class="result-grid">
-                    <div class="frame-3d" data-tilt>
-                        <div class="frame-content">
-                            <div class="glow-effect"></div>
-                            <div class="image-wrapper" id="imageContainer">
-                                <div class="loading-scanner">
-                                    <div class="scan-line"></div>
-                                    <i class="fas fa-eye fa-2x"></i>
-                                    <p>RENDERING...</p>
+                    <div class="output-grid">
+                        <div class="image-preview" id="imageContainer"></div>
+                        
+                        <div class="spotlight-card" style="padding: 20px;" onmousemove="moveGlow(event)">
+                            <div class="card-content">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                                    <span style="color:#666; font-size:0.8rem;">GENERATED CONTENT</span>
+                                    <i class="fas fa-copy" style="cursor:pointer; color:#fff;" onclick="copyText()"></i>
                                 </div>
+                                <div id="resultText" class="result-text-area"></div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="frame-3d text-frame" data-tilt>
-                        <div class="frame-content">
-                            <div class="card-tools">
-                                <span>VIRAL_CONTENT_GENERATED</span>
-                                <button onclick="copyText()"><i class="fas fa-copy"></i></button>
-                            </div>
-                            <div class="result-text" id="resultText"></div>
                         </div>
                     </div>
                 </div>
 
             </div>
+
         </main>
     </div>
 
     <script>
-        // تأثير Tilt 3D (حركة البطاقات مع الماوس)
-        document.addEventListener('mousemove', (e) => {
-            document.querySelectorAll('[data-tilt]').forEach(card => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                
-                const rotateX = ((y - centerY) / centerY) * -5; // عكس المحور لتبدو طبيعية
-                const rotateY = ((x - centerX) / centerX) * 5;
+        // --- السحر الحقيقي: دالة تحريك الإضاءة بدون تشويه ---
+        function moveGlow(e) {
+            const card = e.currentTarget;
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left; // موقع الماوس داخل البطاقة
+            const y = e.clientY - rect.top;
+            
+            // نحدث متغيرات CSS ليتحرك الضوء
+            card.style.setProperty('--x', `${x}px`);
+            card.style.setProperty('--y', `${y}px`);
+        }
 
-                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-            });
-        });
-
-        // إعادة البطاقات لوضعها الطبيعي
-        document.addEventListener('mouseout', () => {
-            document.querySelectorAll('[data-tilt]').forEach(card => {
-                card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
-            });
-        });
-
-        // --- دوال النظام ---
+        // --- دوال النظام (كما هي) ---
         async function analyzeStyle() {
             const text = document.getElementById('sampleText').value;
             const status = document.getElementById('styleStatus');
-            if(!text || text.length < 20) return alert("البيانات غير كافية للتحليل!");
-            status.innerHTML = '<span class="blink">SCANNING DNA...</span>';
-            status.className = "status-line active";
-            
+            status.innerText = "جاري التحليل...";
             try {
                 const res = await fetch('/analyze-style', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text})});
                 const data = await res.json();
                 if(data.style_dna) {
                     document.getElementById('styleDNA').value = data.style_dna;
-                    status.innerHTML = '<span style="color:#00ff88">✔ DNA SEQUENCE LOCKED</span>';
+                    status.innerText = "✔ تم حفظ الأسلوب";
                 }
-            } catch(e) { status.innerHTML = 'ERROR'; }
+            } catch(e) { status.innerText = "خطأ"; }
         }
 
         async function remixContent() {
             const text = document.getElementById('inputText').value;
             const style = document.getElementById('styleDNA').value;
-            const imageStyle = document.getElementById('imageStyle').value; // الستايل المختار
+            const imageStyle = document.getElementById('imageStyle').value;
             const btn = document.getElementById('generateBtn');
 
-            if(!text) return alert("أدخل بيانات المهمة!");
-
-            btn.innerHTML = '<span class="btn-content">⚡ SYSTEM PROCESSING...</span>';
+            if(!text) return alert("اكتب فكرة!");
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
             btn.disabled = true;
             document.getElementById('outputSection').style.display = 'block';
-            document.getElementById('resultText').innerHTML = '<div class="matrix-loader">Decrypting...</div>';
-            document.getElementById('imageContainer').innerHTML = '<div class="loading-scanner"><div class="scan-line"></div><p>RENDERING PIXELS...</p></div>';
+            document.getElementById('resultText').innerHTML = '<div class="loader-ui">جاري الكتابة...</div>';
+            document.getElementById('imageContainer').innerHTML = '<div class="loader-ui"><i class="fas fa-circle-notch fa-spin"></i><br>جاري الرسم...</div>';
 
             try {
                 const res = await fetch('/generate', {
@@ -170,22 +139,20 @@
                     document.getElementById('resultText').innerHTML = data.result.replace(/\n/g, '<br>');
                     if(data.debug) {
                         document.getElementById('insightBox').style.display = 'block';
-                        document.getElementById('insightText').innerText = data.debug;
+                        document.getElementById('insightText').innerText = "💡 ملاحظات الناقد: " + data.debug;
                     }
-
-                    // توليد الصورة بالستايل المختار
-                    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(data.image_prompt)}?nologin=true&width=1024&height=1024&model=flux&seed=${Math.floor(Math.random()*1000)}`;
+                    
                     const img = new Image();
+                    img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(data.image_prompt)}?nologin=true&width=1024&height=1024&model=flux&seed=${Math.random()}`;
                     img.onload = () => { document.getElementById('imageContainer').innerHTML = ''; document.getElementById('imageContainer').appendChild(img); };
-                    img.src = imgUrl;
                 }
-            } catch(e) { document.getElementById('resultText').innerText = "SYSTEM FAILURE"; }
+            } catch(e) { document.getElementById('resultText').innerText = "حدث خطأ"; }
             
-            btn.innerHTML = '<span class="btn-glitch"></span><span class="btn-content">🚀 إطلاق المحرك النووي</span>';
+            btn.innerHTML = 'إطلاق المحرك الإبداعي <i class="fas fa-rocket"></i>';
             btn.disabled = false;
         }
 
-        function copyText() { navigator.clipboard.writeText(document.getElementById('resultText').innerText); alert("COPIED TO CLIPBOARD"); }
+        function copyText() { navigator.clipboard.writeText(document.getElementById('resultText').innerText); alert("تم النسخ!"); }
     </script>
 </body>
 </html>
