@@ -12,10 +12,16 @@ if not GEMINI_API_KEY:
 
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    # 🔥 الاكتشاف الذكي: نستخدم هذا الموديل لأنه ظهر في قائمتك وهو يمتلك حصة ضخمة
-   # --- التعديل الذكي: قراءة الموديل من متغيرات البيئة ---
-model = genai.GenerativeModel('gemini_model')
+    
+ # 2. جلب اسم الموديل (إجباري)
+GEMINI_MODEL = os.environ.get('GEMINI_MODEL')
 
+# التحقق الصارم: إذا لم توجد المتغيرات، أوقف النظام فوراً
+if not GEMINI_API_KEY:
+    raise ValueError("❌ خطأ قاتل: مفتاح GEMINI_API_KEY غير موجود في متغيرات البيئة!")
+
+if not GEMINI_MODEL:
+    raise ValueError("❌ خطأ قاتل: لم تحدد الموديل! يجب إضافة متغير GEMINI_MODEL في إعدادات Render.")
 try:
     genai.configure(api_key=GEMINI_API_KEY)
     print(f"🤖 جاري تشغيل النظام باستخدام الموديل: {MODEL_NAME}")
@@ -136,6 +142,7 @@ def generate():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
