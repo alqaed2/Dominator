@@ -14,8 +14,8 @@ try:
     genai.configure(api_key=GEMINI_API_KEY)
     # 🔥 الاكتشاف الذكي: نستخدم هذا الموديل لأنه ظهر في قائمتك وهو يمتلك حصة ضخمة
    # --- التعديل الذكي: قراءة الموديل من متغيرات البيئة ---
-# إذا لم يجد متغيراً، سيستخدم 'gemini-1.5-flash' كاحتياط
-MODEL_NAME = os.environ.get('GEMINI_MODEL', 'gemini-1.5-flash')
+# إذا لم يجد متغيراً، سيستخدم 'gemini-2.5-flash' كاحتياط
+MODEL_NAME = os.environ.get('GEMINI_MODEL', 'gemini-2.5-flash')
 
 try:
     genai.configure(api_key=GEMINI_API_KEY)
@@ -137,4 +137,5 @@ def generate():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
