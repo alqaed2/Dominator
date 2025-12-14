@@ -13,7 +13,16 @@ if not GEMINI_API_KEY:
 try:
     genai.configure(api_key=GEMINI_API_KEY)
     # 🔥 الاكتشاف الذكي: نستخدم هذا الموديل لأنه ظهر في قائمتك وهو يمتلك حصة ضخمة
-    model = genai.GenerativeModel('gemini-flash-latest')
+   # --- التعديل الذكي: قراءة الموديل من متغيرات البيئة ---
+# إذا لم يجد متغيراً، سيستخدم 'gemini-1.5-flash' كاحتياط
+MODEL_NAME = os.environ.get('GEMINI_MODEL', 'gemini-1.5-flash')
+
+try:
+    genai.configure(api_key=GEMINI_API_KEY)
+    print(f"🤖 جاري تشغيل النظام باستخدام الموديل: {MODEL_NAME}")
+    model = genai.GenerativeModel(MODEL_NAME)
+except Exception as e:
+    print(f"❌ خطأ في إعداد Gemini: {e}")
 except Exception as e:
     print(f"❌ خطأ في إعداد Gemini: {e}")
 
@@ -128,3 +137,4 @@ def generate():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
