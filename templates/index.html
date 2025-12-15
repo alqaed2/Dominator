@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR | Pro Studio</title>
+    <title>AI DOMINATOR | V10 Cinema Engine</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -12,79 +12,118 @@
 <body>
 
     <div class="app-container">
+        
         <header class="cyber-header">
             <div class="logo-section">
-                <h1>AI DOMINATOR <span class="version-tag">V12.0 STABLE</span></h1>
+                <h1>AI DOMINATOR <span class="version-tag">V10 CINEMA</span></h1>
             </div>
-            <div class="system-status"><div class="status-dot"></div>ONLINE</div>
+            <div class="system-status">
+                <div class="status-dot"></div>
+                SYSTEM ONLINE
+            </div>
         </header>
 
         <main class="dashboard-grid">
+            
             <div class="sidebar">
                 <div class="cyber-card">
-                    <div class="card-title"><h3><i class="fas fa-fingerprint"></i> الأسلوب</h3></div>
-                    <textarea id="sampleText" rows="3" placeholder="الصق النص هنا..."></textarea>
-                    <button onclick="analyzeStyle()" class="cyber-btn-small">تحليل</button>
+                    <div class="card-title">
+                        <h3><i class="fas fa-fingerprint"></i> بصمة الأسلوب</h3>
+                        <div class="tech-decor-line"></div>
+                    </div>
+                    <textarea id="sampleText" rows="3" placeholder=">_ الصق النص هنا..."></textarea>
+                    <button onclick="analyzeStyle()" class="cyber-btn-small"><i class="fas fa-upload"></i> تحليل البيانات</button>
+                    <div id="styleStatus" class="status-text"></div>
                     <input type="hidden" id="styleDNA" value="">
                 </div>
+
                 <div class="cyber-card" style="margin-top: 25px;">
-                    <div class="card-title"><h3><i class="fas fa-sliders-h"></i> الصور</h3></div>
+                    <div class="card-title">
+                        <h3><i class="fas fa-sliders-h"></i> معلمات الصورة</h3>
+                        <div class="tech-decor-line"></div>
+                    </div>
                     <select id="imageStyle">
-                        <option value="Cyberpunk, Neon, Futurism">🔮 سايبر بانك</option>
-                        <option value="Cinematic Photorealistic, 8k">📸 واقعي 8K</option>
-                        <option value="3D Render, Unreal Engine">🧊 3D ريندر</option>
+                        <option value="Cyberpunk, Neon, Futurism, Cinematic Lighting">🔮 سايبر بانك سينمائي</option>
+                        <option value="Cinematic Photorealistic, 8k, Highly Detailed">📸 واقعي جداً (8K)</option>
+                        <option value="3D Render, Unreal Engine 5 Style">🧊 3D ريندر (Unreal)</option>
+                        <option value="Minimalist Modern Tech Illustration">✏️ رسم تقني حديث</option>
                     </select>
                 </div>
             </div>
 
             <div class="main-content">
+                
                 <div class="cyber-card">
-                    <div class="card-title"><h3><i class="fas fa-rocket"></i> استوديو الإنتاج</h3></div>
-                    <textarea id="inputText" rows="3" placeholder="أدخل فكرة المحتوى..."></textarea>
+                    <div class="card-title">
+                        <h3><i class="fas fa-film"></i> استوديو الإنتاج (Storyboard Engine)</h3>
+                        <div class="tech-decor-line" style="width: 150px;"></div>
+                    </div>
+                    <textarea id="inputText" rows="3" placeholder=">_ أدخل فكرة الفيديو/الحملة هنا..."></textarea>
                     <button id="generateBtn" class="cyber-btn-main" onclick="remixContent()">
-                        <i class="fas fa-magic"></i> توليد المحتوى
+                        <i class="fas fa-clapperboard"></i> إطلاق الإنتاج السينمائي
                     </button>
                 </div>
 
                 <div id="outputSection" style="display: none; margin-top: 30px;">
+                    
+                    <div id="insightBox" class="cyber-card debug-card" style="display:none;">
+                         <p id="insightText"></p>
+                    </div>
+
                     <div class="output-grid" id="mainOutputGrid">
-                        
-                        <div class="image-area">
-                            <div class="image-frame" id="mainImageContainer"></div>
-                            <div class="image-frame" id="tiktokImageContainer" style="display:none; border-color:var(--neon-red);"></div>
-                        </div>
+                        <div class="image-frame" id="mainImageContainer"></div>
                         
                         <div class="content-wrapper">
                             <div class="tabs-header">
                                 <button class="tab-btn active" onclick="openTab('linkedin')"><i class="fab fa-linkedin"></i> LinkedIn</button>
                                 <button class="tab-btn" onclick="openTab('twitter')"><i class="fab fa-twitter"></i> X Thread</button>
-                                <button class="tab-btn video-tab-btn" onclick="openTab('tiktok')"><i class="fab fa-tiktok"></i> TikTok</button>
+                                <button class="tab-btn video-tab-btn" onclick="openTab('tiktok')"><i class="fab fa-tiktok"></i> TikTok Storyboard 🎬</button>
                             </div>
 
                             <div class="cyber-card text-frame">
+                                
                                 <div id="linkedinContent" class="tab-content active simple-text-content"></div>
                                 <div id="twitterContent" class="tab-content simple-text-content"></div>
 
                                 <div id="tiktokContent" class="tab-content cinema-mode">
-                                    <h4 class="section-title"><i class="fas fa-terminal"></i> كود فيديو (Sora/Runway)</h4>
+                                    
+                                    <h4 class="section-title"><i class="fas fa-images"></i> القصة المصورة (Storyboard Scenes)</h4>
+                                    <div class="storyboard-grid" id="storyboardGrid">
+                                        <div class="story-frame" id="storyImg1"><div class="loader-ui small">Scene 1</div></div>
+                                        <div class="story-frame" id="storyImg2"><div class="loader-ui small">Scene 2</div></div>
+                                        <div class="story-frame" id="storyImg3"><div class="loader-ui small">Scene 3</div></div>
+                                    </div>
+
+                                    <h4 class="section-title" style="margin-top:25px;"><i class="fas fa-terminal"></i> كود توليد الفيديو (Video Prompt)</h4>
                                     <div class="video-prompt-box">
                                         <textarea id="videoPromptText" readonly></textarea>
-                                        <button class="copy-prompt-btn" onclick="copyPrompt()"><i class="fas fa-copy"></i></button>
+                                        <button class="copy-prompt-btn" onclick="copyVideoPrompt()"><i class="fas fa-copy"></i> نسخ الكود</button>
                                     </div>
-                                    <h4 class="section-title"><i class="fas fa-file-alt"></i> السكريبت</h4>
+
+                                    <h4 class="section-title" style="margin-top:25px;"><i class="fas fa-file-alt"></i> السكريبت النصي</h4>
                                     <div id="tiktokScriptText" class="script-container"></div>
+                                </div>
+
+                                <div class="action-bar-bottom">
+                                    <span id="platformLabel" class="tech-label">>_ READY.</span>
+                                    <button class="cyber-btn-small copy-main-btn" onclick="copyActiveText()"><i class="fas fa-copy"></i> نسخ المحتوى النصي</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
+
         </main>
     </div>
 
     <script>
-        // دالة التبويب المعدلة
+        // متغيرات عامة
+        let currentData = null;
+
         function openTab(platform) {
+            // التبديل البصري للتبويبات
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(platform + 'Content').classList.add('active');
@@ -92,121 +131,134 @@
             const btnIndex = platform === 'linkedin' ? 0 : platform === 'twitter' ? 1 : 2;
             document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
 
-            // تبديل الصور
-            const mainImg = document.getElementById('mainImageContainer');
-            const tiktokImg = document.getElementById('tiktokImageContainer');
-
+            // إخفاء/إظهار الصورة الرئيسية بناءً على التبويب
+            const mainGrid = document.getElementById('mainOutputGrid');
+            const mainImage = document.getElementById('mainImageContainer');
+            
             if (platform === 'tiktok') {
-                mainImg.style.display = 'none';
-                tiktokImg.style.display = 'flex';
+                mainImage.style.display = 'none';
+                mainGrid.style.gridTemplateColumns = '1fr'; 
+                document.getElementById('platformLabel').innerText = '>_ STORYBOARD_MODE_ACTIVE';
             } else {
-                mainImg.style.display = 'flex';
-                tiktokImg.style.display = 'none';
+                mainImage.style.display = 'flex';
+                mainGrid.style.gridTemplateColumns = '1fr 1fr'; 
+                const label = platform === 'linkedin' ? 'LINKEDIN_POST.TXT' : 'X_THREAD.TXT';
+                document.getElementById('platformLabel').innerText = '>_ ' + label;
             }
         }
 
-        // دالة التحميل مع أزرار التحميل والمشاركة
+        async function analyzeStyle() {
+            const text = document.getElementById('sampleText').value;
+            const status = document.getElementById('styleStatus');
+            status.innerText = "SCANNING...";
+            try {
+                const res = await fetch('/analyze-style', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text})});
+                const data = await res.json();
+                if(data.style_dna) document.getElementById('styleDNA').value = data.style_dna;
+                status.innerHTML = "[✔] DNA LOCKED";
+            } catch(e) { status.innerText = "ERROR"; }
+        }
+
+        // دالة التحميل
         function loadImage(containerId, prompt, seedOffset) {
             const container = document.getElementById(containerId);
             container.innerHTML = '<div class="loader-ui small"><i class="fas fa-circle-notch fa-spin"></i></div>';
-            
-            const seed = Math.floor(Math.random() * 10000) + seedOffset;
-            const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologin=true&width=1024&height=1024&model=flux&seed=${seed}`;
-
             const img = new Image();
-            img.crossOrigin = "Anonymous"; 
-            img.src = imgUrl;
-            
-            img.onload = () => { 
-                container.innerHTML = ''; 
-                container.appendChild(img);
-                
-                // إضافة الأزرار فوق الصورة
-                const overlay = document.createElement('div');
-                overlay.className = 'image-overlay';
-                overlay.innerHTML = `
-                    <button onclick="downloadImage('${imgUrl}')" title="تحميل"><i class="fas fa-download"></i></button>
-                    <button onclick="shareImage('${imgUrl}')" title="مشاركة"><i class="fas fa-share-alt"></i></button>
-                `;
-                container.appendChild(overlay);
-            };
-            img.onerror = () => { container.innerHTML = '<span style="color:red">فشل تحميل الصورة</span>'; };
-        }
-
-        async function downloadImage(url) {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = "AI-Dominator-" + Date.now() + ".jpg";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } catch (error) { window.open(url, '_blank'); }
-        }
-
-        async function shareImage(url) {
-            if (navigator.share) {
-                try { await navigator.share({ title: 'AI Art', url: url }); } catch (err) {}
-            } else {
-                navigator.clipboard.writeText(url);
-                alert("تم نسخ رابط الصورة!");
-            }
+            const seed = Math.floor(Math.random() * 1000) + seedOffset;
+            img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologin=true&width=1024&height=1024&model=flux&seed=${seed}`;
+            img.onload = () => { container.innerHTML = ''; container.appendChild(img); };
+            img.onerror = () => { container.innerHTML = '<span style="color:red;font-size:0.8rem;">Failed (Try Again)</span>'; };
         }
 
         async function remixContent() {
             const text = document.getElementById('inputText').value;
             const style = document.getElementById('styleDNA').value;
-            const imgStyle = document.getElementById('imageStyle').value;
+            const imageStyle = document.getElementById('imageStyle').value;
             const btn = document.getElementById('generateBtn');
-            
+
             if(!text) return alert("أدخل البيانات!");
             
-            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري العمل...';
+            btn.innerHTML = '<i class="fas fa-film fa-spin"></i> جاري الإنتاج السينمائي...';
             btn.disabled = true;
             document.getElementById('outputSection').style.display = 'block';
             
-            // مؤشرات التحميل
+            // تنظيف الحقول
             document.getElementById('linkedinContent').innerHTML = '<div class="loader-ui">جاري الكتابة...</div>';
             document.getElementById('twitterContent').innerHTML = '';
             document.getElementById('tiktokScriptText').innerHTML = '';
-            document.getElementById('videoPromptText').value = 'Generating...';
-            document.getElementById('mainImageContainer').innerHTML = '<div class="loader-ui">جاري الرسم...</div>';
-            document.getElementById('tiktokImageContainer').innerHTML = '<div class="loader-ui">جاري الرسم...</div>';
+            document.getElementById('videoPromptText').value = 'Generating video prompt code...';
+            document.getElementById('mainImageContainer').innerHTML = '<div class="loader-ui"><i class="fas fa-spinner fa-spin"></i><br>RENDERING MAIN...</div>';
+            document.getElementById('storyboardGrid').innerHTML = `
+                <div class="story-frame" id="storyImg1"><div class="loader-ui small">Scene 1...</div></div>
+                <div class="story-frame" id="storyImg2"><div class="loader-ui small">Scene 2...</div></div>
+                <div class="story-frame" id="storyImg3"><div class="loader-ui small">Scene 3...</div></div>
+            `;
 
             try {
                 const res = await fetch('/generate', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: text, style: style, image_style: imgStyle})
+                    body: JSON.stringify({text: text, style: style, image_style: imageStyle})
                 });
-                
-                const data = await res.json();
+                currentData = await res.json();
 
-                if(!data.error) {
-                    document.getElementById('linkedinContent').innerHTML = data.linkedin.replace(/\n/g, '<br>');
-                    document.getElementById('twitterContent').innerHTML = data.twitter.replace(/\n/g, '<br>');
-                    document.getElementById('tiktokScriptText').innerHTML = data.tiktok.replace(/\n/g, '<br>');
-                    document.getElementById('videoPromptText').value = data.video_prompt;
+                if(!currentData.error) {
+                    // تعبئة النصوص
+                    document.getElementById('linkedinContent').innerHTML = currentData.linkedin.replace(/\n/g, '<br>');
+                    document.getElementById('twitterContent').innerHTML = currentData.twitter.replace(/\n/g, '<br>');
+                    document.getElementById('tiktokScriptText').innerHTML = currentData.tiktok.replace(/\n/g, '<br>');
+                    document.getElementById('videoPromptText').value = currentData.video_prompt;
                     
-                    // تحميل الصورة الرئيسية
-                    loadImage('mainImageContainer', data.image_main, 1);
+                    if(currentData.debug) {
+                        document.getElementById('insightBox').style.display = 'block';
+                        document.getElementById('insightText').innerText = currentData.debug;
+                    }
                     
-                    // تحميل صورة تيك توك الواحدة (بتأخير بسيط لتخفيف الحمل)
+                    // 🔥 (FIX V10.1): تحميل الصور بالتتابع (Smart Queue)
+                    // الصورة الرئيسية فوراً
+                    loadImage('mainImageContainer', currentData.image_main, 1);
+
+                    // المشهد 1 بعد 1.5 ثانية
                     setTimeout(() => {
-                        loadImage('tiktokImageContainer', data.tiktok_image, 10);
-                    }, 1000);
+                        loadImage('storyImg1', currentData.story_img1, 10);
+                    }, 1500);
+
+                    // المشهد 2 بعد 3 ثواني
+                    setTimeout(() => {
+                        loadImage('storyImg2', currentData.story_img2, 20);
+                    }, 3000);
+
+                    // المشهد 3 بعد 4.5 ثانية
+                    setTimeout(() => {
+                        loadImage('storyImg3', currentData.story_img3, 30);
+                    }, 4500);
                 }
-            } catch(e) { alert("حدث خطأ، حاول مجدداً."); }
+            } catch(e) { alert("System Failure: " + e); }
             
-            btn.innerHTML = '<i class="fas fa-magic"></i> توليد المحتوى';
+            btn.innerHTML = '<i class="fas fa-clapperboard"></i> إطلاق الإنتاج السينمائي';
             btn.disabled = false;
             openTab('linkedin');
         }
-        
-        function analyzeStyle() { alert("تم التحليل!"); document.getElementById('styleDNA').value = "Professional"; }
-        function copyPrompt() { navigator.clipboard.writeText(document.getElementById('videoPromptText').value); alert("تم النسخ"); }
+
+        function copyActiveText() {
+            let textToCopy = "";
+            if(document.getElementById('linkedinContent').classList.contains('active')) {
+                textToCopy = document.getElementById('linkedinContent').innerText;
+            } else if(document.getElementById('twitterContent').classList.contains('active')) {
+                textToCopy = document.getElementById('twitterContent').innerText;
+            } else if(document.getElementById('tiktokContent').classList.contains('active')) {
+                textToCopy = document.getElementById('tiktokScriptText').innerText;
+            }
+            navigator.clipboard.writeText(textToCopy);
+            alert("تم نسخ النص!");
+        }
+
+        function copyVideoPrompt() {
+            const promptText = document.getElementById('videoPromptText');
+            promptText.select();
+            document.execCommand("copy");
+            alert("تم النسخ! جاهز للاستخدام في Runway/Veo.");
+        }
     </script>
 </body>
 </html>
