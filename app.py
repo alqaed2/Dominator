@@ -5,18 +5,26 @@ import re
 
 app = Flask(__name__)
 
-# إعدادات النظام
+# --- إعدادات النظام من بيئة الخادم (Render) ---
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-GEMINI_MODEL = os.environ.get('GEMINI_MODEL')
+GEMINI_MODEL = os.environ.get('GEMINI_MODEL') # هنا نقرأ اسم الموديل من Render
 
+# التحقق الصارم: لن يعمل النظام إذا لم تكن المتغيرات موجودة
 if not GEMINI_API_KEY:
-    print("❌ Error: Missing API Key.")
+    raise ValueError("❌ خطأ قاتل: لم يتم العثور على GEMINI_API_KEY في متغيرات البيئة.")
+
+if not GEMINI_MODEL:
+    raise ValueError("❌ خطأ قاتل: لم يتم العثور على GEMINI_MODEL في متغيرات البيئة. يرجى إضافته في إعدادات Render.")
 
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel(GEMINI_MODEL or "gemini-1.5-flash")
+    # استخدام الموديل المحدد في Render مباشرة
+    model = genai.GenerativeModel(GEMINI_MODEL)
+    print(f"🤖 System Online. Using Model: {GEMINI_MODEL}")
 except Exception as e:
     print(f"❌ Setup Error: {e}")
+
+# --- المسارات ---
 
 @app.route('/')
 def home():
@@ -24,7 +32,7 @@ def home():
 
 @app.route('/analyze-style', methods=['POST'])
 def analyze_style():
-    return jsonify({'style_dna': "تم التحليل."})
+    return jsonify({'style_dna': "تم التحليل بنجاح."})
 
 def extract(text, start, end):
     try:
@@ -33,12 +41,12 @@ def extract(text, start, end):
         return m.group(1).strip() if m else ""
     except: return ""
 
-# --- المسارات المنفصلة (السر وراء السرعة والاستقرار) ---
+# --- نقاط النهاية (Endpoints) ---
 
 @app.route('/generate/linkedin', methods=['POST'])
 def generate_linkedin():
     try:
-        data = request.json
+        data = request.get_json()
         prompt = f"""
         Act as a LinkedIn Expert. Write a viral post about: {data['topic']}
         Style: {data['style_dna']}
@@ -62,7 +70,7 @@ def generate_linkedin():
 @app.route('/generate/twitter', methods=['POST'])
 def generate_twitter():
     try:
-        data = request.json
+        data = request.get_json()
         prompt = f"""
         Act as a Twitter Expert. Write a 5-tweet thread about: {data['topic']}
         Style: {data['style_dna']}
@@ -81,7 +89,7 @@ def generate_twitter():
 @app.route('/generate/tiktok', methods=['POST'])
 def generate_tiktok():
     try:
-        data = request.json
+        data = request.get_json()
         prompt = f"""
         Act as a TikTok Director. Write a script about: {data['topic']}
         Style: {data['style_dna']}
