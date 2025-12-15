@@ -1,4 +1,6 @@
-/* --- AI DOMINATOR STYLE FILE --- */
+/* --- AI DOMINATOR V10 - CINEMA EDITION CSS --- */
+/* (احتفظ بالمتغيرات وإعدادات الـ body والهيدر والبطاقات الأساسية من V9 كما هي) */
+
 :root {
     --bg-main: #020204;
     --neon-cyan: #00fff2;
@@ -6,7 +8,9 @@
     --neon-blue: #0066ff;
     --glass-bg: rgba(20, 25, 40, 0.7);
     --text-primary: #ffffff;
-    --neon-red: #ff0055;
+    --text-secondary: #a0aabf;
+    --neon-green: #00ff88;
+    --neon-red: #ff0055; /* لون جديد لتبويب الفيديو */
 }
 
 body {
@@ -15,62 +19,88 @@ body {
     font-family: 'Cairo', sans-serif;
     margin: 0;
     min-height: 100vh;
-    background-image: linear-gradient(rgba(0, 255, 242, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 242, 0.05) 1px, transparent 1px);
+    background-image: 
+        linear-gradient(rgba(0, 255, 242, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 242, 0.05) 1px, transparent 1px);
     background-size: 50px 50px;
     display: flex; justify-content: center; padding: 20px;
 }
+body::before { content: ''; position: fixed; top: -20%; left: -20%; width: 140%; height: 140%; background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.15), transparent 60%); z-index: -1; pointer-events: none; }
+.app-container { width: 100%; max-width: 1200px; position: relative; z-index: 2; }
 
-.app-container { width: 100%; max-width: 1200px; }
-.cyber-header { display: flex; justify-content: space-between; padding: 20px; background: var(--glass-bg); backdrop-filter: blur(20px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 40px; }
-.logo-section h1 { margin: 0; background: linear-gradient(to right, var(--neon-cyan), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+/* --- الهيدر والبطاقات (نفس V9) --- */
+.cyber-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding: 20px; background: var(--glass-bg); backdrop-filter: blur(20px); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 255, 242, 0.05); }
+.logo-section h1 { margin: 0; font-size: 2rem; font-weight: 900; letter-spacing: 2px; background: linear-gradient(to right, var(--neon-cyan), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
+.version-tag { font-size: 0.8rem; color: var(--neon-red); vertical-align: super; border: 1px solid var(--neon-red); padding: 2px 8px; border-radius: 4px; }
+.system-status { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); padding: 8px 15px; border-radius: 50px; background: rgba(0, 255, 242, 0.1); }
+.status-dot { width: 10px; height: 10px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); animation: pulse 2s infinite; }
+
 .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
 @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+.cyber-card { background: var(--glass-bg); backdrop-filter: blur(25px); border-radius: 20px; padding: 30px; position: relative; overflow: hidden; border: double 2px transparent; background-image: linear-gradient(var(--glass-bg), var(--glass-bg)), linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 10px 40px rgba(0,0,0,0.5); transition: transform 0.3s, box-shadow 0.3s; }
+.cyber-card:hover { box-shadow: 0 15px 50px rgba(0, 255, 242, 0.15); transform: translateY(-5px); }
+.card-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+.card-title h3 { margin: 0; font-size: 1.1rem; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+.tech-decor-line { height: 3px; width: 50px; background: linear-gradient(to right, var(--neon-cyan), transparent); border-radius: 10px; }
 
-.cyber-card { background: var(--glass-bg); backdrop-filter: blur(25px); border-radius: 20px; padding: 25px; border: 1px solid rgba(0, 255, 242, 0.1); margin-bottom: 20px; }
-.card-title h3 { margin: 0; color: var(--neon-cyan); font-size: 1.1rem; }
-textarea, select { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 255, 242, 0.3); color: #fff; padding: 15px; border-radius: 10px; margin-top: 15px; box-sizing: border-box; }
+textarea, select { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 255, 242, 0.3); color: #fff; padding: 18px; border-radius: 12px; font-family: 'Courier New', monospace; font-size: 1rem; margin-top: 15px; transition: 0.3s; outline: none; box-sizing: border-box; }
+textarea:focus, select:focus { border-color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0, 255, 242, 0.2); background: rgba(0, 0, 0, 0.6); }
+.cyber-btn-main { width: 100%; padding: 20px; margin-top: 25px; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue)); border: none; border-radius: 12px; color: #000; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; position: relative; overflow: hidden; transition: 0.3s; box-shadow: 0 0 20px rgba(0, 255, 242, 0.3); }
+.cyber-btn-main:hover { transform: scale(1.02); box-shadow: 0 0 40px rgba(0, 255, 242, 0.5); }
+.cyber-btn-small { width: 100%; margin-top: 15px; padding: 12px; background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); border-radius: 8px; cursor: pointer; transition: 0.3s; }
+.cyber-btn-small:hover { background: var(--neon-cyan); color: #000; }
 
-.cyber-btn-main { width: 100%; padding: 15px; margin-top: 20px; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue)); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-.cyber-btn-main:hover { transform: scale(1.02); }
-.cyber-btn-small { width: 100%; padding: 10px; margin-top: 10px; background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); border-radius: 8px; cursor: pointer; }
+/* --- منطقة النتائج الجديدة (V10 Features) --- */
+.output-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 25px; transition: all 0.3s ease; }
 
-/* Grid Layout for Output */
-.output-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
-.image-area { width: 100%; }
+/* الصورة الرئيسية */
+.image-frame { width: 100%; aspect-ratio: 1/1; background: #050505; border-radius: 20px; border: 1px solid var(--neon-purple); box-shadow: 0 0 20px rgba(189, 0, 255, 0.2); overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; transition: all 0.3s ease; }
+.image-frame img { width: 100%; height: 100%; object-fit: cover; z-index: 1; animation: fadeIn 0.5s; }
 
-/* إطارات الصور */
-.image-frame { width: 100%; aspect-ratio: 1/1; background: #050505; border-radius: 20px; border: 1px solid var(--neon-purple); overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
-.image-frame img { width: 100%; height: 100%; object-fit: cover; }
-
-/* أزرار التحميل والمشاركة (Overlay) */
-.image-overlay {
-    position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-    display: flex; justify-content: center; gap: 15px;
-    opacity: 0; transition: 0.3s;
-}
-.image-frame:hover .image-overlay { opacity: 1; }
-.image-overlay button {
-    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff;
-    width: 40px; height: 40px; border-radius: 50%; cursor: pointer; backdrop-filter: blur(5px);
-    display: flex; align-items: center; justify-content: center;
-}
-.image-overlay button:hover { background: var(--neon-cyan); color: #000; }
-
-/* التبويبات والنصوص */
+/* التبويبات */
 .content-wrapper { display: flex; flex-direction: column; }
 .tabs-header { display: flex; gap: 5px; margin-bottom: -2px; z-index: 10; padding-left: 10px; }
-.tab-btn { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-bottom: none; color: #888; padding: 10px 20px; border-radius: 10px 10px 0 0; cursor: pointer; }
-.tab-btn.active { background: var(--glass-bg); border-color: var(--neon-cyan); color: var(--neon-cyan); border-bottom: 1px solid var(--glass-bg); }
-.video-tab-btn.active { color: var(--neon-red); border-color: var(--neon-red); }
+.tab-btn { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-bottom: none; color: #888; padding: 12px 25px; border-radius: 12px 12px 0 0; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: bold; transition: 0.3s; backdrop-filter: blur(10px); }
+.tab-btn:hover { background: rgba(0, 255, 242, 0.1); color: #fff; }
+.tab-btn.active { background: var(--glass-bg); border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 -5px 15px rgba(0, 255, 242, 0.1); transform: translateY(-2px); border-bottom: 1px solid var(--glass-bg); }
 
-.text-frame { border-top: 1px solid var(--neon-cyan); border-radius: 0 20px 20px 20px; min-height: 500px; color: #e0e0e0; line-height: 1.8; }
-.tab-content { display: none; }
+/* تبويب الفيديو المميز */
+.video-tab-btn.active { border-color: var(--neon-red); color: var(--neon-red); box-shadow: 0 -5px 15px rgba(255, 0, 85, 0.2); }
+
+.text-frame { border-top: 1px solid var(--neon-cyan); border-radius: 0 20px 20px 20px; min-height: 500px; color: #e0e0e0; line-height: 1.8; font-size: 1.05rem; display: flex; flex-direction: column; }
+.tab-content { display: none; animation: fadeIn 0.3s; flex-grow: 1; }
 .tab-content.active { display: block; }
 
-.section-title { color: var(--neon-red); margin: 20px 0 10px 0; border-bottom: 1px dashed rgba(255,0,85,0.3); padding-bottom: 5px; }
-.video-prompt-box textarea { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #444; color: var(--neon-cyan); padding: 10px; font-family: monospace; resize: none; }
-.copy-prompt-btn { float: right; margin-top: -40px; margin-right: 10px; background: var(--neon-red); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-.loader-ui { text-align: center; color: var(--neon-cyan); padding: 50px; font-family: monospace; }
-.system-status { display: flex; align-items: center; gap: 8px; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; }
-.status-dot { width: 8px; height: 8px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 8px var(--neon-cyan); }
+/* --- تصميم وضع السينما (TikTok Storyboard) --- */
+.cinema-mode { padding: 10px; }
+.section-title { color: var(--neon-red); margin: 20px 0 15px 0; display: flex; align-items: center; gap: 10px; font-size: 1.1rem; text-transform: uppercase; border-bottom: 1px dashed rgba(255,0,85,0.3); padding-bottom: 10px; }
+
+/* شبكة القصة المصورة (3 صور) */
+.storyboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+@media (max-width: 600px) { .storyboard-grid { grid-template-columns: 1fr; } }
+.story-frame { aspect-ratio: 9/16; /* تنسيق طولي للفيديو */ background: #000; border-radius: 12px; border: 1px solid rgba(255, 0, 85, 0.5); overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; transition: 0.3s; }
+.story-frame:hover { border-color: var(--neon-red); box-shadow: 0 0 20px rgba(255, 0, 85, 0.3); transform: scale(1.02); }
+.story-frame img { width: 100%; height: 100%; object-fit: cover; animation: fadeIn 0.5s; }
+
+/* صندوق برومبت الفيديو */
+.video-prompt-box { position: relative; border: 1px solid #333; border-radius: 10px; overflow: hidden; }
+.video-prompt-box textarea { margin: 0; border: none; background: rgba(0,0,0,0.5); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--neon-cyan); height: 120px; padding-right: 120px; /* مساحة للزر */ resize: none; }
+.copy-prompt-btn { position: absolute; top: 10px; right: 10px; background: var(--neon-red); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: 0.3s; }
+.copy-prompt-btn:hover { background: #fff; color: var(--neon-red); box-shadow: 0 0 15px var(--neon-red); }
+
+.script-container { white-space: pre-wrap; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; border-left: 3px solid var(--neon-red); }
+
+/* شريط الأكشن السفلي */
+.action-bar-bottom { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+.tech-label { font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); font-size: 0.8rem; }
+.copy-main-btn { width: auto; margin: 0; padding: 10px 20px; }
+
+/* أنيميشن ولودر */
+@keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.loader-ui { text-align: center; color: var(--neon-cyan); font-family: 'Courier New'; padding: 50px; }
+.loader-ui.small { padding: 20px; font-size: 0.8rem; }
+.loader-ui i { font-size: 2.5rem; margin-bottom: 15px; display: block; }
+.loader-ui.small i { font-size: 1.5rem; margin-bottom: 5px; }
+.status-text { margin-top: 10px; font-size: 0.8rem; color: var(--neon-green); font-family: 'Courier New'; }
+.debug-card { border-color: var(--neon-purple); background: rgba(20,0,30,0.8); margin-bottom: 20px; }
