@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR | V10 Cinema Engine</title>
+    <title>AI DOMINATOR | V11 Control Center</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
         
         <header class="cyber-header">
             <div class="logo-section">
-                <h1>AI DOMINATOR <span class="version-tag">V10 CINEMA</span></h1>
+                <h1>AI DOMINATOR <span class="version-tag">V11.0 PRO</span></h1>
             </div>
             <div class="system-status">
                 <div class="status-dot"></div>
@@ -55,7 +55,7 @@
                 
                 <div class="cyber-card">
                     <div class="card-title">
-                        <h3><i class="fas fa-film"></i> استوديو الإنتاج (Storyboard Engine)</h3>
+                        <h3><i class="fas fa-film"></i> استوديو الإنتاج</h3>
                         <div class="tech-decor-line" style="width: 150px;"></div>
                     </div>
                     <textarea id="inputText" rows="3" placeholder=">_ أدخل فكرة الفيديو/الحملة هنا..."></textarea>
@@ -77,7 +77,7 @@
                             <div class="tabs-header">
                                 <button class="tab-btn active" onclick="openTab('linkedin')"><i class="fab fa-linkedin"></i> LinkedIn</button>
                                 <button class="tab-btn" onclick="openTab('twitter')"><i class="fab fa-twitter"></i> X Thread</button>
-                                <button class="tab-btn video-tab-btn" onclick="openTab('tiktok')"><i class="fab fa-tiktok"></i> TikTok Storyboard 🎬</button>
+                                <button class="tab-btn video-tab-btn" onclick="openTab('tiktok')"><i class="fab fa-tiktok"></i> TikTok Storyboard</button>
                             </div>
 
                             <div class="cyber-card text-frame">
@@ -94,10 +94,10 @@
                                         <div class="story-frame" id="storyImg3"><div class="loader-ui small">Scene 3</div></div>
                                     </div>
 
-                                    <h4 class="section-title" style="margin-top:25px;"><i class="fas fa-terminal"></i> كود توليد الفيديو (Video Prompt)</h4>
+                                    <h4 class="section-title" style="margin-top:25px;"><i class="fas fa-terminal"></i> كود توليد الفيديو</h4>
                                     <div class="video-prompt-box">
                                         <textarea id="videoPromptText" readonly></textarea>
-                                        <button class="copy-prompt-btn" onclick="copyVideoPrompt()"><i class="fas fa-copy"></i> نسخ الكود</button>
+                                        <button class="copy-prompt-btn" onclick="copyVideoPrompt()"><i class="fas fa-copy"></i> نسخ</button>
                                     </div>
 
                                     <h4 class="section-title" style="margin-top:25px;"><i class="fas fa-file-alt"></i> السكريبت النصي</h4>
@@ -119,11 +119,9 @@
     </div>
 
     <script>
-        // متغيرات عامة
         let currentData = null;
 
         function openTab(platform) {
-            // التبديل البصري للتبويبات
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(platform + 'Content').classList.add('active');
@@ -131,7 +129,6 @@
             const btnIndex = platform === 'linkedin' ? 0 : platform === 'twitter' ? 1 : 2;
             document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
 
-            // إخفاء/إظهار الصورة الرئيسية بناءً على التبويب
             const mainGrid = document.getElementById('mainOutputGrid');
             const mainImage = document.getElementById('mainImageContainer');
             
@@ -159,15 +156,78 @@
             } catch(e) { status.innerText = "ERROR"; }
         }
 
-        // دالة التحميل
+        // 🔥 الدالة المحدثة: مع أزرار التحميل، المشاركة، وإعادة المحاولة
         function loadImage(containerId, prompt, seedOffset) {
             const container = document.getElementById(containerId);
             container.innerHTML = '<div class="loader-ui small"><i class="fas fa-circle-notch fa-spin"></i></div>';
+            
+            const seed = Math.floor(Math.random() * 10000) + seedOffset;
+            const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologin=true&width=1024&height=1024&model=flux&seed=${seed}`;
+
             const img = new Image();
-            const seed = Math.floor(Math.random() * 1000) + seedOffset;
-            img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologin=true&width=1024&height=1024&model=flux&seed=${seed}`;
-            img.onload = () => { container.innerHTML = ''; container.appendChild(img); };
-            img.onerror = () => { container.innerHTML = '<span style="color:red;font-size:0.8rem;">Failed (Try Again)</span>'; };
+            img.crossOrigin = "Anonymous"; // مهم جداً للتحميل
+            img.src = imgUrl;
+            
+            img.onload = () => { 
+                container.innerHTML = ''; 
+                // إضافة الصورة
+                container.appendChild(img);
+                
+                // إضافة طبقة الأزرار (Download / Share)
+                const overlay = document.createElement('div');
+                overlay.className = 'image-overlay';
+                overlay.innerHTML = `
+                    <button onclick="downloadImage('${imgUrl}')" title="تحميل"><i class="fas fa-download"></i></button>
+                    <button onclick="shareImage('${imgUrl}')" title="مشاركة"><i class="fas fa-share-alt"></i></button>
+                `;
+                container.appendChild(overlay);
+            };
+            
+            img.onerror = () => { 
+                // زر إعادة المحاولة عند الفشل
+                container.innerHTML = `
+                    <div class="retry-box">
+                        <span style="color:var(--neon-red);font-size:0.8rem;">فشل التحميل</span>
+                        <button onclick="loadImage('${containerId}', '${prompt.replace(/'/g, "\\'")}', ${seedOffset + 1})" class="retry-btn">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                `; 
+            };
+        }
+
+        // دالة التحميل الذكية
+        async function downloadImage(url) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "AI-Dominator-" + Date.now() + ".jpg";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                // في حال فشل الـ Fetch، نفتح الصورة في نافذة جديدة
+                window.open(url, '_blank');
+            }
+        }
+
+        // دالة المشاركة
+        async function shareImage(url) {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'AI Dominator Art',
+                        text: 'تم التصميم بواسطة AI Dominator 🚀',
+                        url: url
+                    });
+                } catch (err) { console.log('Share canceled'); }
+            } else {
+                // نسخ الرابط إذا لم يدعم المتصفح المشاركة
+                navigator.clipboard.writeText(url);
+                alert("تم نسخ رابط الصورة!");
+            }
         }
 
         async function remixContent() {
@@ -182,7 +242,6 @@
             btn.disabled = true;
             document.getElementById('outputSection').style.display = 'block';
             
-            // تنظيف الحقول
             document.getElementById('linkedinContent').innerHTML = '<div class="loader-ui">جاري الكتابة...</div>';
             document.getElementById('twitterContent').innerHTML = '';
             document.getElementById('tiktokScriptText').innerHTML = '';
@@ -203,7 +262,6 @@
                 currentData = await res.json();
 
                 if(!currentData.error) {
-                    // تعبئة النصوص
                     document.getElementById('linkedinContent').innerHTML = currentData.linkedin.replace(/\n/g, '<br>');
                     document.getElementById('twitterContent').innerHTML = currentData.twitter.replace(/\n/g, '<br>');
                     document.getElementById('tiktokScriptText').innerHTML = currentData.tiktok.replace(/\n/g, '<br>');
@@ -214,24 +272,11 @@
                         document.getElementById('insightText').innerText = currentData.debug;
                     }
                     
-                    // 🔥 (FIX V10.1): تحميل الصور بالتتابع (Smart Queue)
-                    // الصورة الرئيسية فوراً
+                    // تحميل متتابع للصور
                     loadImage('mainImageContainer', currentData.image_main, 1);
-
-                    // المشهد 1 بعد 1.5 ثانية
-                    setTimeout(() => {
-                        loadImage('storyImg1', currentData.story_img1, 10);
-                    }, 1500);
-
-                    // المشهد 2 بعد 3 ثواني
-                    setTimeout(() => {
-                        loadImage('storyImg2', currentData.story_img2, 20);
-                    }, 3000);
-
-                    // المشهد 3 بعد 4.5 ثانية
-                    setTimeout(() => {
-                        loadImage('storyImg3', currentData.story_img3, 30);
-                    }, 4500);
+                    setTimeout(() => { loadImage('storyImg1', currentData.story_img1, 10); }, 1500);
+                    setTimeout(() => { loadImage('storyImg2', currentData.story_img2, 20); }, 3000);
+                    setTimeout(() => { loadImage('storyImg3', currentData.story_img3, 30); }, 4500);
                 }
             } catch(e) { alert("System Failure: " + e); }
             
@@ -257,7 +302,7 @@
             const promptText = document.getElementById('videoPromptText');
             promptText.select();
             document.execCommand("copy");
-            alert("تم النسخ! جاهز للاستخدام في Runway/Veo.");
+            alert("تم النسخ!");
         }
     </script>
 </body>
