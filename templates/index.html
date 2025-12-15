@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR | V14.0 Fixed</title>
+    <title>AI DOMINATOR | V15.0 Final</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -14,7 +14,7 @@
     <div class="app-container">
         <header class="cyber-header">
             <div class="logo-section">
-                <h1>AI DOMINATOR <span class="version-tag">V14.0 STABLE</span></h1>
+                <h1>AI DOMINATOR <span class="version-tag">V15.0 FINAL</span></h1>
             </div>
             <div class="system-status"><div class="status-dot"></div>ONLINE</div>
         </header>
@@ -30,9 +30,9 @@
                 <div class="cyber-card" style="margin-top: 25px;">
                     <div class="card-title"><h3><i class="fas fa-sliders-h"></i> الصور</h3></div>
                     <select id="imageStyle">
-                        <option value="Cyberpunk, Neon, Futurism">🔮 سايبر بانك</option>
-                        <option value="Cinematic Photorealistic, 8k">📸 واقعي 8K</option>
-                        <option value="3D Render, Unreal Engine">🧊 3D ريندر</option>
+                        <option value="Cyberpunk">🔮 سايبر بانك</option>
+                        <option value="Cinematic">📸 واقعي</option>
+                        <option value="3D Render">🧊 3D</option>
                     </select>
                 </div>
             </div>
@@ -42,25 +42,22 @@
                     <div class="card-title"><h3><i class="fas fa-bolt"></i> المحرك المتوازي</h3></div>
                     <textarea id="inputText" rows="3" placeholder="أدخل الفكرة..."></textarea>
                     <button id="generateBtn" class="cyber-btn-main" onclick="startParallelEngine()">
-                        <i class="fas fa-rocket"></i> إطلاق (V14 Fixed)
+                        <i class="fas fa-rocket"></i> إطلاق (V15 Fixed)
                     </button>
                 </div>
 
                 <div id="outputSection" style="display: none; margin-top: 30px;">
                     <div class="output-grid" id="mainOutputGrid">
-                        
                         <div class="image-area">
                             <div class="image-frame" id="mainImageContainer"></div>
                             <div class="image-frame" id="tiktokImageContainer" style="display:none; border-color:var(--neon-red);"></div>
                         </div>
-                        
                         <div class="content-wrapper">
                             <div class="tabs-header">
                                 <button class="tab-btn active" onclick="openTab('linkedin')"><i class="fab fa-linkedin"></i> LinkedIn</button>
                                 <button class="tab-btn" onclick="openTab('twitter')"><i class="fab fa-twitter"></i> Twitter</button>
                                 <button class="tab-btn video-tab-btn" onclick="openTab('tiktok')"><i class="fab fa-tiktok"></i> TikTok</button>
                             </div>
-
                             <div class="cyber-card text-frame">
                                 <div id="linkedinContent" class="tab-content active simple-text-content"></div>
                                 <div id="twitterContent" class="tab-content simple-text-content"></div>
@@ -82,19 +79,14 @@
     </div>
 
     <script>
-        // --- دوال الواجهة (Tab Switching) ---
         function openTab(platform) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(platform + 'Content').classList.add('active');
             
-            // تلوين الزر النشط
-            const btns = document.querySelectorAll('.tab-btn');
-            if(platform === 'linkedin') btns[0].classList.add('active');
-            if(platform === 'twitter') btns[1].classList.add('active');
-            if(platform === 'tiktok') btns[2].classList.add('active');
+            const btnIndex = platform === 'linkedin' ? 0 : platform === 'twitter' ? 1 : 2;
+            document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
 
-            // تبديل الصور
             const mainImg = document.getElementById('mainImageContainer');
             const tiktokImg = document.getElementById('tiktokImageContainer');
 
@@ -107,7 +99,6 @@
             }
         }
 
-        // --- دالة تحميل الصور ---
         function loadImage(containerId, prompt) {
             const el = document.getElementById(containerId);
             if(!prompt || prompt.length < 5) return;
@@ -122,7 +113,6 @@
             img.onload = () => { 
                 el.innerHTML = ''; 
                 el.appendChild(img);
-                // أزرار التحميل
                 const overlay = document.createElement('div');
                 overlay.className = 'image-overlay';
                 overlay.innerHTML = `
@@ -130,10 +120,46 @@
                 `;
                 el.appendChild(overlay);
             };
-            img.onerror = () => { el.innerHTML = '<span style="color:red">فشل الصورة</span>'; };
+            img.onerror = () => { el.innerHTML = '<span style="color:red">فشل</span>'; };
         }
 
-        // --- المحرك الرئيسي (مع إصلاح الأخطاء) ---
+        // --- الدالة الآمنة للاتصال (Safe Fetch) ---
+        const fetchSafe = async (url, containerId, imageContainerId = null, isTikTok = false, payload) => {
+            try {
+                // ✅ التأكد من إرسال الهيدر الصحيح
+                const res = await fetch(url, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload)
+                });
+                
+                // ✅ قراءة رسالة الخطأ من السيرفر إذا لم يكن 200 OK
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || `Server Error: ${res.status}`);
+                }
+                
+                const data = await res.json();
+                
+                // عرض النص
+                document.getElementById(containerId).innerHTML = data.text.replace(/\n/g, '<br>');
+                
+                // عرض الصورة
+                if (imageContainerId && data.image) {
+                    loadImage(imageContainerId, data.image);
+                }
+                
+                // خاص بـ TikTok
+                if (isTikTok && data.video_prompt) {
+                    document.getElementById('videoPromptText').value = data.video_prompt;
+                }
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById(containerId).innerHTML = `<div style="color:red; text-align:center; padding:20px;">❌ حدث خطأ: ${err.message}</div>`;
+            }
+        };
+
         async function startParallelEngine() {
             const text = document.getElementById('inputText').value;
             const style = document.getElementById('styleDNA').value;
@@ -143,63 +169,28 @@
             
             const btn = document.getElementById('generateBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري الاتصال بالسيرفر...';
+            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري الاتصال...';
             
             document.getElementById('outputSection').style.display = 'block';
             
-            // رسائل الانتظار
-            document.getElementById('linkedinContent').innerHTML = '<div class="loader-ui">جاري تحضير LinkedIn...</div>';
-            document.getElementById('twitterContent').innerHTML = '<div class="loader-ui">جاري تحضير Twitter...</div>';
-            document.getElementById('tiktokScriptText').innerHTML = '<div class="loader-ui">جاري إخراج TikTok...</div>';
+            document.getElementById('linkedinContent').innerHTML = '<div class="loader-ui">جاري LinkedIn...</div>';
+            document.getElementById('twitterContent').innerHTML = '<div class="loader-ui">جاري Twitter...</div>';
+            document.getElementById('tiktokScriptText').innerHTML = '<div class="loader-ui">جاري TikTok...</div>';
             document.getElementById('mainImageContainer').innerHTML = '<div class="loader-ui">Image...</div>';
             document.getElementById('tiktokImageContainer').innerHTML = '<div class="loader-ui">Cover...</div>';
 
-            const payload = { topic: text, style_dna: style, image_style: imgStyle };
-
-            // ✅ دالة مساعدة للتعامل مع الطلبات
-            const fetchSafe = async (url, containerId, imageContainerId = null, isTikTok = false) => {
-                try {
-                    const res = await fetch(url, {
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'}, 
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    if (!res.ok) throw new Error(`Server Error: ${res.status}`);
-                    
-                    const data = await res.json();
-                    
-                    if (data.error) throw new Error(data.error);
-
-                    // عرض النص
-                    document.getElementById(containerId).innerHTML = data.text.replace(/\n/g, '<br>');
-                    
-                    // عرض الصورة (إن وجدت)
-                    if (imageContainerId && data.image) {
-                        loadImage(imageContainerId, data.image);
-                    }
-                    
-                    // خاص بـ TikTok
-                    if (isTikTok) {
-                        document.getElementById('videoPromptText').value = data.video_prompt;
-                    }
-
-                } catch (err) {
-                    console.error(err);
-                    document.getElementById(containerId).innerHTML = `<div style="color:red; text-align:center;">❌ حدث خطأ: ${err.message}</div>`;
-                }
-            };
+            // ✅ تجهيز البيانات بشكل صحيح (استخدام "text" بدلاً من "topic" لتوحيد المسميات)
+            const payload = { text: text, style_dna: style, image_style: imgStyle };
 
             // تشغيل المهام بالتوازي
             await Promise.all([
-                fetchSafe('/generate/linkedin', 'linkedinContent', 'mainImageContainer'),
-                fetchSafe('/generate/twitter', 'twitterContent'),
-                fetchSafe('/generate/tiktok', 'tiktokScriptText', 'tiktokImageContainer', true)
+                fetchSafe('/generate/linkedin', 'linkedinContent', 'mainImageContainer', false, payload),
+                fetchSafe('/generate/twitter', 'twitterContent', null, false, payload),
+                fetchSafe('/generate/tiktok', 'tiktokScriptText', 'tiktokImageContainer', true, payload)
             ]);
 
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-rocket"></i> إطلاق (V14 Fixed)';
-            
+            btn.innerHTML = '<i class="fas fa-rocket"></i> إطلاق (V15 Fixed)';
             openTab('linkedin');
         }
         
