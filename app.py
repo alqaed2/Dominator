@@ -15,60 +15,39 @@ if not GEMINI_API_KEY or not GEMINI_MODEL:
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel(GEMINI_MODEL)
 
-# --- أوامر متخصصة وسريعة (Specialized Prompts) ---
+# --- الأمر المبسط (Simplified Prompt) ---
+EDITOR_PROMPT = """
+أنت مدير محتوى شامل.
+المهمة: تحويل الفكرة إلى حملة لمنصات متعددة مع وصف للصور.
 
-LINKEDIN_PROMPT = """
-بصفتك خبير LinkedIn، اكتب مقالاً احترافياً وتفاعلياً.
 الموضوع: {topic}
 الأسلوب: {style_dna}
-النمط البصري للصورة: {image_style}
+نمط الصور: {image_style}
 
-المخرجات المطلوبة (التزم بالفواصل):
+⚠️ المخرجات المطلوبة (التزم بالفواصل):
+
 ---LINKEDIN_START---
-(نص المقال هنا)
+(مقال LinkedIn احترافي)
 ---LINKEDIN_END---
 
----IMAGE_MAIN_START---
-(وصف إنجليزي للصورة الرئيسية: {image_style})
----IMAGE_MAIN_END---
-"""
-
-TWITTER_PROMPT = """
-بصفتك خبير X (Twitter)، اكتب ثريد فيروسي (Viral Thread).
-الموضوع: {topic}
-الأسلوب: {style_dna}
-
-المخرجات المطلوبة:
 ---TWITTER_START---
-(5-7 تغريدات مرقمة وجذابة)
+(ثريد X مكون من 5 تغريدات)
 ---TWITTER_END---
-"""
 
-TIKTOK_PROMPT = """
-بصفتك مخرج سينمائي، اكتب سكريبت TikTok وقصة مصورة.
-الموضوع: {topic}
-الأسلوب: {style_dna}
-النمط البصري: {image_style}
-
-المخرجات المطلوبة:
 ---TIKTOK_START---
-(السكريبت النصي: المشهد، الصوت)
+(سكريبت TikTok: المشهد، الصوت، النص)
 ---TIKTOK_END---
 
----STORYBOARD_IMG1_START---
-(وصف مشهد 1 إنجليزي: {image_style})
----STORYBOARD_IMG1_END---
+---IMAGE_MAIN_START---
+(وصف صورة للمقال الرئيسي: {image_style})
+---IMAGE_MAIN_END---
 
----STORYBOARD_IMG2_START---
-(وصف مشهد 2 إنجليزي: {image_style})
----STORYBOARD_IMG2_END---
-
----STORYBOARD_IMG3_START---
-(وصف مشهد 3 إنجليزي: {image_style})
----STORYBOARD_IMG3_END---
+---TIKTOK_IMAGE_START---
+(وصف صورة واحدة جذابة جداً لغلاف فيديو التيك توك: {image_style})
+---TIKTOK_IMAGE_END---
 
 ---VIDEO_PROMPT_START---
-(Detailed Cinematic Video Prompt in English)
+(Cinematic Video Prompt for Sora/Runway: detailed description)
 ---VIDEO_PROMPT_END---
 """
 
@@ -78,52 +57,50 @@ def home():
 
 @app.route('/analyze-style', methods=['POST'])
 def analyze_style():
-    return jsonify({'style_dna': "تم تفعيل تحليل النمط."})
+    return jsonify({'style_dna': "تم التحليل بنجاح."})
 
-def extract(text, start, end):
+def extract_section(text, start_tag, end_tag):
     try:
-        p = re.escape(start) + r"(.*?)" + re.escape(end)
-        m = re.search(p, text, re.DOTALL)
-        return m.group(1).strip() if m else "Generating..."
-    except: return "Error"
+        pattern = re.escape(start_tag) + r"(.*?)" + re.escape(end_tag)
+        match = re.search(pattern, text, re.DOTALL)
+        return match.group(1).strip() if match else "Generating..."
+    except:
+        return "Error."
 
-# --- 3 مسارات منفصلة (API Endpoints) ---
-
-@app.route('/generate/linkedin', methods=['POST'])
-def generate_linkedin():
-    try:
-        data = request.json
-        resp = model.generate_content(LINKEDIN_PROMPT.format(**data))
-        return jsonify({
-            'text': extract(resp.text, "---LINKEDIN_START---", "---LINKEDIN_END---"),
-            'image': extract(resp.text, "---IMAGE_MAIN_START---", "---IMAGE_MAIN_END---")
-        })
-    except Exception as e: return jsonify({'error': str(e)}), 500
-
-@app.route('/generate/twitter', methods=['POST'])
-def generate_twitter():
+@app.route('/generate', methods=['POST'])
+def generate():
     try:
         data = request.json
-        resp = model.generate_content(TWITTER_PROMPT.format(**data))
-        return jsonify({
-            'text': extract(resp.text, "---TWITTER_START---", "---TWITTER_END---")
-        })
-    except Exception as e: return jsonify({'error': str(e)}), 500
+        topic = data.get('text', '')
+        style_dna = data.get('style', '') or "Professional"
+        image_style = data.get('image_style', 'Cyberpunk')
 
-@app.route('/generate/tiktok', methods=['POST'])
-def generate_tiktok():
-    try:
-        data = request.json
-        resp = model.generate_content(TIKTOK_PROMPT.format(**data))
-        txt = resp.text
-        return jsonify({
-            'text': extract(txt, "---TIKTOK_START---", "---TIKTOK_END---"),
-            'img1': extract(txt, "---STORYBOARD_IMG1_START---", "---STORYBOARD_IMG1_END---"),
-            'img2': extract(txt, "---STORYBOARD_IMG2_START---", "---STORYBOARD_IMG2_END---"),
-            'img3': extract(txt, "---STORYBOARD_IMG3_START---", "---STORYBOARD_IMG3_END---"),
-            'video_prompt': extract(txt, "---VIDEO_PROMPT_START---", "---VIDEO_PROMPT_END---")
-        })
-    except Exception as e: return jsonify({'error': str(e)}), 500
+        if not topic: return jsonify({'error': 'النص فارغ'}), 400
+
+        final_prompt = EDITOR_PROMPT.format(topic=topic, style_dna=style_dna, image_style=image_style)
+        
+        response = model.generate_content(final_prompt)
+        full_output = response.text
+
+        results = {
+            'linkedin': extract_section(full_output, "---LINKEDIN_START---", "---LINKEDIN_END---"),
+            'twitter': extract_section(full_output, "---TWITTER_START---", "---TWITTER_END---"),
+            'tiktok': extract_section(full_output, "---TIKTOK_START---", "---TIKTOK_END---"),
+            'image_main': extract_section(full_output, "---IMAGE_MAIN_START---", "---IMAGE_MAIN_END---"),
+            'tiktok_image': extract_section(full_output, "---TIKTOK_IMAGE_START---", "---TIKTOK_IMAGE_END---"),
+            'video_prompt': extract_section(full_output, "---VIDEO_PROMPT_START---", "---VIDEO_PROMPT_END---"),
+            'debug': "تم التوليد بنجاح (وضع الصورة الواحدة)."
+        }
+
+        # تصحيح سريع للصور الفارغة
+        fallback = f"{image_style} illustration about {topic}"
+        if len(results['image_main']) < 5: results['image_main'] = fallback
+        if len(results['tiktok_image']) < 5: results['tiktok_image'] = fallback
+
+        return jsonify(results)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
