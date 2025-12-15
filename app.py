@@ -5,59 +5,18 @@ import re
 
 app = Flask(__name__)
 
-# --- إعدادات النظام ---
+# إعدادات النظام
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 GEMINI_MODEL = os.environ.get('GEMINI_MODEL')
 
 if not GEMINI_API_KEY:
-    # استخدام مفتاح احتياطي أو طباعة خطأ واضح في السجلات
-    print("❌ Error: GEMINI_API_KEY not found.")
+    print("❌ Error: Missing API Key.")
 
-# تهيئة Gemini
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    # نستخدم الموديل السريع لضمان عدم حدوث Timeout
-    model_name = GEMINI_MODEL if GEMINI_MODEL else "gemini-1.5-flash" 
-    model = genai.GenerativeModel(model_name)
-    print(f"🤖 System Ready using: {model_name}")
+    model = genai.GenerativeModel(GEMINI_MODEL or "gemini-1.5-flash")
 except Exception as e:
     print(f"❌ Setup Error: {e}")
-
-# --- الأمر المبسط والسريع (Fast Prompt) ---
-EDITOR_PROMPT = """
-أنت خبير محتوى شامل. 
-المهمة: توليد حملة تسويقية سريعة جداً.
-
-الموضوع: {topic}
-الأسلوب: {style_dna}
-ستايل الصور: {image_style}
-
-⚠️ المخرجات المطلوبة (التزم بالفواصل بدقة):
-
----LINKEDIN_START---
-(مقال LinkedIn احترافي وقصير)
----LINKEDIN_END---
-
----TWITTER_START---
-(ثريد X من 5 تغريدات)
----TWITTER_END---
-
----TIKTOK_START---
-(سكريبت TikTok سريع: المشهد، الصوت)
----TIKTOK_END---
-
----IMAGE_MAIN_START---
-(وصف إنجليزي لصورة المقال: {image_style})
----IMAGE_MAIN_END---
-
----TIKTOK_IMAGE_START---
-(وصف إنجليزي لصورة غلاف التيك توك: {image_style})
----TIKTOK_IMAGE_END---
-
----VIDEO_PROMPT_START---
-(Cinematic Video Prompt English)
----VIDEO_PROMPT_END---
-"""
 
 @app.route('/')
 def home():
@@ -65,59 +24,87 @@ def home():
 
 @app.route('/analyze-style', methods=['POST'])
 def analyze_style():
-    return jsonify({'style_dna': "تم التحليل (وضع التوفير)."})
+    return jsonify({'style_dna': "تم التحليل."})
 
-def extract_section(text, start_tag, end_tag):
+def extract(text, start, end):
     try:
-        # استخدام البحث المرن لتجنب الأخطاء
-        pattern = re.escape(start_tag) + r"(.*?)" + re.escape(end_tag)
-        match = re.search(pattern, text, re.DOTALL)
-        if match:
-            return match.group(1).strip()
-        else:
-            return "Content not generated."
-    except:
-        return "Error parsing content."
+        p = re.escape(start) + r"(.*?)" + re.escape(end)
+        m = re.search(p, text, re.DOTALL)
+        return m.group(1).strip() if m else ""
+    except: return ""
 
-@app.route('/generate', methods=['POST'])
-def generate():
+# --- المسارات المنفصلة (السر وراء السرعة والاستقرار) ---
+
+@app.route('/generate/linkedin', methods=['POST'])
+def generate_linkedin():
     try:
         data = request.json
-        topic = data.get('text', '')
-        style_dna = data.get('style', '') or "Professional"
-        image_style = data.get('image_style', 'Cyberpunk')
-
-        if not topic: return jsonify({'error': 'النص فارغ'}), 400
-
-        print(f"🚀 Processing request for: {topic}")
+        prompt = f"""
+        Act as a LinkedIn Expert. Write a viral post about: {data['topic']}
+        Style: {data['style_dna']}
+        Image Style: {data['image_style']}
         
-        # التوليد
-        final_prompt = EDITOR_PROMPT.format(topic=topic, style_dna=style_dna, image_style=image_style)
-        response = model.generate_content(final_prompt)
-        full_output = response.text
+        Output format:
+        ---LINKEDIN_START---
+        (Post content here)
+        ---LINKEDIN_END---
+        ---IMAGE_MAIN_START---
+        (English image description)
+        ---IMAGE_MAIN_END---
+        """
+        resp = model.generate_content(prompt)
+        return jsonify({
+            'text': extract(resp.text, "---LINKEDIN_START---", "---LINKEDIN_END---"),
+            'image': extract(resp.text, "---IMAGE_MAIN_START---", "---IMAGE_MAIN_END---")
+        })
+    except Exception as e: return jsonify({'error': str(e)}), 500
 
-        # الاستخراج الآمن
-        results = {
-            'linkedin': extract_section(full_output, "---LINKEDIN_START---", "---LINKEDIN_END---"),
-            'twitter': extract_section(full_output, "---TWITTER_START---", "---TWITTER_END---"),
-            'tiktok': extract_section(full_output, "---TIKTOK_START---", "---TIKTOK_END---"),
-            'image_main': extract_section(full_output, "---IMAGE_MAIN_START---", "---IMAGE_MAIN_END---"),
-            'tiktok_image': extract_section(full_output, "---TIKTOK_IMAGE_START---", "---TIKTOK_IMAGE_END---"),
-            'video_prompt': extract_section(full_output, "---VIDEO_PROMPT_START---", "---VIDEO_PROMPT_END---"),
-            'debug': "Success (Fast Mode)"
-        }
+@app.route('/generate/twitter', methods=['POST'])
+def generate_twitter():
+    try:
+        data = request.json
+        prompt = f"""
+        Act as a Twitter Expert. Write a 5-tweet thread about: {data['topic']}
+        Style: {data['style_dna']}
+        
+        Output format:
+        ---TWITTER_START---
+        (Thread content here)
+        ---TWITTER_END---
+        """
+        resp = model.generate_content(prompt)
+        return jsonify({
+            'text': extract(resp.text, "---TWITTER_START---", "---TWITTER_END---")
+        })
+    except Exception as e: return jsonify({'error': str(e)}), 500
 
-        # ملء الفراغات لتجنب الصور المكسورة
-        fallback = f"{image_style} illustration about {topic}"
-        if len(results['image_main']) < 5: results['image_main'] = fallback
-        if len(results['tiktok_image']) < 5: results['tiktok_image'] = fallback
-
-        return jsonify(results)
-
-    except Exception as e:
-        print(f"🔥 Server Error: {e}")
-        # إرجاع رسالة خطأ واضحة للمتصفح بدلاً من 500 غامضة
-        return jsonify({'error': f"فشل المعالجة: {str(e)}"}), 500
+@app.route('/generate/tiktok', methods=['POST'])
+def generate_tiktok():
+    try:
+        data = request.json
+        prompt = f"""
+        Act as a TikTok Director. Write a script about: {data['topic']}
+        Style: {data['style_dna']}
+        Image Style: {data['image_style']}
+        
+        Output format:
+        ---TIKTOK_START---
+        (Script content)
+        ---TIKTOK_END---
+        ---TIKTOK_IMAGE_START---
+        (One English image prompt for cover)
+        ---TIKTOK_IMAGE_END---
+        ---VIDEO_PROMPT_START---
+        (Video generation prompt)
+        ---VIDEO_PROMPT_END---
+        """
+        resp = model.generate_content(prompt)
+        return jsonify({
+            'text': extract(resp.text, "---TIKTOK_START---", "---TIKTOK_END---"),
+            'image': extract(resp.text, "---TIKTOK_IMAGE_START---", "---TIKTOK_IMAGE_END---"),
+            'video_prompt': extract(resp.text, "---VIDEO_PROMPT_START---", "---VIDEO_PROMPT_END---")
+        })
+    except Exception as e: return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
