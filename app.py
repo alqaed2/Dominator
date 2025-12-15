@@ -7,22 +7,28 @@ app = Flask(__name__)
 
 # --- إعدادات النظام من بيئة الخادم (Render) ---
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-GEMINI_MODEL = os.environ.get('GEMINI_MODEL') # الاعتماد الكلي على المتغير
+GEMINI_MODEL = os.environ.get('GEMINI_MODEL') # الاعتماد الكلي والوحيد على هذا المتغير
 
-# التحقق من المتغيرات
+# 1. التحقق الصارم: النظام لن يعمل إذا كانت المتغيرات ناقصة
 if not GEMINI_API_KEY:
-    print("❌ CRITICAL ERROR: GEMINI_API_KEY is missing in environment variables.")
-if not GEMINI_MODEL:
-    print("⚠️ WARNING: GEMINI_MODEL is missing. Defaulting to gemini-1.5-flash if available.")
+    raise ValueError("❌ CRITICAL ERROR: GEMINI_API_KEY is missing in environment variables.")
 
+if not GEMINI_MODEL:
+    raise ValueError("❌ CRITICAL ERROR: GEMINI_MODEL is missing in environment variables. Please add it in Render settings.")
+
+# 2. التهيئة باستخدام المتغير فقط
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    # استخدام الموديل من البيئة فقط
-    model_name = GEMINI_MODEL if GEMINI_MODEL else "gemini-1.5-flash"
-    model = genai.GenerativeModel(model_name)
-    print(f"🤖 System Online. Using Model from Env: {model_name}")
+    
+    # لا توجد قيم افتراضية هنا، نستخدم ما هو موجود في البيئة فقط
+    model = genai.GenerativeModel(GEMINI_MODEL)
+    
+    print(f"🤖 System Online. Model Configured from Env: {GEMINI_MODEL}")
+
 except Exception as e:
+    # هذا سيمنع التطبيق من العمل إذا كان اسم الموديل في البيئة خاطئاً
     print(f"❌ Setup Error: {e}")
+    raise e
 
 # --- دوال مساعدة ---
 def extract(text, start, end):
@@ -34,11 +40,10 @@ def extract(text, start, end):
     except: return ""
 
 def get_safe_response(prompt):
-    """دالة آمنة جداً لتوليد النص والتعامل مع الأخطاء"""
+    """دالة آمنة لتوليد النص والتعامل مع الأخطاء"""
     try:
         response = model.generate_content(prompt)
         
-        # محاولة استخراج النص بعدة طرق لتجنب الانهيار
         if hasattr(response, 'text') and response.text:
             return response.text
         elif hasattr(response, 'parts'):
@@ -48,9 +53,7 @@ def get_safe_response(prompt):
         else:
             return "Error: Empty response from AI."
     except Exception as e:
-        # طباعة الخطأ في السيرفر للمراقبة
         print(f"🔥 GEMINI ERROR: {str(e)}")
-        # إعادة رفع الخطأ ليتم التقاطه في الدالة الرئيسية
         raise e
 
 @app.route('/')
@@ -61,12 +64,11 @@ def home():
 def analyze_style():
     return jsonify({'style_dna': "تم التحليل بنجاح."})
 
-# --- نقاط النهاية المحصنة (Fortified Endpoints) ---
+# --- نقاط النهاية (Endpoints) ---
 
 @app.route('/generate/linkedin', methods=['POST'])
 def generate_linkedin():
     try:
-        # 1. استقبال البيانات بأمان
         data = request.get_json(silent=True)
         if not data or 'text' not in data:
             return jsonify({"error": "No data provided"}), 400
@@ -89,11 +91,10 @@ def generate_linkedin():
         ---IMAGE_MAIN_END---
         """
         
-        # 2. التوليد الآمن
         text_response = get_safe_response(prompt)
         
         return jsonify({
-            'text': extract(text_response, "---LINKEDIN_START---", "---LINKEDIN_END---") or "Failed to generate text",
+            'text': extract(text_response, "---LINKEDIN_START---", "---LINKEDIN_END---"),
             'image': extract(text_response, "---IMAGE_MAIN_START---", "---IMAGE_MAIN_END---")
         })
 
@@ -124,7 +125,7 @@ def generate_twitter():
         text_response = get_safe_response(prompt)
         
         return jsonify({
-            'text': extract(text_response, "---TWITTER_START---", "---TWITTER_END---") or "Failed to generate thread"
+            'text': extract(text_response, "---TWITTER_START---", "---TWITTER_END---")
         })
 
     except Exception as e:
@@ -162,7 +163,7 @@ def generate_tiktok():
         text_response = get_safe_response(prompt)
         
         return jsonify({
-            'text': extract(text_response, "---TIKTOK_START---", "---TIKTOK_END---") or "Failed to generate script",
+            'text': extract(text_response, "---TIKTOK_START---", "---TIKTOK_END---"),
             'image': extract(text_response, "---TIKTOK_IMAGE_START---", "---TIKTOK_IMAGE_END---"),
             'video_prompt': extract(text_response, "---VIDEO_PROMPT_START---", "---VIDEO_PROMPT_END---")
         })
