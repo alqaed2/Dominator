@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR | Stable V12.1</title>
+    <title>AI DOMINATOR | V13 Stable</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
@@ -13,7 +14,7 @@
     <div class="app-container">
         <header class="cyber-header">
             <div class="logo-section">
-                <h1>AI DOMINATOR <span class="version-tag">V12.1 STABLE</span></h1>
+                <h1>AI DOMINATOR <span class="version-tag">V13.0 FAST</span></h1>
             </div>
             <div class="system-status"><div class="status-dot"></div>ONLINE</div>
         </header>
@@ -23,25 +24,25 @@
                 <div class="cyber-card">
                     <div class="card-title"><h3><i class="fas fa-fingerprint"></i> الأسلوب</h3></div>
                     <textarea id="sampleText" rows="3" placeholder="الصق النص هنا..."></textarea>
-                    <button onclick="analyzeStyle()" class="cyber-btn-small">تحليل سريع</button>
+                    <button onclick="analyzeStyle()" class="cyber-btn-small">تحليل</button>
                     <input type="hidden" id="styleDNA" value="">
                 </div>
                 <div class="cyber-card" style="margin-top: 25px;">
                     <div class="card-title"><h3><i class="fas fa-sliders-h"></i> الصور</h3></div>
                     <select id="imageStyle">
-                        <option value="Cyberpunk, Neon, Futurism">🔮 سايبر بانك</option>
-                        <option value="Cinematic Photorealistic, 8k">📸 واقعي 8K</option>
-                        <option value="3D Render, Unreal Engine">🧊 3D ريندر</option>
+                        <option value="Cyberpunk">🔮 سايبر بانك</option>
+                        <option value="Cinematic">📸 واقعي</option>
+                        <option value="3D Render">🧊 3D</option>
                     </select>
                 </div>
             </div>
 
             <div class="main-content">
                 <div class="cyber-card">
-                    <div class="card-title"><h3><i class="fas fa-rocket"></i> استوديو الإنتاج</h3></div>
-                    <textarea id="inputText" rows="3" placeholder="أدخل فكرة المحتوى..."></textarea>
-                    <button id="generateBtn" class="cyber-btn-main" onclick="remixContent()">
-                        <i class="fas fa-magic"></i> توليد المحتوى
+                    <div class="card-title"><h3><i class="fas fa-bolt"></i> المحرك المتوازي</h3></div>
+                    <textarea id="inputText" rows="3" placeholder="أدخل الفكرة..."></textarea>
+                    <button id="generateBtn" class="cyber-btn-main" onclick="startParallelEngine()">
+                        <i class="fas fa-rocket"></i> إطلاق (سرعة قصوى)
                     </button>
                 </div>
 
@@ -63,9 +64,8 @@
                             <div class="cyber-card text-frame">
                                 <div id="linkedinContent" class="tab-content active simple-text-content"></div>
                                 <div id="twitterContent" class="tab-content simple-text-content"></div>
-
                                 <div id="tiktokContent" class="tab-content cinema-mode">
-                                    <h4 class="section-title"><i class="fas fa-terminal"></i> كود فيديو (Prompt)</h4>
+                                    <h4 class="section-title"><i class="fas fa-terminal"></i> كود فيديو</h4>
                                     <div class="video-prompt-box">
                                         <textarea id="videoPromptText" readonly></textarea>
                                         <button class="copy-prompt-btn" onclick="copyPrompt()"><i class="fas fa-copy"></i></button>
@@ -102,100 +102,79 @@
             }
         }
 
-        // 🔥 دالة التحميل مع أزرار التحميل والمشاركة (موجودة ومثبتة)
-        function loadImage(containerId, prompt, seedOffset) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '<div class="loader-ui small"><i class="fas fa-circle-notch fa-spin"></i></div>';
+        function loadImage(containerId, prompt) {
+            const el = document.getElementById(containerId);
+            if(!prompt || prompt.length < 5) return;
+            el.innerHTML = '<div class="loader-ui small"><i class="fas fa-circle-notch fa-spin"></i></div>';
             
-            const seed = Math.floor(Math.random() * 10000) + seedOffset;
+            const seed = Math.floor(Math.random() * 9999);
             const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologin=true&width=1024&height=1024&model=flux&seed=${seed}`;
 
             const img = new Image();
-            img.crossOrigin = "Anonymous"; // ضروري للتحميل
+            img.crossOrigin = "Anonymous";
             img.src = imgUrl;
-            
             img.onload = () => { 
-                container.innerHTML = ''; 
-                container.appendChild(img);
-                
-                // إضافة الأزرار
+                el.innerHTML = ''; 
+                el.appendChild(img);
                 const overlay = document.createElement('div');
                 overlay.className = 'image-overlay';
-                overlay.innerHTML = `
-                    <button onclick="downloadImage('${imgUrl}')" title="تحميل"><i class="fas fa-download"></i></button>
-                    <button onclick="shareImage('${imgUrl}')" title="مشاركة"><i class="fas fa-share-alt"></i></button>
-                `;
-                container.appendChild(overlay);
+                overlay.innerHTML = `<button onclick="window.open('${imgUrl}')"><i class="fas fa-download"></i></button>`;
+                el.appendChild(overlay);
             };
-            img.onerror = () => { container.innerHTML = '<span style="color:red">فشل تحميل الصورة</span>'; };
+            img.onerror = () => { el.innerHTML = '<span style="color:red">فشل</span>'; };
         }
 
-        async function downloadImage(url) {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = "AI-Dominator-" + Date.now() + ".jpg";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } catch (error) { window.open(url, '_blank'); }
-        }
-
-        async function shareImage(url) {
-            navigator.clipboard.writeText(url);
-            alert("تم نسخ رابط الصورة للمشاركة!");
-        }
-
-        async function remixContent() {
+        async function startParallelEngine() {
             const text = document.getElementById('inputText').value;
             const style = document.getElementById('styleDNA').value;
             const imgStyle = document.getElementById('imageStyle').value;
-            const btn = document.getElementById('generateBtn');
             
             if(!text) return alert("أدخل البيانات!");
             
-            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري العمل (يرجى الانتظار)...';
+            const btn = document.getElementById('generateBtn');
             btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري العمل (متوازي)...';
+            
             document.getElementById('outputSection').style.display = 'block';
             
-            document.getElementById('linkedinContent').innerHTML = '<div class="loader-ui">جاري الكتابة...</div>';
-            document.getElementById('mainImageContainer').innerHTML = '<div class="loader-ui">جاري الرسم...</div>';
-            document.getElementById('tiktokImageContainer').innerHTML = '<div class="loader-ui">جاري الرسم...</div>';
+            // تهيئة الواجهة
+            document.getElementById('linkedinContent').innerHTML = '<div class="loader-ui">جاري LinkedIn...</div>';
+            document.getElementById('twitterContent').innerHTML = '<div class="loader-ui">جاري Twitter...</div>';
+            document.getElementById('tiktokScriptText').innerHTML = '<div class="loader-ui">جاري TikTok...</div>';
+            document.getElementById('mainImageContainer').innerHTML = '<div class="loader-ui">Image...</div>';
+            document.getElementById('tiktokImageContainer').innerHTML = '<div class="loader-ui">Cover...</div>';
 
-            try {
-                const res = await fetch('/generate', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: text, style: style, image_style: imgStyle})
-                });
-                
-                // التعامل مع الخطأ 500 إذا حدث
-                if (!res.ok) throw new Error("Server Timeout or Error");
-                
-                const data = await res.json();
+            const payload = { topic: text, style_dna: style, image_style: imgStyle };
 
-                if(!data.error) {
-                    document.getElementById('linkedinContent').innerHTML = data.linkedin.replace(/\n/g, '<br>');
-                    document.getElementById('twitterContent').innerHTML = data.twitter.replace(/\n/g, '<br>');
-                    document.getElementById('tiktokScriptText').innerHTML = data.tiktok.replace(/\n/g, '<br>');
-                    document.getElementById('videoPromptText').value = data.video_prompt;
-                    
-                    loadImage('mainImageContainer', data.image_main, 1);
-                    setTimeout(() => {
-                        loadImage('tiktokImageContainer', data.tiktok_image, 10);
-                    }, 1000);
-                } else {
-                    alert("خطأ: " + data.error);
-                }
-            } catch(e) { 
-                alert("انتهت مهلة السيرفر! يرجى التأكد من إعدادات Timeout في Render."); 
-                document.getElementById('linkedinContent').innerHTML = "فشلت العملية. حاول مرة أخرى.";
-            }
+            // 1. LinkedIn Task
+            fetch('/generate/linkedin', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            }).then(r => r.json()).then(data => {
+                document.getElementById('linkedinContent').innerHTML = data.text.replace(/\n/g, '<br>');
+                loadImage('mainImageContainer', data.image);
+            }).catch(e => document.getElementById('linkedinContent').innerText = "خطأ.");
+
+            // 2. Twitter Task
+            fetch('/generate/twitter', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            }).then(r => r.json()).then(data => {
+                document.getElementById('twitterContent').innerHTML = data.text.replace(/\n/g, '<br>');
+            }).catch(e => document.getElementById('twitterContent').innerText = "خطأ.");
+
+            // 3. TikTok Task
+            fetch('/generate/tiktok', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            }).then(r => r.json()).then(data => {
+                document.getElementById('tiktokScriptText').innerHTML = data.text.replace(/\n/g, '<br>');
+                document.getElementById('videoPromptText').value = data.video_prompt;
+                loadImage('tiktokImageContainer', data.image);
+            }).catch(e => document.getElementById('tiktokScriptText').innerText = "خطأ.");
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i> إطلاق (سرعة قصوى)';
+            }, 5000);
             
-            btn.innerHTML = '<i class="fas fa-magic"></i> توليد المحتوى';
-            btn.disabled = false;
             openTab('linkedin');
         }
         
