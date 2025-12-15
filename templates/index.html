@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR | V13 Stable</title>
+    <title>AI DOMINATOR | V14.0 Fixed</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <div class="app-container">
         <header class="cyber-header">
             <div class="logo-section">
-                <h1>AI DOMINATOR <span class="version-tag">V13.0 FAST</span></h1>
+                <h1>AI DOMINATOR <span class="version-tag">V14.0 STABLE</span></h1>
             </div>
             <div class="system-status"><div class="status-dot"></div>ONLINE</div>
         </header>
@@ -25,14 +25,14 @@
                     <div class="card-title"><h3><i class="fas fa-fingerprint"></i> الأسلوب</h3></div>
                     <textarea id="sampleText" rows="3" placeholder="الصق النص هنا..."></textarea>
                     <button onclick="analyzeStyle()" class="cyber-btn-small">تحليل</button>
-                    <input type="hidden" id="styleDNA" value="">
+                    <input type="hidden" id="styleDNA" value="Professional">
                 </div>
                 <div class="cyber-card" style="margin-top: 25px;">
                     <div class="card-title"><h3><i class="fas fa-sliders-h"></i> الصور</h3></div>
                     <select id="imageStyle">
-                        <option value="Cyberpunk">🔮 سايبر بانك</option>
-                        <option value="Cinematic">📸 واقعي</option>
-                        <option value="3D Render">🧊 3D</option>
+                        <option value="Cyberpunk, Neon, Futurism">🔮 سايبر بانك</option>
+                        <option value="Cinematic Photorealistic, 8k">📸 واقعي 8K</option>
+                        <option value="3D Render, Unreal Engine">🧊 3D ريندر</option>
                     </select>
                 </div>
             </div>
@@ -42,7 +42,7 @@
                     <div class="card-title"><h3><i class="fas fa-bolt"></i> المحرك المتوازي</h3></div>
                     <textarea id="inputText" rows="3" placeholder="أدخل الفكرة..."></textarea>
                     <button id="generateBtn" class="cyber-btn-main" onclick="startParallelEngine()">
-                        <i class="fas fa-rocket"></i> إطلاق (سرعة قصوى)
+                        <i class="fas fa-rocket"></i> إطلاق (V14 Fixed)
                     </button>
                 </div>
 
@@ -57,7 +57,7 @@
                         <div class="content-wrapper">
                             <div class="tabs-header">
                                 <button class="tab-btn active" onclick="openTab('linkedin')"><i class="fab fa-linkedin"></i> LinkedIn</button>
-                                <button class="tab-btn" onclick="openTab('twitter')"><i class="fab fa-twitter"></i> X Thread</button>
+                                <button class="tab-btn" onclick="openTab('twitter')"><i class="fab fa-twitter"></i> Twitter</button>
                                 <button class="tab-btn video-tab-btn" onclick="openTab('tiktok')"><i class="fab fa-tiktok"></i> TikTok</button>
                             </div>
 
@@ -82,14 +82,19 @@
     </div>
 
     <script>
+        // --- دوال الواجهة (Tab Switching) ---
         function openTab(platform) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(platform + 'Content').classList.add('active');
             
-            const btnIndex = platform === 'linkedin' ? 0 : platform === 'twitter' ? 1 : 2;
-            document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
+            // تلوين الزر النشط
+            const btns = document.querySelectorAll('.tab-btn');
+            if(platform === 'linkedin') btns[0].classList.add('active');
+            if(platform === 'twitter') btns[1].classList.add('active');
+            if(platform === 'tiktok') btns[2].classList.add('active');
 
+            // تبديل الصور
             const mainImg = document.getElementById('mainImageContainer');
             const tiktokImg = document.getElementById('tiktokImageContainer');
 
@@ -102,6 +107,7 @@
             }
         }
 
+        // --- دالة تحميل الصور ---
         function loadImage(containerId, prompt) {
             const el = document.getElementById(containerId);
             if(!prompt || prompt.length < 5) return;
@@ -116,69 +122,88 @@
             img.onload = () => { 
                 el.innerHTML = ''; 
                 el.appendChild(img);
+                // أزرار التحميل
                 const overlay = document.createElement('div');
                 overlay.className = 'image-overlay';
-                overlay.innerHTML = `<button onclick="window.open('${imgUrl}')"><i class="fas fa-download"></i></button>`;
+                overlay.innerHTML = `
+                    <button onclick="window.open('${imgUrl}', '_blank')" title="تحميل"><i class="fas fa-download"></i></button>
+                `;
                 el.appendChild(overlay);
             };
-            img.onerror = () => { el.innerHTML = '<span style="color:red">فشل</span>'; };
+            img.onerror = () => { el.innerHTML = '<span style="color:red">فشل الصورة</span>'; };
         }
 
+        // --- المحرك الرئيسي (مع إصلاح الأخطاء) ---
         async function startParallelEngine() {
             const text = document.getElementById('inputText').value;
             const style = document.getElementById('styleDNA').value;
             const imgStyle = document.getElementById('imageStyle').value;
             
-            if(!text) return alert("أدخل البيانات!");
+            if(!text) return alert("الرجاء إدخال الفكرة!");
             
             const btn = document.getElementById('generateBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري العمل (متوازي)...';
+            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري الاتصال بالسيرفر...';
             
             document.getElementById('outputSection').style.display = 'block';
             
-            // تهيئة الواجهة
-            document.getElementById('linkedinContent').innerHTML = '<div class="loader-ui">جاري LinkedIn...</div>';
-            document.getElementById('twitterContent').innerHTML = '<div class="loader-ui">جاري Twitter...</div>';
-            document.getElementById('tiktokScriptText').innerHTML = '<div class="loader-ui">جاري TikTok...</div>';
+            // رسائل الانتظار
+            document.getElementById('linkedinContent').innerHTML = '<div class="loader-ui">جاري تحضير LinkedIn...</div>';
+            document.getElementById('twitterContent').innerHTML = '<div class="loader-ui">جاري تحضير Twitter...</div>';
+            document.getElementById('tiktokScriptText').innerHTML = '<div class="loader-ui">جاري إخراج TikTok...</div>';
             document.getElementById('mainImageContainer').innerHTML = '<div class="loader-ui">Image...</div>';
             document.getElementById('tiktokImageContainer').innerHTML = '<div class="loader-ui">Cover...</div>';
 
             const payload = { topic: text, style_dna: style, image_style: imgStyle };
 
-            // 1. LinkedIn Task
-            fetch('/generate/linkedin', {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
-            }).then(r => r.json()).then(data => {
-                document.getElementById('linkedinContent').innerHTML = data.text.replace(/\n/g, '<br>');
-                loadImage('mainImageContainer', data.image);
-            }).catch(e => document.getElementById('linkedinContent').innerText = "خطأ.");
+            // ✅ دالة مساعدة للتعامل مع الطلبات
+            const fetchSafe = async (url, containerId, imageContainerId = null, isTikTok = false) => {
+                try {
+                    const res = await fetch(url, {
+                        method: 'POST', 
+                        headers: {'Content-Type': 'application/json'}, 
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!res.ok) throw new Error(`Server Error: ${res.status}`);
+                    
+                    const data = await res.json();
+                    
+                    if (data.error) throw new Error(data.error);
 
-            // 2. Twitter Task
-            fetch('/generate/twitter', {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
-            }).then(r => r.json()).then(data => {
-                document.getElementById('twitterContent').innerHTML = data.text.replace(/\n/g, '<br>');
-            }).catch(e => document.getElementById('twitterContent').innerText = "خطأ.");
+                    // عرض النص
+                    document.getElementById(containerId).innerHTML = data.text.replace(/\n/g, '<br>');
+                    
+                    // عرض الصورة (إن وجدت)
+                    if (imageContainerId && data.image) {
+                        loadImage(imageContainerId, data.image);
+                    }
+                    
+                    // خاص بـ TikTok
+                    if (isTikTok) {
+                        document.getElementById('videoPromptText').value = data.video_prompt;
+                    }
 
-            // 3. TikTok Task
-            fetch('/generate/tiktok', {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
-            }).then(r => r.json()).then(data => {
-                document.getElementById('tiktokScriptText').innerHTML = data.text.replace(/\n/g, '<br>');
-                document.getElementById('videoPromptText').value = data.video_prompt;
-                loadImage('tiktokImageContainer', data.image);
-            }).catch(e => document.getElementById('tiktokScriptText').innerText = "خطأ.");
+                } catch (err) {
+                    console.error(err);
+                    document.getElementById(containerId).innerHTML = `<div style="color:red; text-align:center;">❌ حدث خطأ: ${err.message}</div>`;
+                }
+            };
 
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-rocket"></i> إطلاق (سرعة قصوى)';
-            }, 5000);
+            // تشغيل المهام بالتوازي
+            await Promise.all([
+                fetchSafe('/generate/linkedin', 'linkedinContent', 'mainImageContainer'),
+                fetchSafe('/generate/twitter', 'twitterContent'),
+                fetchSafe('/generate/tiktok', 'tiktokScriptText', 'tiktokImageContainer', true)
+            ]);
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rocket"></i> إطلاق (V14 Fixed)';
             
             openTab('linkedin');
         }
         
-        function analyzeStyle() { alert("تم التحليل!"); document.getElementById('styleDNA').value = "Professional"; }
+        function analyzeStyle() { alert("تم تحليل النمط!"); }
         function copyPrompt() { navigator.clipboard.writeText(document.getElementById('videoPromptText').value); alert("تم النسخ"); }
     </script>
 </body>
