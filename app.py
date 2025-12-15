@@ -26,26 +26,37 @@ STYLE_ANALYZER_PROMPT = """
 """
 
 CREATOR_PROMPT = """
-أنت كاتب شبحي. اكتب منشوراً بتقمص هذا الأسلوب:
-{style_dna}
+أنت استراتيجي محتوى شامل.
+مهمتك: توليد محتوى لمنصات متعددة بناءً على الفكرة، مع تقمص الأسلوب: {style_dna}
 الموضوع: {topic}
 """
 
 CRITIC_PROMPT = """
-أنت ناقد. هل النص يطابق الأسلوب؟ وهل هو قوي؟
+أنت ناقد. هل الأفكار قوية وتناسب كل منصة؟
 """
 
-# 🔥 تحديث المحرر لدعم الستايلات الفنية
+# 🔥 التحديث العبقري: المحرر متعدد المنصات
 EDITOR_PROMPT = """
-أنت المدير الفني (Art Director).
-مهمتك:
-1. صياغة النص النهائي للنشر.
-2. تصميم صورة مذهلة بالأسلوب التالي: {image_style}.
+أنت رئيس تحرير إمبراطورية إعلامية (Editor-in-Chief).
+مهمتك تحويل المسودة إلى حملة متكاملة لـ 3 منصات، بالإضافة لتصميم صورة.
 
-⚠️ المخرج يجب أن يكون مفصولاً بـ "---IMAGE_SPLIT---":
-الجزء الأول: النص النهائي (بالعربية، منسق، إيموجي، وهاشتاغات).
----IMAGE_SPLIT---
-الجزء الثاني: وصف الصورة بالإنجليزية (Visual Prompt). ركز بشدة على تطبيق أسلوب {image_style} في الوصف.
+⚠️ يجب أن يكون المخرج مقسماً بدقة باستخدام الفواصل التالية (لا تغيرها):
+
+---LINKEDIN_START---
+(هنا اكتب مقالاً احترافياً لـ LinkedIn: قوي، منسق، فقرات، هاشتاقات، وتوقيع).
+---LINKEDIN_END---
+
+---TWITTER_START---
+(هنا اكتب ثريد Thread لـ X: مكون من 5-7 تغريدات مرقمة 1/5، قصيرة، جذابة جداً).
+---TWITTER_END---
+
+---TIKTOK_START---
+(هنا اكتب سكريبت فيديو TikTok/Reels: قسمه إلى "المشهد"، "زاوية الكاميرا"، "الصوت/الكلام". اجعله سريعاً وحماسياً).
+---TIKTOK_END---
+
+---IMAGE_START---
+(هنا اكتب وصف الصورة بالإنجليزية Visual Prompt بأسلوب: {image_style}).
+---IMAGE_END---
 """
 
 @app.route('/')
@@ -68,8 +79,7 @@ def generate():
         data = request.json
         topic = data.get('text', '')
         style_dna = data.get('style', '') or "أسلوب احترافي."
-        # نستلم ستايل الصورة المختار
-        image_style = data.get('image_style', 'Cinematic Photorealistic')
+        image_style = data.get('image_style', 'Cyberpunk')
 
         if not topic: return jsonify({'error': 'النص فارغ!'}), 400
 
@@ -81,24 +91,31 @@ def generate():
         critic_resp = model.generate_content(f"{CRITIC_PROMPT}\nالأسلوب:\n{style_dna}\nالمسودة:\n{draft}")
         feedback = critic_resp.text
 
-        # 3. المحرر (مع ستايل الصورة)
+        # 3. المحرر (الموزع)
         final_prompt = EDITOR_PROMPT.format(image_style=image_style) + f"\nالمسودة:\n{draft}\nالنقد:\n{feedback}"
         final_resp = model.generate_content(final_prompt)
         full_output = final_resp.text
 
-        final_text = ""
-        image_prompt = ""
+        # تفكيك الرد الذكي (Parsing)
+        def extract_section(text, start_tag, end_tag):
+            try:
+                return text.split(start_tag)[1].split(end_tag)[0].strip()
+            except:
+                return "فشل في توليد هذا القسم."
+
+        linkedin_text = extract_section(full_output, "---LINKEDIN_START---", "---LINKEDIN_END---")
+        twitter_text = extract_section(full_output, "---TWITTER_START---", "---TWITTER_END---")
+        tiktok_text = extract_section(full_output, "---TIKTOK_START---", "---TIKTOK_END---")
+        image_prompt = extract_section(full_output, "---IMAGE_START---", "---IMAGE_END---")
         
-        if "---IMAGE_SPLIT---" in full_output:
-            parts = full_output.split("---IMAGE_SPLIT---")
-            final_text = parts[0].strip()
-            image_prompt = parts[1].strip()
-        else:
-            final_text = full_output
+        # تصحيح سريع لو فشل استخراج الصورة
+        if "فشل" in image_prompt or len(image_prompt) < 5:
             image_prompt = f"{image_style} illustration about {topic}"
 
         return jsonify({
-            'result': final_text,
+            'linkedin': linkedin_text,
+            'twitter': twitter_text,
+            'tiktok': tiktok_text,
             'image_prompt': image_prompt,
             'debug': feedback
         })
