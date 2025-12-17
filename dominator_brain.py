@@ -1,9 +1,12 @@
 # =========================================================
 # Strategic Intelligence Core (SIC)
-# AI DOMINATOR – V16.0
+# AI DOMINATOR – V16.1
 # =========================================================
 
 from typing import Dict, List, Any
+
+# 🧠 Memory
+from sic_memory import get_platform_score
 
 
 def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -23,15 +26,14 @@ def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
     content = payload["content_signal"]
     style = payload["style_signal"]
     context = payload["context_signal"]
-    memory = payload["system_memory"]
 
     # -----------------------------------------------------
-    # 2. Metric Evaluation (Deterministic Heuristics)
+    # 2. Metric Evaluation
     # -----------------------------------------------------
-    metrics = _evaluate_metrics(content, style)
+    metrics = _evaluate_metrics(content)
 
     # -----------------------------------------------------
-    # 3. Dominance Law Enforcement
+    # 3. Dominance Law
     # -----------------------------------------------------
     if metrics["curiosity"] < 0.7:
         return _abort("Curiosity Index below dominance threshold")
@@ -43,12 +45,18 @@ def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
         return _abort("Hook Strength below dominance threshold")
 
     # -----------------------------------------------------
-    # 4. Platform Selection
+    # 4. Platform Selection (Memory-Aware)
     # -----------------------------------------------------
     platforms = _select_platforms(metrics, context)
 
     if not platforms:
         return _abort("No platform met execution criteria")
+
+    # Sort platforms by historical performance
+    platforms.sort(
+        key=lambda p: get_platform_score(p),
+        reverse=True
+    )
 
     primary = platforms[0]
     secondary = platforms[1:]
@@ -67,21 +75,17 @@ def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
             "cta_type": "curiosity",
             "length": _content_length(metrics)
         },
-        "decision_reason": _decision_reason(primary, metrics)
+        "decision_reason": f"Platform ranked by performance memory: {platforms}"
     }
 
     return decision
 
 
 # =========================================================
-# Internal Helper Functions
+# Helpers
 # =========================================================
 
-def _evaluate_metrics(content: Dict[str, Any], style: Dict[str, Any]) -> Dict[str, float]:
-    """
-    Deterministic scoring heuristics (V16.0 – non-ML)
-    """
-
+def _evaluate_metrics(content: Dict[str, Any]) -> Dict[str, float]:
     text = (content.get("raw_text") or "").lower()
     length = len(text)
 
@@ -104,29 +108,24 @@ def _select_platforms(metrics: Dict[str, float], context: Dict[str, Any]) -> Lis
     available = context.get("platforms_available", [])
     selected = []
 
-    if "twitter" in available:
-        if metrics["curiosity"] + metrics["skim"] >= 1.6:
-            selected.append("twitter")
+    if "twitter" in available and metrics["curiosity"] + metrics["skim"] >= 1.6:
+        selected.append("twitter")
 
-    if "linkedin" in available:
-        if metrics["curiosity"] + metrics["share"] >= 1.5:
-            selected.append("linkedin")
+    if "linkedin" in available and metrics["curiosity"] + metrics["share"] >= 1.5:
+        selected.append("linkedin")
 
-    if "tiktok" in available:
-        if metrics["shock"] + metrics["hook"] >= 1.4:
-            selected.append("tiktok")
+    if "tiktok" in available and metrics["shock"] + metrics["hook"] >= 1.4:
+        selected.append("tiktok")
 
     return selected
 
 
 def _content_mode_for(platform: str) -> str:
-    if platform == "twitter":
-        return "thread"
-    if platform == "linkedin":
-        return "post"
-    if platform == "tiktok":
-        return "video"
-    return "post"
+    return {
+        "twitter": "thread",
+        "linkedin": "post",
+        "tiktok": "video"
+    }.get(platform, "post")
 
 
 def _content_length(metrics: Dict[str, float]) -> str:
@@ -135,10 +134,6 @@ def _content_length(metrics: Dict[str, float]) -> str:
     if metrics["curiosity"] > 0.8:
         return "medium"
     return "long"
-
-
-def _decision_reason(platform: str, metrics: Dict[str, float]) -> str:
-    return f"Selected {platform} due to metric dominance: {metrics}"
 
 
 def _abort(reason: str) -> Dict[str, Any]:
