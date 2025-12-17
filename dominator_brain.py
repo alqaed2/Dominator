@@ -1,70 +1,44 @@
 # =========================================================
-# Strategic Intelligence Core (SIC)
-# AI DOMINATOR – V16.1
+# Strategic Intelligence Core (SIC) — Strategic Transformer
+# AI DOMINATOR – V16.2
 # =========================================================
 
-from typing import Dict, List, Any
-
-# 🧠 Memory
+from typing import Dict, Any, List
 from sic_memory import get_platform_score
 
-
+# ---------------------------------------------------------
+# Public Entry
+# ---------------------------------------------------------
 def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Governing decision engine of AI DOMINATOR.
-    Returns execution directives only.
+    Transforms any raw idea into a dominance-ready execution plan.
+    No rejection. Only transformation.
     """
 
-    # -----------------------------------------------------
-    # 1. Input Validation
-    # -----------------------------------------------------
-    required_keys = ["content_signal", "style_signal", "context_signal", "system_memory"]
-    for key in required_keys:
-        if key not in payload:
-            return _abort(f"Missing required input: {key}")
+    # 1) Extract
+    content = payload.get("content_signal", {})
+    style = payload.get("style_signal", {})
+    context = payload.get("context_signal", {})
 
-    content = payload["content_signal"]
-    style = payload["style_signal"]
-    context = payload["context_signal"]
+    raw_text = (content.get("raw_text") or content.get("topic") or "").strip()
 
-    # -----------------------------------------------------
-    # 2. Metric Evaluation
-    # -----------------------------------------------------
-    metrics = _evaluate_metrics(content)
+    # 2) Evaluate (initial)
+    metrics = _evaluate_metrics(raw_text)
 
-    # -----------------------------------------------------
-    # 3. Dominance Law
-    # -----------------------------------------------------
-    if metrics["curiosity"] < 0.7:
-        return _abort("Curiosity Index below dominance threshold")
+    # 3) Inject Dominance (NO REJECTION)
+    transformed_text, metrics = _inject_dominance(raw_text, metrics)
 
-    if metrics["share"] < 0.6:
-        return _abort("Share Trigger below dominance threshold")
-
-    if metrics["hook"] < 0.6:
-        return _abort("Hook Strength below dominance threshold")
-
-    # -----------------------------------------------------
-    # 4. Platform Selection (Memory-Aware)
-    # -----------------------------------------------------
+    # 4) Platform Selection (memory-aware)
     platforms = _select_platforms(metrics, context)
-
     if not platforms:
-        return _abort("No platform met execution criteria")
+        platforms = ["linkedin", "twitter", "tiktok"]  # fallback safety
 
-    # Sort platforms by historical performance
-    platforms.sort(
-        key=lambda p: get_platform_score(p),
-        reverse=True
-    )
-
+    platforms.sort(key=lambda p: get_platform_score(p), reverse=True)
     primary = platforms[0]
     secondary = platforms[1:]
 
-    # -----------------------------------------------------
-    # 5. Decision Construction
-    # -----------------------------------------------------
-    decision = {
+    # 5) Decision
+    return {
         "execute": True,
         "primary_platform": primary,
         "secondary_platforms": secondary,
@@ -75,74 +49,46 @@ def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
             "cta_type": "curiosity",
             "length": _content_length(metrics)
         },
-        "decision_reason": f"Platform ranked by performance memory: {platforms}"
+        "transformed_input": transformed_text,
+        "decision_reason": f"Transformed for dominance; platform ranked by memory: {platforms}"
     }
 
-    return decision
+# ---------------------------------------------------------
+# Dominance Injection
+# ---------------------------------------------------------
+def _inject_dominance(text: str, metrics: Dict[str, float]):
+    t = text
 
+    # Curiosity
+    if metrics["curiosity"] < 0.7:
+        t = f"ماذا لو كان هذا مختلفًا تمامًا عمّا تعتقد؟ {t}"
+        metrics["curiosity"] = 0.85
 
-# =========================================================
-# Helpers
-# =========================================================
+    # Hook
+    if metrics["hook"] < 0.6:
+        t = f"{t} — هذه ليست تنبؤات… هذه إشارات مبكرة."
+        metrics["hook"] = 0.8
 
-def _evaluate_metrics(content: Dict[str, Any]) -> Dict[str, float]:
-    text = (content.get("raw_text") or "").lower()
-    length = len(text)
+    # Shock
+    if metrics["shock"] < 0.6:
+        t = f"الحقيقة غير المريحة: {t}"
+        metrics["shock"] = 0.75
 
-    curiosity = 0.5 + (0.2 if "?" in text else 0.0)
-    shock = 0.4 + (0.3 if any(w in text for w in ["never", "nobody", "truth"]) else 0.0)
-    skim = 0.6 + (0.2 if length < 300 else 0.0)
-    share = 0.5 + (0.3 if any(w in text for w in ["you", "your"]) else 0.0)
-    hook = 0.6 if length < 120 else 0.5
+    # Share
+    if metrics["share"] < 0.6:
+        t = f"أنت على وشك أن ترى لماذا يهتم الناس فعلًا بهذا: {t}"
+        metrics["share"] = 0.8
 
-    return {
-        "curiosity": min(curiosity, 1.0),
-        "shock": min(shock, 1.0),
-        "skim": min(skim, 1.0),
-        "share": min(share, 1.0),
-        "hook": min(hook, 1.0)
-    }
+    return t, metrics
 
+# ---------------------------------------------------------
+# Metrics
+# ---------------------------------------------------------
+def _evaluate_metrics(text: str) -> Dict[str, float]:
+    t = text.lower()
+    length = len(t)
 
-def _select_platforms(metrics: Dict[str, float], context: Dict[str, Any]) -> List[str]:
-    available = context.get("platforms_available", [])
-    selected = []
-
-    if "twitter" in available and metrics["curiosity"] + metrics["skim"] >= 1.6:
-        selected.append("twitter")
-
-    if "linkedin" in available and metrics["curiosity"] + metrics["share"] >= 1.5:
-        selected.append("linkedin")
-
-    if "tiktok" in available and metrics["shock"] + metrics["hook"] >= 1.4:
-        selected.append("tiktok")
-
-    return selected
-
-
-def _content_mode_for(platform: str) -> str:
-    return {
-        "twitter": "thread",
-        "linkedin": "post",
-        "tiktok": "video"
-    }.get(platform, "post")
-
-
-def _content_length(metrics: Dict[str, float]) -> str:
-    if metrics["skim"] > 0.8:
-        return "short"
-    if metrics["curiosity"] > 0.8:
-        return "medium"
-    return "long"
-
-
-def _abort(reason: str) -> Dict[str, Any]:
-    return {
-        "execute": False,
-        "primary_platform": None,
-        "secondary_platforms": [],
-        "content_mode": None,
-        "style_override": None,
-        "rules": {},
-        "decision_reason": reason
-    }
+    curiosity = 0.5 + (0.25 if "?" in t else 0.0)
+    shock = 0.4 + (0.35 if any(w in t for w in ["الحقيقة", "لن", "لا أحد", "خطير"]) else 0.0)
+    skim = 0.6 + (0.2 if length < 280 else 0.0)
+    share = 0.5 + (0.3 if any(w in t
