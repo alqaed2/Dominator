@@ -3,47 +3,47 @@ import google.generativeai as genai
 import os
 import re
 
+# 🧠 Strategic Intelligence Core
+from dominator_brain import strategic_intelligence_core
+
 app = Flask(__name__)
 
-# --- إعدادات النظام من بيئة الخادم (Render) ---
+# -------------------------------------------------
+# إعدادات النظام من بيئة الخادم (Render)
+# -------------------------------------------------
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-GEMINI_MODEL = os.environ.get('GEMINI_MODEL') # الاعتماد الكلي والوحيد على هذا المتغير
+GEMINI_MODEL = os.environ.get('GEMINI_MODEL')
 
-# 1. التحقق الصارم: النظام لن يعمل إذا كانت المتغيرات ناقصة
 if not GEMINI_API_KEY:
     raise ValueError("❌ CRITICAL ERROR: GEMINI_API_KEY is missing in environment variables.")
 
 if not GEMINI_MODEL:
-    raise ValueError("❌ CRITICAL ERROR: GEMINI_MODEL is missing in environment variables. Please add it in Render settings.")
+    raise ValueError("❌ CRITICAL ERROR: GEMINI_MODEL is missing in environment variables.")
 
-# 2. التهيئة باستخدام المتغير فقط
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    
-    # لا توجد قيم افتراضية هنا، نستخدم ما هو موجود في البيئة فقط
     model = genai.GenerativeModel(GEMINI_MODEL)
-    
     print(f"🤖 System Online. Model Configured from Env: {GEMINI_MODEL}")
-
 except Exception as e:
-    # هذا سيمنع التطبيق من العمل إذا كان اسم الموديل في البيئة خاطئاً
     print(f"❌ Setup Error: {e}")
     raise e
 
-# --- دوال مساعدة ---
+# -------------------------------------------------
+# دوال مساعدة
+# -------------------------------------------------
 def extract(text, start, end):
     try:
-        if not text: return ""
+        if not text:
+            return ""
         p = re.escape(start) + r"(.*?)" + re.escape(end)
         m = re.search(p, text, re.DOTALL)
         return m.group(1).strip() if m else ""
-    except: return ""
+    except:
+        return ""
 
 def get_safe_response(prompt):
-    """دالة آمنة لتوليد النص والتعامل مع الأخطاء"""
     try:
         response = model.generate_content(prompt)
-        
         if hasattr(response, 'text') and response.text:
             return response.text
         elif hasattr(response, 'parts'):
@@ -56,6 +56,36 @@ def get_safe_response(prompt):
         print(f"🔥 GEMINI ERROR: {str(e)}")
         raise e
 
+# -------------------------------------------------
+# 🧠 Brain Payload Builder
+# -------------------------------------------------
+def build_brain_payload(topic, raw_text, style_dna, image_style):
+    return {
+        "content_signal": {
+            "topic": topic,
+            "raw_text": raw_text,
+            "intent": "dominate"
+        },
+        "style_signal": {
+            "style_dna": style_dna,
+            "confidence_level": 0.9
+        },
+        "context_signal": {
+            "platforms_available": ["linkedin", "twitter", "tiktok"],
+            "time_context": "now"
+        },
+        "system_memory": {
+            "historical_scores": {
+                "linkedin": 0.7,
+                "twitter": 0.8,
+                "tiktok": 0.9
+            }
+        }
+    }
+
+# -------------------------------------------------
+# Routes
+# -------------------------------------------------
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -64,24 +94,41 @@ def home():
 def analyze_style():
     return jsonify({'style_dna': "تم التحليل بنجاح."})
 
-# --- نقاط النهاية (Endpoints) ---
-
+# -------------------------------------------------
+# LinkedIn (🔒 محكوم بالعقل)
+# -------------------------------------------------
 @app.route('/generate/linkedin', methods=['POST'])
 def generate_linkedin():
     try:
         data = request.get_json(silent=True)
         if not data or 'text' not in data:
             return jsonify({"error": "No data provided"}), 400
-            
+
         topic = data['text']
         style = data.get('style_dna', 'Professional')
         image_style = data.get('image_style', 'Corporate')
+
+        # 🧠 تمرير الطلب إلى العقل الحاكم
+        brain_payload = build_brain_payload(
+            topic=topic,
+            raw_text=topic,
+            style_dna=style,
+            image_style=image_style
+        )
+
+        decision = strategic_intelligence_core(brain_payload)
+
+        if not decision.get("execute"):
+            return jsonify({
+                "error": "Execution blocked by Strategic Intelligence Core",
+                "reason": decision.get("decision_reason")
+            }), 403
 
         prompt = f"""
         Act as a LinkedIn Expert. Write a viral post about: {topic}
         Style: {style}
         Image Style: {image_style}
-        
+
         OUTPUT FORMAT:
         ---LINKEDIN_START---
         (Content)
@@ -90,9 +137,9 @@ def generate_linkedin():
         (Image Prompt)
         ---IMAGE_MAIN_END---
         """
-        
+
         text_response = get_safe_response(prompt)
-        
+
         return jsonify({
             'text': extract(text_response, "---LINKEDIN_START---", "---LINKEDIN_END---"),
             'image': extract(text_response, "---IMAGE_MAIN_START---", "---IMAGE_MAIN_END---")
@@ -102,6 +149,9 @@ def generate_linkedin():
         print(f"🔥 BACKEND ERROR (LinkedIn): {e}")
         return jsonify({"error": str(e)}), 500
 
+# -------------------------------------------------
+# Twitter (بدون عقل – كما هو)
+# -------------------------------------------------
 @app.route('/generate/twitter', methods=['POST'])
 def generate_twitter():
     try:
@@ -115,15 +165,15 @@ def generate_twitter():
         prompt = f"""
         Act as a Twitter Expert. Write a 5-tweet thread about: {topic}
         Style: {style}
-        
+
         OUTPUT FORMAT:
         ---TWITTER_START---
         (Thread content)
         ---TWITTER_END---
         """
-        
+
         text_response = get_safe_response(prompt)
-        
+
         return jsonify({
             'text': extract(text_response, "---TWITTER_START---", "---TWITTER_END---")
         })
@@ -132,6 +182,9 @@ def generate_twitter():
         print(f"🔥 BACKEND ERROR (Twitter): {e}")
         return jsonify({"error": str(e)}), 500
 
+# -------------------------------------------------
+# TikTok (بدون عقل – كما هو)
+# -------------------------------------------------
 @app.route('/generate/tiktok', methods=['POST'])
 def generate_tiktok():
     try:
@@ -147,7 +200,7 @@ def generate_tiktok():
         Act as a TikTok Director. Write a script for: {topic}
         Style: {style}
         Image Style: {image_style}
-        
+
         OUTPUT FORMAT:
         ---TIKTOK_START---
         (Script)
@@ -159,9 +212,9 @@ def generate_tiktok():
         (Video Gen Prompt)
         ---VIDEO_PROMPT_END---
         """
-        
+
         text_response = get_safe_response(prompt)
-        
+
         return jsonify({
             'text': extract(text_response, "---TIKTOK_START---", "---TIKTOK_END---"),
             'image': extract(text_response, "---TIKTOK_IMAGE_START---", "---TIKTOK_IMAGE_END---"),
