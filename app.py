@@ -11,14 +11,14 @@ app = Flask(__name__)
 # -------------------------------------------------
 # Environment Configuration
 # -------------------------------------------------
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-GEMINI_MODEL = os.environ.get('GEMINI_MODEL')
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL")
 
 if not GEMINI_API_KEY:
-    raise ValueError("❌ CRITICAL ERROR: GEMINI_API_KEY is missing.")
+    raise ValueError("GEMINI_API_KEY missing")
 
 if not GEMINI_MODEL:
-    raise ValueError("❌ CRITICAL ERROR: GEMINI_MODEL is missing.")
+    raise ValueError("GEMINI_MODEL missing")
 
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel(GEMINI_MODEL)
@@ -27,25 +27,21 @@ model = genai.GenerativeModel(GEMINI_MODEL)
 # Helpers
 # -------------------------------------------------
 def extract(text, start, end):
-    try:
-        if not text:
-            return ""
-        p = re.escape(start) + r"(.*?)" + re.escape(end)
-        m = re.search(p, text, re.DOTALL)
-        return m.group(1).strip() if m else ""
-    except:
+    if not text:
         return ""
+    m = re.search(re.escape(start) + r"(.*?)" + re.escape(end), text, re.DOTALL)
+    return m.group(1).strip() if m else ""
 
-def get_safe_response(prompt):
+def get_safe_response(prompt: str) -> str:
     response = model.generate_content(prompt)
-    if hasattr(response, 'text') and response.text:
+    if hasattr(response, "text") and response.text:
         return response.text
     return response.candidates[0].content.parts[0].text
 
 # -------------------------------------------------
-# 🧠 Brain Payload Builder
+# Brain Payload Builder
 # -------------------------------------------------
-def build_brain_payload(topic, style_dna):
+def build_brain_payload(topic: str, style_dna: str):
     return {
         "content_signal": {
             "topic": topic,
@@ -60,57 +56,41 @@ def build_brain_payload(topic, style_dna):
             "platforms_available": ["linkedin", "twitter", "tiktok"],
             "time_context": "now"
         },
-        "system_memory": {
-            "historical_scores": {
-                "linkedin": 0.7,
-                "twitter": 0.8,
-                "tiktok": 0.9
-            }
-        }
+        "system_memory": {}
     }
 
 # -------------------------------------------------
 # Routes
 # -------------------------------------------------
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('index.html')
+    return render_template("index.html")
 
-# -------------------------------------------------
-# LinkedIn (🧠 Controlled)
-# -------------------------------------------------
-@app.route('/generate/linkedin', methods=['POST'])
+@app.route("/generate/linkedin", methods=["POST"])
 def generate_linkedin():
-    return _execute_with_brain("linkedin")
+    return execute_with_brain("linkedin")
 
-# -------------------------------------------------
-# Twitter (🧠 Controlled)
-# -------------------------------------------------
-@app.route('/generate/twitter', methods=['POST'])
+@app.route("/generate/twitter", methods=["POST"])
 def generate_twitter():
-    return _execute_with_brain("twitter")
+    return execute_with_brain("twitter")
 
-# -------------------------------------------------
-# TikTok (🧠 Controlled)
-# -------------------------------------------------
-@app.route('/generate/tiktok', methods=['POST'])
+@app.route("/generate/tiktok", methods=["POST"])
 def generate_tiktok():
-    return _execute_with_brain("tiktok")
+    return execute_with_brain("tiktok")
 
 # -------------------------------------------------
 # 🧠 Unified Execution Gate
 # -------------------------------------------------
-def _execute_with_brain(requested_platform):
+def execute_with_brain(requested_platform: str):
     try:
         data = request.get_json(silent=True)
-        if not data or 'text' not in data:
+        if not data or "text" not in data:
             return jsonify({"error": "No data provided"}), 400
 
-        topic = data['text']
-        style = data.get('style_dna', 'Professional')
-        image_style = data.get('image_style', 'Default')
+        topic = data["text"]
+        style = data.get("style_dna", "Professional")
+        image_style = data.get("image_style", "Default")
 
-        # 🧠 Brain Decision
         decision = strategic_intelligence_core(
             build_brain_payload(topic, style)
         )
@@ -123,14 +103,69 @@ def _execute_with_brain(requested_platform):
 
         if decision.get("primary_platform") != requested_platform:
             return jsonify({
-                "error": "Platform overridden by Strategic Intelligence Core",
-                "requested": requested_platform,
+                "error": "Platform overridden by SIC",
                 "approved": decision.get("primary_platform")
             }), 409
 
-        # -------------------------------------------------
-        # Prompt Routing
-        # -------------------------------------------------
         if requested_platform == "linkedin":
-            prompt = f"""
-            Act as a LinkedIn Expert. Write a viral post about: {topic}
+            prompt = (
+                f"Act as a LinkedIn Expert.\n"
+                f"Write a viral post about: {topic}\n"
+                f"Style: {style}\n"
+                f"Image Style: {image_style}\n\n"
+                f"---LINKEDIN_START---\n"
+                f"(Content)\n"
+                f"---LINKEDIN_END---\n"
+                f"---IMAGE_MAIN_START---\n"
+                f"(Image Prompt)\n"
+                f"---IMAGE_MAIN_END---"
+            )
+
+            text = get_safe_response(prompt)
+            return jsonify({
+                "text": extract(text, "---LINKEDIN_START---", "---LINKEDIN_END---"),
+                "image": extract(text, "---IMAGE_MAIN_START---", "---IMAGE_MAIN_END---")
+            })
+
+        if requested_platform == "twitter":
+            prompt = (
+                f"Act as a Twitter Expert.\n"
+                f"Write a 5-tweet thread about: {topic}\n"
+                f"Style: {style}\n\n"
+                f"---TWITTER_START---\n"
+                f"(Thread)\n"
+                f"---TWITTER_END---"
+            )
+
+            text = get_safe_response(prompt)
+            return jsonify({
+                "text": extract(text, "---TWITTER_START---", "---TWITTER_END---")
+            })
+
+        if requested_platform == "tiktok":
+            prompt = (
+                f"Act as a TikTok Director.\n"
+                f"Write a script for: {topic}\n"
+                f"Style: {style}\n"
+                f"Image Style: {image_style}\n\n"
+                f"---TIKTOK_START---\n"
+                f"(Script)\n"
+                f"---TIKTOK_END---\n"
+                f"---VIDEO_PROMPT_START---\n"
+                f"(Video Prompt)\n"
+                f"---VIDEO_PROMPT_END---"
+            )
+
+            text = get_safe_response(prompt)
+            return jsonify({
+                "text": extract(text, "---TIKTOK_START---", "---TIKTOK_END---"),
+                "video_prompt": extract(text, "---VIDEO_PROMPT_START---", "---VIDEO_PROMPT_END---")
+            })
+
+        return jsonify({"error": "Unsupported platform"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)
