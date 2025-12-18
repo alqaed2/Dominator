@@ -18,6 +18,30 @@
 
 <main class="dashboard-grid">
 
+<!-- ================= SIDEBAR ================= -->
+<div class="sidebar">
+
+    <!-- Winning Posts / WPIL -->
+    <div class="cyber-card">
+        <h3><i class="fas fa-crown"></i> Winning Posts (وضع متقدم)</h3>
+
+        <textarea id="winningPostsInput"
+                  rows="5"
+                  placeholder="الصق هنا منشورات ناجحة (كل منشور في سطر)..."></textarea>
+
+        <input id="wpilNicheInput"
+               type="text"
+               placeholder="النيش (مثال: القيادة، التسويق العقاري، التقنية المالية)"
+               style="margin-top:10px;" />
+
+        <div style="margin-top:10px; font-size:12px; opacity:0.75;">
+            ⚠️ يتم استخدام المنشورات لاستخراج أنماط النجاح فقط، بدون نسخ.
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= MAIN ================= -->
 <div class="main-content">
 <div class="cyber-card">
     <h3><i class="fas fa-bolt"></i> المحرك الحاكم</h3>
@@ -45,6 +69,15 @@ async function startGovernedEngine() {
     const text = inputText.value.trim();
     if(!text) return alert("أدخل الفكرة");
 
+    // ===== WPIL INPUT =====
+    const winningPostsRaw = document.getElementById('winningPostsInput').value || "";
+    const wpilNiche = document.getElementById('wpilNicheInput').value || "";
+
+    const winningPosts = winningPostsRaw
+        .split("\n")
+        .map(x => x.trim())
+        .filter(x => x.length > 20);
+
     const btn = generateBtn;
     btn.disabled = true;
     btn.innerHTML = 'جاري اتخاذ القرار...';
@@ -55,10 +88,12 @@ async function startGovernedEngine() {
     const payload = {
         text: text,
         style_dna: "Professional",
-        image_style: "Cinematic"
+        image_style: "Cinematic",
+        winning_posts: winningPosts,
+        niche: wpilNiche
     };
 
-    // 🔹 نطلب LinkedIn أولًا (SIC هو من سيقرر فعليًا)
+    // SIC هو من يقرر المنصة فعليًا
     const platforms = ["linkedin","twitter","tiktok"];
     let decision = null;
     let approvedPlatform = null;
@@ -78,7 +113,7 @@ async function startGovernedEngine() {
     }
 
     if (!decision) {
-        outputText.innerHTML = "⛔ تم رفض الفكرة من قبل Strategic Intelligence Core";
+        outputText.innerHTML = "⛔ لم يتم توليد محتوى";
         btn.disabled = false;
         btn.innerHTML = 'إطلاق ذكي';
         return;
