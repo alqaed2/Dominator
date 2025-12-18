@@ -1,40 +1,78 @@
 # =========================================================
-# SIC Memory Store
-# AI DOMINATOR – V16.1
+# SIC Memory (Lightweight)
+# - Platform scoring
+# - Success/Failure counters (optional)
 # =========================================================
 
-# Simple in-memory performance tracking (deterministic)
+from __future__ import annotations
+from typing import Dict, Any, Optional
+import os
+import json
+import time
 
-PLATFORM_MEMORY = {
-    "linkedin": {
-        "success": 0,
-        "failure": 0
-    },
-    "twitter": {
-        "success": 0,
-        "failure": 0
-    },
-    "tiktok": {
-        "success": 0,
-        "failure": 0
-    }
+SIC_STATS_FILE = os.environ.get("SIC_STATS_FILE", "sic_stats.json")
+
+_PLATFORM_SCORE = {
+    "linkedin": 0.92,
+    "twitter": 0.88,
+    "tiktok": 0.84,
 }
 
-def record_success(platform: str):
-    if platform in PLATFORM_MEMORY:
-        PLATFORM_MEMORY[platform]["success"] += 1
-
-def record_failure(platform: str):
-    if platform in PLATFORM_MEMORY:
-        PLATFORM_MEMORY[platform]["failure"] += 1
 
 def get_platform_score(platform: str) -> float:
-    data = PLATFORM_MEMORY.get(platform)
-    if not data:
+    if not platform:
         return 0.5
+    return _PLATFORM_SCORE.get(platform.lower().strip(), 0.5)
 
-    total = data["success"] + data["failure"]
-    if total == 0:
-        return 0.5
 
-    return data["success"] / total
+def _load_stats() -> Dict[str, Any]:
+    try:
+        if os.path.exists(SIC_STATS_FILE):
+            with open(SIC_STATS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {
+        "total": {"success": 0, "failure": 0},
+        "platform": {},
+        "last_event": None,
+    }
+
+
+def _save_stats(stats: Dict[str, Any]) -> None:
+    try:
+        with open(SIC_STATS_FILE, "w", encoding="utf-8") as f:
+            json.dump(stats, f, ensure_ascii=False, indent=2)
+    except Exception:
+        # في Render قد تكون الكتابة محدودة حسب البيئة، لا نكسر التشغيل
+        pass
+
+
+def record_success(platform: str, meta: Optional[Dict[str, Any]] = None) -> None:
+    stats = _load_stats()
+    stats["total"]["success"] = int(stats["total"].get("success", 0)) + 1
+
+    p = (platform or "unknown").lower()
+    stats["platform"].setdefault(p, {"success": 0, "failure": 0})
+    stats["platform"][p]["success"] = int(stats["platform"][p].get("success", 0)) + 1
+
+    stats["last_event"] = {"ts": int(time.time()), "type": "success", "platform": p, "meta": meta or {}}
+    _save_stats(stats)
+
+
+def record_failure(platform: str, reason: str = "", meta: Optional[Dict[str, Any]] = None) -> None:
+    stats = _load_stats()
+    stats["total"]["failure"] = int(stats["total"].get("failure", 0)) + 1
+
+    p = (platform or "unknown").lower()
+    stats["platform"].setdefault(p, {"success": 0, "failure": 0})
+    stats["platform"][p]["failure"] = int(stats["platform"][p].get("failure", 0)) + 1
+
+    stats["last_event"] = {
+        "ts": int(time.time()),
+        "type": "failure",
+        "platform": p,
+        "reason": reason,
+        "meta": meta or {},
+    }
+    _save_stats(stats)
