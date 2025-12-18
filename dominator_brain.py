@@ -6,6 +6,7 @@
 
 from typing import Dict, Any, List
 from sic_memory import get_platform_score
+from wpil_runtime import invoke_wpil
 
 # ---------------------------------------------------------
 # Public Entry
@@ -27,6 +28,20 @@ def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
         or ""
     ).strip()
 
+    # -----------------------------------------------------
+    # WPIL Injection (Winning Constraints Enforcement)
+    # -----------------------------------------------------
+    content_signal = {
+        "platform": content.get("platform"),
+        "niche": content.get("niche"),
+        "intent": content.get("intent"),
+    }
+
+    wpil_constraints = invoke_wpil(content_signal)
+
+    # -----------------------------------------------------
+    # Core Metrics & Transformation
+    # -----------------------------------------------------
     metrics = _evaluate_metrics(raw_text)
     transformed_text, metrics = _inject_dominance(raw_text, metrics)
 
@@ -39,19 +54,28 @@ def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
     primary = platforms[0]
     secondary = platforms[1:]
 
+    # -----------------------------------------------------
+    # Merge SIC Logic with WPIL Constraints
+    # -----------------------------------------------------
+    rules = {
+        "hook_required": True,
+        "cta_type": "curiosity",
+        "length": _content_length(metrics),
+    }
+
+    # WPIL rules override or extend SIC rules
+    if isinstance(wpil_constraints, dict):
+        rules.update(wpil_constraints)
+
     return {
         "execute": True,
         "primary_platform": primary,
         "secondary_platforms": secondary,
         "content_mode": _content_mode_for(primary),
         "style_override": style.get("style_dna", "Professional"),
-        "rules": {
-            "hook_required": True,
-            "cta_type": "curiosity",
-            "length": _content_length(metrics),
-        },
+        "rules": rules,
         "transformed_input": transformed_text,
-        "decision_reason": "Auto-transformed for dominance (no rejection mode)",
+        "decision_reason": "Auto-transformed under enforced winning constraints (WPIL + SIC)",
     }
 
 # ---------------------------------------------------------
