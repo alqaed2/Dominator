@@ -1,29 +1,36 @@
 # wpil_runtime.py
-# WPIL Runtime Enforcement Engine
-# Applies selected winning patterns as non-negotiable constraints
-
-from typing import Dict
-from wpil_selector import select_winning_pattern
+# WPIL Runtime Interface (No-evaluation, no-rejection)
+from typing import Dict, Any
 
 
-def invoke_wpil(content_signal: Dict) -> Dict:
-    """
-    Invokes WPIL runtime.
-    Selects a winning pattern and converts it into enforced constraints.
-    """
+def invoke_wpil(content_signal: Dict[str, Any]) -> Dict[str, Any]:
+    platform = (content_signal.get("platform") or "linkedin").lower().strip()
+    niche = (content_signal.get("niche") or "general").strip()
+    winning_post = (content_signal.get("winning_post") or "").strip()
 
-    # Select the best winning pattern for this signal
-    winning_pattern = select_winning_pattern(content_signal)
-
-    # Base enforced constraints
-    enforced_constraints = {
-        "hook": winning_pattern.get("hook"),
-        "structure": winning_pattern.get("structure"),
-        "cta": winning_pattern.get("cta"),
-        "enforcement": {
-            "mode": "strict",
-            "fallback": False
-        }
+    # Default constraints (بنيوية فقط)
+    constraints = {
+        "hook": {"type": "bold_claim", "max_words": 12},
+        "structure": {"line_density": "one_idea_per_line", "avg_sentence_words": 14},
+        "cta": {"type": "question", "position": "end"}
     }
 
-    return enforced_constraints
+    mode = "direct"
+    notes = "defaults"
+
+    # لو المستخدم لصق Winning Post: نفعّل Remix Mode ونزيد الانضباط البنيوي
+    if len(winning_post) > 20:
+        mode = "remix"
+        notes = f"remix enabled for niche={niche}"
+        if platform == "twitter":
+            constraints["thread"] = {"tweets": "5-7", "max_lines_per_tweet": 4}
+        if platform == "linkedin":
+            constraints["length_hint"] = {"words": "120-220"}
+        if platform == "tiktok":
+            constraints["video"] = {"seconds": "45-70", "shots": "5-8"}
+
+    return {
+        "mode": mode,
+        "constraints": constraints,
+        "notes": notes
+    }
