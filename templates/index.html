@@ -1,140 +1,306 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR | V15.0 Final</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI DOMINATOR | WPIL Enabled</title>
+
+  <link rel="stylesheet" href="/static/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 </head>
+
 <body>
+  <div class="app-container">
+    <header class="cyber-header">
+      <div class="logo-section">
+        <h1>AI DOMINATOR <span class="version-tag">WPIL + SIC</span></h1>
+      </div>
+      <div class="system-status"><div class="status-dot"></div>ONLINE</div>
+    </header>
 
-<div class="app-container">
-<header class="cyber-header">
-    <h1>AI DOMINATOR <span class="version-tag">V15.0 FINAL</span></h1>
-    <div class="system-status"><div class="status-dot"></div>ONLINE</div>
-</header>
+    <main class="dashboard-grid">
 
-<main class="dashboard-grid">
-
-<!-- ================= SIDEBAR ================= -->
-<div class="sidebar">
-
-    <!-- Winning Posts / WPIL -->
-    <div class="cyber-card">
-        <h3><i class="fas fa-crown"></i> Winning Posts (وضع متقدم)</h3>
-
-        <textarea id="winningPostsInput"
-                  rows="5"
-                  placeholder="الصق هنا منشورات ناجحة (كل منشور في سطر)..."></textarea>
-
-        <input id="wpilNicheInput"
-               type="text"
-               placeholder="النيش (مثال: القيادة، التسويق العقاري، التقنية المالية)"
-               style="margin-top:10px;" />
-
-        <div style="margin-top:10px; font-size:12px; opacity:0.75;">
-            ⚠️ يتم استخدام المنشورات لاستخراج أنماط النجاح فقط، بدون نسخ.
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <div class="cyber-card">
+          <div class="card-title"><h3><i class="fas fa-fingerprint"></i> الأسلوب</h3></div>
+          <textarea id="sampleText" rows="3" placeholder="الصق نصًا يمثّل أسلوبك (اختياري)…"></textarea>
+          <button onclick="analyzeStyle()" class="cyber-btn-small">تحليل (شكلي)</button>
+          <input type="hidden" id="styleDNA" value="Professional">
+          <div style="margin-top:10px; font-size: 12px; opacity: .85;">
+            الأسلوب الحالي: <b id="styleLabel">Professional</b>
+          </div>
         </div>
-    </div>
 
-</div>
+        <div class="cyber-card" style="margin-top: 18px;">
+          <div class="card-title"><h3><i class="fas fa-sliders-h"></i> الصور</h3></div>
+          <select id="imageStyle">
+            <option value="Cyberpunk">🔮 سايبر بانك</option>
+            <option value="Cinematic" selected>📸 سينمائي</option>
+            <option value="3D Render">🧊 3D</option>
+          </select>
+        </div>
 
-<!-- ================= MAIN ================= -->
-<div class="main-content">
-<div class="cyber-card">
-    <h3><i class="fas fa-bolt"></i> المحرك الحاكم</h3>
-    <textarea id="inputText" rows="3" placeholder="أدخل الفكرة..."></textarea>
-    <button id="generateBtn" class="cyber-btn-main" onclick="startGovernedEngine()">
-        <i class="fas fa-rocket"></i> إطلاق ذكي
-    </button>
-</div>
+        <div class="cyber-card" style="margin-top: 18px;">
+          <div class="card-title"><h3><i class="fas fa-trophy"></i> Winning Posts (اختياري)</h3></div>
 
-<div id="outputSection" style="display:none;margin-top:30px;">
-    <div class="cyber-card">
-        <h3 id="decisionInfo"></h3>
-        <div id="outputText"></div>
-        <div id="imageBox"></div>
-        <textarea id="videoPromptText" readonly style="display:none"></textarea>
-    </div>
-</div>
+          <label style="display:block; margin-bottom:6px; font-size:12px; opacity:.9;">
+            النيش (مثال: القيادة، العقار، fintech)
+          </label>
+          <input id="niche" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.25); color:#fff;"
+                 placeholder="مثال: القيادة" value="القيادة" />
 
-</div>
-</main>
-</div>
+          <label style="display:block; margin:12px 0 6px; font-size:12px; opacity:.9;">
+            الصق منشورًا ناجحًا (Winning Post) لإعادة مزجه
+          </label>
+          <textarea id="winningPost" rows="6" placeholder="الصق هنا منشورًا ناجحًا من LinkedIn/X… (30 حرفًا على الأقل)"></textarea>
 
-<script>
-async function startGovernedEngine() {
-    const text = inputText.value.trim();
-    if(!text) return alert("أدخل الفكرة");
+          <div style="margin-top:10px; font-size:12px; opacity:.85;">
+            إذا تركتها فارغة → النظام يعمل بوضع “فكرة مباشرة”.
+          </div>
+        </div>
+      </div>
 
-    // ===== WPIL INPUT =====
-    const winningPostsRaw = document.getElementById('winningPostsInput').value || "";
-    const wpilNiche = document.getElementById('wpilNicheInput').value || "";
+      <!-- MAIN -->
+      <div class="main-content">
+        <div class="cyber-card">
+          <div class="card-title"><h3><i class="fas fa-bolt"></i> محرك الهيمنة</h3></div>
 
-    const winningPosts = winningPostsRaw
-        .split("\n")
-        .map(x => x.trim())
-        .filter(x => x.length > 20);
+          <textarea id="inputText" rows="3" placeholder="أدخل الفكرة (أو اكتب عنوانًا/مشكلة)…"></textarea>
 
-    const btn = generateBtn;
-    btn.disabled = true;
-    btn.innerHTML = 'جاري اتخاذ القرار...';
+          <button id="generateBtn" class="cyber-btn-main" onclick="startDominanceEngine()">
+            <i class="fas fa-rocket"></i> إطلاق
+          </button>
 
-    outputSection.style.display = 'block';
-    outputText.innerHTML = '🧠 SIC يفكر...';
+          <div id="engineStatus" style="margin-top:12px; font-size:12px; opacity:.85;"></div>
+        </div>
 
-    const payload = {
-        text: text,
-        style_dna: "Professional",
-        image_style: "Cinematic",
-        winning_posts: winningPosts,
-        niche: wpilNiche
-    };
+        <!-- OUTPUT -->
+        <div id="outputSection" style="display:none; margin-top: 22px;">
+          <div class="output-grid" id="mainOutputGrid">
+            <div class="image-area">
+              <div class="image-frame" id="mainImageContainer"></div>
+              <div class="image-frame" id="tiktokImageContainer" style="display:none; border-color:var(--neon-red);"></div>
+            </div>
 
-    // SIC هو من يقرر المنصة فعليًا
-    const platforms = ["linkedin","twitter","tiktok"];
-    let decision = null;
-    let approvedPlatform = null;
+            <div class="content-wrapper">
+              <div class="tabs-header">
+                <button class="tab-btn active" onclick="openTab('linkedin')"><i class="fab fa-linkedin"></i> LinkedIn</button>
+                <button class="tab-btn" onclick="openTab('twitter')"><i class="fab fa-twitter"></i> X</button>
+                <button class="tab-btn video-tab-btn" onclick="openTab('tiktok')"><i class="fab fa-tiktok"></i> TikTok</button>
+              </div>
 
-    for (const p of platforms) {
-        const res = await fetch(`/generate/${p}`, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(payload)
-        });
+              <div class="cyber-card text-frame">
+                <div id="linkedinContent" class="tab-content active simple-text-content"></div>
+                <div id="twitterContent" class="tab-content simple-text-content"></div>
 
-        if (res.status === 200) {
-            decision = await res.json();
-            approvedPlatform = p;
-            break;
+                <div id="tiktokContent" class="tab-content cinema-mode">
+                  <h4 class="section-title"><i class="fas fa-terminal"></i> Video Prompt</h4>
+                  <div class="video-prompt-box">
+                    <textarea id="videoPromptText" readonly></textarea>
+                    <button class="copy-prompt-btn" onclick="copyPrompt()"><i class="fas fa-copy"></i></button>
+                  </div>
+
+                  <h4 class="section-title"><i class="fas fa-file-alt"></i> السكريبت</h4>
+                  <div id="tiktokScriptText" class="script-container"></div>
+                </div>
+              </div>
+
+              <div class="cyber-card" style="margin-top:14px;">
+                <div class="card-title">
+                  <h3><i class="fas fa-brain"></i> WPIL Trace (للتحقق)</h3>
+                </div>
+                <div style="font-family:'JetBrains Mono', monospace; font-size:12px; opacity:.9; white-space:pre-wrap;" id="wpilTrace">
+جاهز.
+- إذا أدخلت Winning Post: سيظهر هنا (Remixed Seed + SIC Final Input).
+- إذا لم تُدخل: سيظهر “Direct Mode”.
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function openTab(platform) {
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(platform + 'Content').classList.add('active');
+
+      const btnIndex = platform === 'linkedin' ? 0 : platform === 'twitter' ? 1 : 2;
+      document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
+
+      const mainImg = document.getElementById('mainImageContainer');
+      const tiktokImg = document.getElementById('tiktokImageContainer');
+
+      if (platform === 'tiktok') {
+        mainImg.style.display = 'none';
+        tiktokImg.style.display = 'flex';
+      } else {
+        mainImg.style.display = 'flex';
+        tiktokImg.style.display = 'none';
+      }
+    }
+
+    function loadImage(containerId, prompt) {
+      const el = document.getElementById(containerId);
+      if(!prompt || prompt.length < 5) { el.innerHTML = ''; return; }
+
+      el.innerHTML = '<div class="loader-ui small"><i class="fas fa-circle-notch fa-spin"></i></div>';
+
+      const seed = Math.floor(Math.random() * 9999);
+      const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologin=true&width=1024&height=1024&model=flux&seed=${seed}`;
+
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = imgUrl;
+      img.onload = () => {
+        el.innerHTML = '';
+        el.appendChild(img);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'image-overlay';
+        overlay.innerHTML = `<button onclick="window.open('${imgUrl}', '_blank')" title="تحميل"><i class="fas fa-download"></i></button>`;
+        el.appendChild(overlay);
+      };
+      img.onerror = () => { el.innerHTML = '<span style="color:red">فشل تحميل الصورة</span>'; };
+    }
+
+    async function postJSON(url, payload) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      let data = null;
+      try { data = await res.json(); } catch (e) {}
+
+      if (!res.ok) {
+        const msg = (data && data.error) ? data.error : `Server Error: ${res.status}`;
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function startDominanceEngine() {
+      const text = document.getElementById('inputText').value.trim();
+      const style = document.getElementById('styleDNA').value || "Professional";
+      const imgStyle = document.getElementById('imageStyle').value || "Cinematic";
+
+      const niche = document.getElementById('niche').value.trim() || "general";
+      const winningPost = document.getElementById('winningPost').value.trim();
+
+      if(!text && !winningPost) return alert("أدخل فكرة أو الصق Winning Post");
+
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> تشغيل...';
+
+      document.getElementById('outputSection').style.display = 'block';
+      document.getElementById('engineStatus').innerHTML = '🧠 تشغيل WPIL + SIC...';
+
+      // loaders
+      document.getElementById('linkedinContent').innerHTML = '<div class="loader-ui">جاري LinkedIn...</div>';
+      document.getElementById('twitterContent').innerHTML  = '<div class="loader-ui">جاري X...</div>';
+      document.getElementById('tiktokScriptText').innerHTML = '<div class="loader-ui">جاري TikTok...</div>';
+      document.getElementById('videoPromptText').value = '';
+      document.getElementById('mainImageContainer').innerHTML = '<div class="loader-ui">Image...</div>';
+      document.getElementById('tiktokImageContainer').innerHTML = '<div class="loader-ui">Cover...</div>';
+
+      let seedText = text || "فكرة عامة";
+      let finalInput = seedText;
+
+      // 1) إذا يوجد Winning Post → نعمل Remix مرة واحدة فقط
+      if (winningPost && winningPost.length >= 30) {
+        try {
+          const remix = await postJSON('/remix', {
+            winning_post: winningPost,
+            niche: niche,
+            style_dna: style,
+            platform: 'linkedin'
+          });
+
+          seedText = remix.remixed_seed || seedText;
+          finalInput = remix.sic_transformed_input || seedText;
+
+          document.getElementById('wpilTrace').textContent =
+`MODE: WINNING POSTS REMIX
+NICHE: ${niche}
+
+REMIXED SEED:
+${seedText}
+
+SIC FINAL INPUT:
+${finalInput}`;
+        } catch (e) {
+          document.getElementById('wpilTrace').textContent =
+`MODE: WINNING POSTS REMIX
+لكن فشل /remix:
+${e.message}
+
+سيتم المتابعة بوضع Direct Mode.`;
+          finalInput = seedText;
         }
+      } else {
+        document.getElementById('wpilTrace').textContent =
+`MODE: DIRECT
+INPUT:
+${finalInput}`;
+      }
+
+      // 2) نولّد كل المنصات بالتوازي من finalInput
+      const payload = { text: finalInput, style_dna: style, image_style: imgStyle };
+
+      try {
+        const [li, tw, tk] = await Promise.all([
+          postJSON('/generate/linkedin', payload),
+          postJSON('/generate/twitter', payload),
+          postJSON('/generate/tiktok', payload)
+        ]);
+
+        document.getElementById('linkedinContent').innerHTML = (li.text || '').replace(/\n/g,'<br>');
+        document.getElementById('twitterContent').innerHTML  = (tw.text || '').replace(/\n/g,'<br>');
+
+        document.getElementById('tiktokScriptText').innerHTML = (tk.text || '').replace(/\n/g,'<br>');
+        document.getElementById('videoPromptText').value = tk.video_prompt || '';
+
+        // images
+        loadImage('mainImageContainer', li.image);
+        loadImage('tiktokImageContainer', tk.image);
+
+        document.getElementById('engineStatus').innerHTML = '✅ تم التوليد بنجاح (WPIL + SIC).';
+        openTab('linkedin');
+
+      } catch (e) {
+        document.getElementById('engineStatus').innerHTML = '❌ فشل التشغيل: ' + e.message;
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-rocket"></i> إطلاق';
     }
 
-    if (!decision) {
-        outputText.innerHTML = "⛔ لم يتم توليد محتوى";
-        btn.disabled = false;
-        btn.innerHTML = 'إطلاق ذكي';
-        return;
+    function analyzeStyle() {
+      // في هذه النسخة: تحليل شكلي فقط
+      const t = document.getElementById('sampleText').value.trim();
+      const newStyle = t.length > 20 ? "Personal-Professional" : "Professional";
+      document.getElementById('styleDNA').value = newStyle;
+      document.getElementById('styleLabel').innerText = newStyle;
+      alert("تم تعيين الأسلوب: " + newStyle);
     }
 
-    decisionInfo.innerHTML = `✅ المنصة المعتمدة: ${approvedPlatform.toUpperCase()}`;
-    outputText.innerHTML = decision.text.replace(/\n/g,'<br>');
-
-    if (decision.image) {
-        imageBox.innerHTML = `<img src="https://image.pollinations.ai/prompt/${encodeURIComponent(decision.image)}?width=1024&height=1024">`;
+    function copyPrompt() {
+      const v = document.getElementById('videoPromptText').value || '';
+      navigator.clipboard.writeText(v);
+      alert("تم النسخ");
     }
-
-    if (decision.video_prompt) {
-        videoPromptText.style.display = 'block';
-        videoPromptText.value = decision.video_prompt;
-    }
-
-    btn.disabled = false;
-    btn.innerHTML = 'إطلاق ذكي';
-}
-</script>
-
+  </script>
 </body>
 </html>
