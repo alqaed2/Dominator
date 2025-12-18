@@ -1,48 +1,29 @@
 # wpil_runtime.py
-# WPIL Runtime Interface
-# This module enforces winning constraints before SIC execution
+# WPIL Runtime Enforcement Engine
+# Applies selected winning patterns as non-negotiable constraints
 
 from typing import Dict
+from wpil_selector import select_winning_pattern
 
 
 def invoke_wpil(content_signal: Dict) -> Dict:
     """
-    Runtime invocation for WPIL.
-    WPIL does NOT generate content.
-    WPIL ONLY returns enforced winning constraints.
+    Invokes WPIL runtime.
+    Selects a winning pattern and converts it into enforced constraints.
     """
 
-    platform = content_signal.get("platform")
-    niche = content_signal.get("niche")
-    intent = content_signal.get("intent")
+    # Select the best winning pattern for this signal
+    winning_pattern = select_winning_pattern(content_signal)
 
-    # --- Default Winning Constraints ---
-    constraints = {
-        "hook": {
-            "type": "bold_claim",
-            "max_words": 12
-        },
-        "structure": {
-            "line_density": "one_idea_per_line",
-            "avg_sentence_length": "short"
-        },
-        "narrative": {
-            "arc": "problem_reframe_authority"
-        },
-        "cta": {
-            "type": "curiosity",
-            "position": "final_line"
+    # Base enforced constraints
+    enforced_constraints = {
+        "hook": winning_pattern.get("hook"),
+        "structure": winning_pattern.get("structure"),
+        "cta": winning_pattern.get("cta"),
+        "enforcement": {
+            "mode": "strict",
+            "fallback": False
         }
     }
 
-    # --- Platform-specific enforcement ---
-    if platform == "linkedin":
-        constraints["hook"]["type"] = "contrarian"
-
-    if platform == "x":
-        constraints["hook"]["max_words"] = 10
-
-    if platform == "tiktok":
-        constraints["narrative"]["arc"] = "pattern_interrupt"
-
-    return constraints
+    return enforced_constraints
