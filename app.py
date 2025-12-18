@@ -6,7 +6,7 @@ import re
 # 🧠 Strategic Intelligence Core
 from dominator_brain import strategic_intelligence_core
 
-# 🧠 Memory (optional)
+# 🧠 Memory
 from sic_memory import record_success, record_failure
 
 app = Flask(__name__)
@@ -41,9 +41,9 @@ def get_safe_response(prompt: str) -> str:
     return response.candidates[0].content.parts[0].text
 
 # -------------------------------------------------
-# Brain Payload Builder
+# Brain Payload Builder (WPIL ENABLED)
 # -------------------------------------------------
-def build_brain_payload(raw_text: str, style_dna: str):
+def build_brain_payload(raw_text: str, style_dna: str, wpil_signal: dict | None = None):
     return {
         "content_signal": {
             "topic": raw_text,
@@ -58,43 +58,9 @@ def build_brain_payload(raw_text: str, style_dna: str):
             "platforms_available": ["linkedin", "twitter", "tiktok"],
             "time_context": "now"
         },
+        "wpil_signal": wpil_signal or {},
         "system_memory": {}
     }
-
-# -------------------------------------------------
-# Winning Posts Remix Engine (Prompt-based)
-# -------------------------------------------------
-def remix_winning_post(winning_post: str, niche: str, voice: str, platform: str) -> str:
-    """
-    Takes a high-performing post and rewrites it into a fresh, non-derivative version.
-    Then returns a new 'raw_text' seed that SIC will further dominance-inject.
-    """
-    winning_post = (winning_post or "").strip()
-    niche = (niche or "general").strip()
-    voice = (voice or "Professional").strip()
-
-    prompt = (
-        f"You are an elite content remixer.\n"
-        f"Goal: produce a NEW post inspired by the idea, NOT copying wording.\n"
-        f"Niche: {niche}\n"
-        f"Target platform: {platform}\n"
-        f"Voice: {voice}\n\n"
-        f"Rules:\n"
-        f"- Keep the same core insight, but change structure, examples, phrasing, and angles.\n"
-        f"- Add one personal micro-story (2-3 lines) and one strong CTA.\n"
-        f"- Include a pattern-interrupt hook in the first line.\n"
-        f"- Output in Arabic.\n\n"
-        f"OUTPUT FORMAT:\n"
-        f"---REMIX_START---\n"
-        f"(Remixed seed text)\n"
-        f"---REMIX_END---\n\n"
-        f"WINNING POST INPUT:\n"
-        f"{winning_post}\n"
-    )
-
-    txt = get_safe_response(prompt)
-    remixed = extract(txt, "---REMIX_START---", "---REMIX_END---")
-    return remixed.strip() if remixed.strip() else winning_post
 
 # -------------------------------------------------
 # Routes
@@ -103,174 +69,102 @@ def remix_winning_post(winning_post: str, niche: str, voice: str, platform: str)
 def home():
     return render_template("index.html")
 
-# ✅ NEW: Dedicated Remix endpoint
-@app.route("/remix", methods=["POST"])
-def remix_endpoint():
+@app.route("/generate/<platform>", methods=["POST"])
+def generate(platform):
     try:
         data = request.get_json(silent=True) or {}
-        winning_post = data.get("winning_post", "")
-        niche = data.get("niche", "general")
-        voice = data.get("style_dna", "Professional")
-        platform = data.get("platform", "linkedin")
-
-        if not winning_post or len(winning_post.strip()) < 30:
-            return jsonify({"error": "winning_post is required (min ~30 chars)."}), 400
-
-        remixed = remix_winning_post(winning_post, niche, voice, platform)
-
-        # Pass through SIC for dominance shaping
-        decision = strategic_intelligence_core(build_brain_payload(remixed, voice))
-
-        return jsonify({
-            "remixed_seed": remixed,
-            "sic_transformed_input": decision.get("transformed_input", remixed),
-            "sic_decision": {
-                "primary_platform": decision.get("primary_platform"),
-                "secondary_platforms": decision.get("secondary_platforms", []),
-                "content_mode": decision.get("content_mode"),
-                "rules": decision.get("rules", {}),
-                "decision_reason": decision.get("decision_reason"),
-            }
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/generate/linkedin", methods=["POST"])
-def generate_linkedin():
-    return execute_with_brain("linkedin")
-
-@app.route("/generate/twitter", methods=["POST"])
-def generate_twitter():
-    return execute_with_brain("twitter")
-
-@app.route("/generate/tiktok", methods=["POST"])
-def generate_tiktok():
-    return execute_with_brain("tiktok")
-
-# -------------------------------------------------
-# 🧠 Unified Execution Gate (NO BLOCK MODE)
-# -------------------------------------------------
-def execute_with_brain(requested_platform: str):
-    try:
-        data = request.get_json(silent=True) or {}
-        if "text" not in data:
-            return jsonify({"error": "No data provided (missing 'text')."}), 400
 
         user_text = (data.get("text") or "").strip()
+        if not user_text:
+            return jsonify({"error": "text is required"}), 400
+
         style = data.get("style_dna", "Professional")
         image_style = data.get("image_style", "Default")
 
-        # Optional Winning Posts Remix
-        winning_post = (data.get("winning_post") or "").strip()
+        # 🧠 WPIL INPUT (OPTIONAL)
+        winning_posts = data.get("winning_posts", [])
         niche = data.get("niche", "general")
 
-        # 1) If winning_post provided → remix into fresh seed
-        seed_text = user_text
-        if winning_post:
-            seed_text = remix_winning_post(
-                winning_post=winning_post,
-                niche=niche,
-                voice=style,
-                platform=requested_platform
+        wpil_signal = {
+            "winning_posts": winning_posts,
+            "niche": niche,
+            "voice_profile": style
+        } if winning_posts else {}
+
+        # 1) SIC Decision
+        decision = strategic_intelligence_core(
+            build_brain_payload(
+                raw_text=user_text,
+                style_dna=style,
+                wpil_signal=wpil_signal
             )
+        )
 
-        # 2) SIC shapes the final input (dominance injection)
-        decision = strategic_intelligence_core(build_brain_payload(seed_text, style))
-        final_input = decision.get("transformed_input") or seed_text
+        final_input = decision.get("transformed_input", user_text)
 
-        # 3) Generate per platform (SIC never blocks; only guides)
-        if requested_platform == "linkedin":
+        # 2) Platform Generation
+        if platform == "linkedin":
             prompt = (
-                f"Act as a LinkedIn Expert.\n"
-                f"Write a viral post.\n"
-                f"Topic seed: {final_input}\n"
-                f"Style: {style}\n"
-                f"Image Style: {image_style}\n"
-                f"Constraints: hook_required={decision.get('rules', {}).get('hook_required', True)} "
-                f"cta_type={decision.get('rules', {}).get('cta_type', 'curiosity')} "
-                f"length={decision.get('rules', {}).get('length', 'medium')}\n\n"
-                f"OUTPUT FORMAT:\n"
-                f"---LINKEDIN_START---\n"
-                f"(Content)\n"
-                f"---LINKEDIN_END---\n"
-                f"---IMAGE_MAIN_START---\n"
-                f"(Image Prompt)\n"
-                f"---IMAGE_MAIN_END---\n"
+                f"اكتب منشور LinkedIn احترافي عالي الانتشار.\n"
+                f"الفكرة: {final_input}\n"
+                f"الأسلوب: {style}\n"
+                f"قيود: {decision['rules']}\n\n"
+                f"---POST---\n"
+                f"(النص)\n"
+                f"---IMAGE---\n"
+                f"(وصف صورة)"
             )
 
-            text = get_safe_response(prompt)
-            payload = {
-                "text": extract(text, "---LINKEDIN_START---", "---LINKEDIN_END---"),
-                "image": extract(text, "---IMAGE_MAIN_START---", "---IMAGE_MAIN_END---"),
-                "meta": {"sic": decision, "seed_used": seed_text, "final_input": final_input}
-            }
+            txt = get_safe_response(prompt)
             record_success("linkedin")
-            return jsonify(payload)
+            return jsonify({
+                "text": extract(txt, "---POST---", "---IMAGE---"),
+                "image": extract(txt, "---IMAGE---", ""),
+                "meta": decision
+            })
 
-        if requested_platform == "twitter":
+        if platform == "twitter":
             prompt = (
-                f"Act as a Twitter/X Expert.\n"
-                f"Write a 5-tweet thread.\n"
-                f"Topic seed: {final_input}\n"
-                f"Style: {style}\n"
-                f"Constraints: hook_required={decision.get('rules', {}).get('hook_required', True)} "
-                f"cta_type={decision.get('rules', {}).get('cta_type', 'curiosity')} "
-                f"length={decision.get('rules', {}).get('length', 'short')}\n\n"
-                f"OUTPUT FORMAT:\n"
-                f"---TWITTER_START---\n"
-                f"(Thread)\n"
-                f"---TWITTER_END---\n"
+                f"اكتب Thread على X.\n"
+                f"الفكرة: {final_input}\n"
+                f"الأسلوب: {style}\n"
+                f"قيود: {decision['rules']}\n\n"
+                f"---THREAD---\n"
+                f"(Thread)"
             )
 
-            text = get_safe_response(prompt)
-            payload = {
-                "text": extract(text, "---TWITTER_START---", "---TWITTER_END---"),
-                "meta": {"sic": decision, "seed_used": seed_text, "final_input": final_input}
-            }
+            txt = get_safe_response(prompt)
             record_success("twitter")
-            return jsonify(payload)
+            return jsonify({
+                "text": extract(txt, "---THREAD---", ""),
+                "meta": decision
+            })
 
-        if requested_platform == "tiktok":
+        if platform == "tiktok":
             prompt = (
-                f"Act as a TikTok Director.\n"
-                f"Write a script AND a video generation prompt.\n"
-                f"Topic seed: {final_input}\n"
-                f"Style: {style}\n"
-                f"Image Style: {image_style}\n"
-                f"Constraints: hook_required={decision.get('rules', {}).get('hook_required', True)} "
-                f"cta_type={decision.get('rules', {}).get('cta_type', 'curiosity')} "
-                f"length={decision.get('rules', {}).get('length', 'medium')}\n\n"
-                f"OUTPUT FORMAT:\n"
-                f"---TIKTOK_START---\n"
-                f"(Script)\n"
-                f"---TIKTOK_END---\n"
-                f"---TIKTOK_IMAGE_START---\n"
-                f"(Cover Image Prompt)\n"
-                f"---TIKTOK_IMAGE_END---\n"
-                f"---VIDEO_PROMPT_START---\n"
-                f"(Video Prompt)\n"
-                f"---VIDEO_PROMPT_END---\n"
+                f"اكتب سكربت TikTok جذاب.\n"
+                f"الفكرة: {final_input}\n"
+                f"الأسلوب: {style}\n"
+                f"قيود: {decision['rules']}\n\n"
+                f"---SCRIPT---\n"
+                f"(سكربت)\n"
+                f"---COVER---\n"
+                f"(صورة)"
             )
 
-            text = get_safe_response(prompt)
-            payload = {
-                "text": extract(text, "---TIKTOK_START---", "---TIKTOK_END---"),
-                "image": extract(text, "---TIKTOK_IMAGE_START---", "---TIKTOK_IMAGE_END---"),
-                "video_prompt": extract(text, "---VIDEO_PROMPT_START---", "---VIDEO_PROMPT_END---"),
-                "meta": {"sic": decision, "seed_used": seed_text, "final_input": final_input}
-            }
+            txt = get_safe_response(prompt)
             record_success("tiktok")
-            return jsonify(payload)
+            return jsonify({
+                "text": extract(txt, "---SCRIPT---", "---COVER---"),
+                "image": extract(txt, "---COVER---", ""),
+                "meta": decision
+            })
 
-        record_failure(requested_platform)
+        record_failure(platform)
         return jsonify({"error": "Unsupported platform"}), 400
 
     except Exception as e:
-        # If anything fails, record failure but do not block future runs
-        try:
-            record_failure(requested_platform)
-        except:
-            pass
+        record_failure(platform)
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
