@@ -1,304 +1,242 @@
+from __future__ import annotations
+
 from flask import Flask, render_template, request, jsonify
-import google.generativeai as genai
 import os
-import json
-from typing import Any, Dict
+import re
 
-# SIC
+import google.generativeai as genai
+
 from dominator_brain import strategic_intelligence_core
-
-# Memory
 from sic_memory import record_success, record_failure
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-WPIL_PATTERNS_FILE = os.path.join(BASE_DIR, "wpil_patterns.json")
 
 app = Flask(__name__)
 
 # ----------------------------
-# Environment
+# Gemini (lazy init)
 # ----------------------------
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
+_MODEL = None
 
-if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY missing")
+def _get_gemini_model():
+    global _MODEL
+    if _MODEL is not None:
+        return _MODEL
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel(GEMINI_MODEL)
+    api_key = os.getenv("GEMINI_API_KEY")
+    model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY missing")
+    genai.configure(api_key=api_key)
+    _MODEL = genai.GenerativeModel(model_name)
+    return _MODEL
 
-# ----------------------------
-# Utilities
-# ----------------------------
-def _read_patterns() -> Any:
-    if not os.path.exists(WPIL_PATTERNS_FILE):
-        with open(WPIL_PATTERNS_FILE, "w", encoding="utf-8") as f:
-            json.dump([], f, ensure_ascii=False, indent=2)
-        return []
-    try:
-        with open(WPIL_PATTERNS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
-
-
-def _write_patterns(data: Any) -> None:
-    try:
-        with open(WPIL_PATTERNS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception:
-        pass
-
-
-def _build_prompt(sic: Dict[str, Any], user_style_text: str = "") -> str:
-    """
-    يبني Prompt نهائي للموديل بالاعتماد على:
-    - SIC transformed_input
-    - WPIL constraints
-    - platform + content_mode
-    """
-    mode = sic.get("mode", "DIRECT")
-    platform = sic.get("primary_platform", "linkedin")
-    content_mode = sic.get("content_mode", "post")
-    style = sic.get("style_override", "Professional")
-    rules = sic.get("rules", {})
-    wpil_trace = sic.get("wpil_trace", {}) or {}
-    constraints = (wpil_trace.get("constraints") or {})
-
-    hook_type = rules.get("hook_type", "bold_claim")
-    hook_max_words = rules.get("hook_max_words", 12)
-    cta_type = rules.get("cta_type", "curiosity")
-    cta_position = rules.get("cta_position", "end")
-
-    extra_style = user_style_text.strip()
-
-    return f"""
-أنت كاتب محتوى عربي محترف متخصص في صناعة منشورات تنتشر.
-هدفك: إنتاج محتوى عالي الجاذبية دون نسخ حرفي أو اقتباس مباشر.
-
-# OUTPUT TARGET
-- platform: {platform}
-- content_mode: {content_mode}
-- mode: {mode}
-
-# STYLE DNA
-- default_style: {style}
-- user_style_sample (if any): {extra_style}
-
-# WPIL CONSTRAINTS (NON-NEGOTIABLE)
-- hook.type = {hook_type}
-- hook.max_words = {hook_max_words}
-- cta.type = {cta_type}
-- cta.position = {cta_position}
-- structure = {constraints.get("structure", {})}
-
-# HARD RULES
-- لا نسخ حرفي إطلاقًا.
-- إذا كان mode = WINNING_POSTS_REMIX: أعد هندسة الفكرة والهيكل لتبدو جديدة 100% مع نفس القوة البنيوية.
-- اكتب عربي طبيعي، سهل القراءة، بفواصل وأسطر قصيرة عند الحاجة.
-- اختم بنداء فعل قوي مناسب.
-
-# INPUT (SIC TRANSFORMED)
-{sic.get("transformed_input","")}
-""".strip()
-
+def _clean_text(x: str) -> str:
+    x = (x or "").strip()
+    # remove excessive whitespace
+    x = re.sub(r"\n{3,}", "\n\n", x)
+    return x
 
 # ----------------------------
-# Pages
+# Views
 # ----------------------------
-@app.get("/")
+@app.route("/")
 def home():
     return render_template("index.html")
 
+@app.route("/health")
+def health():
+    return jsonify({"ok": True})
+
+# Optional: quick debugging endpoint
+@app.route("/debug/decision", methods=["POST"])
+def debug_decision():
+    data = request.get_json(silent=True) or {}
+    raw_text = (data.get("text") or "").strip()
+    payload = {
+        "text": raw_text,
+        "content_signal": {"raw_text": raw_text},
+        "style_signal": {"style_dna": data.get("style_dna", "Professional")},
+        "context_signal": {"platforms_available": ["linkedin", "twitter", "tiktok"]},
+    }
+    decision = strategic_intelligence_core(payload)
+    return jsonify(decision)
 
 # ----------------------------
-# Core Generate
+# Style Analysis (simple, safe)
 # ----------------------------
-@app.post("/generate")
-def generate():
-    """
-    مولد موحد:
-    - Direct: raw_text
-    - Remix: winning_post
-    """
+@app.route("/analyze-style", methods=["POST"])
+def analyze_style():
+    data = request.get_json(silent=True) or {}
+    sample = (data.get("style_text") or "").strip()
+
+    # Heuristic fallback if empty
+    if not sample:
+        return jsonify({"style_dna": "Professional"})
+
+    # Try Gemini, but never crash the app if it fails
     try:
-        payload = request.get_json(force=True) or {}
-
-        raw_text = (payload.get("raw_text") or payload.get("text") or "").strip()
-        winning_post = (payload.get("winning_post") or "").strip()
-
-        platform = (payload.get("platform") or "linkedin").lower()
-        niche = (payload.get("niche") or "general").lower()
-        intent = (payload.get("intent") or "educational").lower()
-
-        style_text = (payload.get("style_text") or "").strip()
-
-        remix = bool(payload.get("remix")) or bool(winning_post)
-
-        sic = strategic_intelligence_core({
-            "remix": remix,
-            "platform": platform,
-            "niche": niche,
-            "intent": intent,
-            "content_signal": {
-                "raw_text": raw_text,
-                "winning_post": winning_post,
-                "platform": platform,
-                "niche": niche,
-                "intent": intent
-            },
-            "style_signal": {
-                "style_dna": payload.get("style_dna", "Professional")
-            },
-            "context_signal": {
-                "platforms_available": ["linkedin", "twitter", "tiktok"],
-                "platform": platform,
-                "niche": niche,
-                "intent": intent
-            }
-        })
-
-        prompt = _build_prompt(sic, user_style_text=style_text)
+        model = _get_gemini_model()
+        prompt = (
+            "حلّل أسلوب الكتابة التالي وأعطني Label واحد فقط (1-3 كلمات) "
+            "بالإنجليزية مثل: Professional, Bold, Minimal, Storytelling, Analytical.\n\n"
+            f"TEXT:\n{sample}\n"
+        )
         resp = model.generate_content(prompt)
-        out_text = (resp.text or "").strip()
+        style = _clean_text(getattr(resp, "text", "") or "")
+        style = re.sub(r"[^A-Za-z ]+", "", style).strip() or "Professional"
+        # Keep it compact
+        style = " ".join(style.split()[:3])
+        return jsonify({"style_dna": style})
+    except Exception:
+        return jsonify({"style_dna": "Professional"})
 
-        record_success(sic.get("primary_platform", platform), {"mode": sic.get("mode")})
+# ----------------------------
+# Core generator per platform
+# IMPORTANT: matches index.html loop behavior.
+# - returns 404 if requested platform is not primary_platform
+# - returns 200 for the primary_platform
+# ----------------------------
+@app.route("/generate/<platform>", methods=["POST"])
+def generate(platform: str):
+    platform = (platform or "").strip().lower()
+    if platform not in ("linkedin", "twitter", "tiktok"):
+        return jsonify({"error": "Unsupported platform"}), 400
+
+    data = request.get_json(silent=True) or {}
+    raw_text = (data.get("text") or "").strip()
+    style_text = (data.get("style_text") or "").strip()
+    image_style = (data.get("image_style") or "Cinematic").strip()
+
+    if not raw_text:
+        return jsonify({"error": "Missing text"}), 400
+
+    # Build SIC payload
+    sic_payload = {
+        "text": raw_text,
+        "content_signal": {"raw_text": raw_text},
+        "style_signal": {"style_dna": data.get("style_dna", "Professional")},
+        "context_signal": {"platforms_available": ["linkedin", "twitter", "tiktok"]},
+    }
+
+    decision = strategic_intelligence_core(sic_payload)
+
+    # If SIC ever says don't execute (should not), treat as reject
+    if not decision.get("execute", False):
+        return jsonify({"error": "Rejected by SIC", "decision": decision}), 404
+
+    primary = (decision.get("primary_platform") or "").strip().lower()
+
+    # Key behavior: only the primary platform returns 200 (to satisfy index.html)
+    if platform != primary:
+        return jsonify({"approved": False, "primary_platform": primary}), 404
+
+    # Generate content
+    try:
+        model = _get_gemini_model()
+    except Exception as e:
+        # This should be 500, not 404
+        return jsonify({"error": str(e)}), 500
+
+    transformed = decision.get("transformed_input", raw_text)
+    style_override = decision.get("style_override", "Professional")
+    mode = decision.get("content_mode", "post")
+    length = (decision.get("rules", {}) or {}).get("length", "short")
+
+    try:
+        if platform == "linkedin":
+            prompt = (
+                f"Write a high-quality LinkedIn post in Arabic.\n"
+                f"Style: {style_override}\n"
+                f"Length: {length}\n"
+                f"Must include: a strong hook, 3-5 short paragraphs, and a subtle CTA.\n\n"
+                f"INPUT:\n{transformed}\n"
+            )
+            resp = model.generate_content(prompt)
+            out = _clean_text(getattr(resp, "text", "") or "")
+            record_success(platform)
+
+            return jsonify({
+                **decision,
+                "approved": True,
+                "platform": platform,
+                "output_text": out
+            }), 200
+
+        if platform == "twitter":
+            prompt = (
+                f"Write an Arabic Twitter/X thread (6-9 tweets).\n"
+                f"Style: {style_override}\n"
+                f"Each tweet <= 240 chars.\n"
+                f"First tweet is a hook. End with a curiosity CTA.\n\n"
+                f"INPUT:\n{transformed}\n"
+            )
+            resp = model.generate_content(prompt)
+            out = _clean_text(getattr(resp, "text", "") or "")
+            record_success(platform)
+
+            return jsonify({
+                **decision,
+                "approved": True,
+                "platform": platform,
+                "output_text": out
+            }), 200
+
+        # tiktok
+        prompt = (
+            f"Create a TikTok video script in Arabic.\n"
+            f"Style: {style_override}\n"
+            f"Duration: 45-60 seconds.\n"
+            f"Return strictly in this format:\n"
+            f"VIDEO_PROMPT: <one paragraph visual prompt>\n"
+            f"SCRIPT:\n"
+            f"1) <0:00-0:05 hook>\n"
+            f"2) <0:05-0:20>\n"
+            f"3) <0:20-0:45>\n"
+            f"4) <0:45-0:60 CTA>\n"
+            f"IMAGE_PROMPT: <one paragraph prompt for a cover image, {image_style}>\n\n"
+            f"INPUT:\n{transformed}\n"
+        )
+        resp = model.generate_content(prompt)
+        txt = _clean_text(getattr(resp, "text", "") or "")
+
+        # Parse fields
+        video_prompt = ""
+        script = ""
+        image_prompt = ""
+
+        m1 = re.search(r"VIDEO_PROMPT:\s*(.+?)\nSCRIPT:", txt, flags=re.S | re.I)
+        if m1:
+            video_prompt = _clean_text(m1.group(1))
+
+        m2 = re.search(r"SCRIPT:\s*(.+?)\nIMAGE_PROMPT:", txt, flags=re.S | re.I)
+        if m2:
+            script = _clean_text(m2.group(1))
+
+        m3 = re.search(r"IMAGE_PROMPT:\s*(.+)$", txt, flags=re.S | re.I)
+        if m3:
+            image_prompt = _clean_text(m3.group(1))
+
+        # Fallback: if parsing failed, return the whole thing as script
+        if not script:
+            script = txt
+
+        record_success(platform)
 
         return jsonify({
-            "ok": True,
-            "mode": sic.get("mode", "DIRECT"),
-            "primary_platform": sic.get("primary_platform"),
-            "secondary_platforms": sic.get("secondary_platforms", []),
-            "content_mode": sic.get("content_mode"),
-            "rules": sic.get("rules", {}),
-            "wpil_trace": sic.get("wpil_trace", {}),
-            "output": out_text
-        })
+            **decision,
+            "approved": True,
+            "platform": platform,
+            "video_prompt": video_prompt,
+            "script": script,
+            "image_prompt": image_prompt,
+            "output_text": txt
+        }), 200
 
     except Exception as e:
-        record_failure("unknown", str(e))
-        return jsonify({"ok": False, "error": str(e)}), 500
+        record_failure(platform)
+        return jsonify({"error": str(e), "decision": decision}), 500
 
 
-# ----------------------------
-# WPIL Remix Routes (Fix 404)
-# ----------------------------
-def _remix_handler():
-    """
-    Handler واحد + عدة Routes لتفادي اختلاف اسم endpoint في الواجهة.
-    """
-    payload = request.get_json(force=True) or {}
-    winning_post = (payload.get("winning_post") or payload.get("text") or "").strip()
-    if not winning_post:
-        return jsonify({"ok": False, "error": "winning_post missing"}), 400
-
-    platform = (payload.get("platform") or "linkedin").lower()
-    niche = (payload.get("niche") or "general").lower()
-    intent = (payload.get("intent") or "educational").lower()
-    style_text = (payload.get("style_text") or "").strip()
-
-    sic = strategic_intelligence_core({
-        "remix": True,
-        "platform": platform,
-        "niche": niche,
-        "intent": intent,
-        "content_signal": {
-            "winning_post": winning_post,
-            "platform": platform,
-            "niche": niche,
-            "intent": intent
-        },
-        "style_signal": {
-            "style_dna": payload.get("style_dna", "Professional")
-        },
-        "context_signal": {
-            "platforms_available": ["linkedin", "twitter", "tiktok"],
-            "platform": platform,
-            "niche": niche,
-            "intent": intent
-        }
-    })
-
-    prompt = _build_prompt(sic, user_style_text=style_text)
-    resp = model.generate_content(prompt)
-    out_text = (resp.text or "").strip()
-
-    return jsonify({
-        "ok": True,
-        "mode": sic.get("mode", "WINNING_POSTS_REMIX"),
-        "primary_platform": sic.get("primary_platform"),
-        "content_mode": sic.get("content_mode"),
-        "rules": sic.get("rules", {}),
-        "wpil_trace": sic.get("wpil_trace", {}),
-        "output": out_text
-    })
-
-
-@app.post("/wpil/remix")
-def wpil_remix():
-    return _remix_handler()
-
-@app.post("/api/wpil/remix")
-def api_wpil_remix():
-    return _remix_handler()
-
-@app.post("/remix")
-def remix_alias():
-    return _remix_handler()
-
-@app.post("/winning-posts/remix")
-def remix_alias2():
-    return _remix_handler()
-
-
-# ----------------------------
-# WPIL Ingest (Optional)
-# ----------------------------
-def _ingest_handler():
-    """
-    إدخال بيانات Winning Posts للتجارب:
-    يقبل:
-      { "posts": ["text1","text2", ...] }
-    أو:
-      { "posts": [ { "text": "...", "platform":"x", "niche":"..." }, ... ] }
-    """
-    payload = request.get_json(force=True) or {}
-    posts = payload.get("posts", [])
-    if not isinstance(posts, list) or len(posts) == 0:
-        return jsonify({"ok": False, "error": "posts must be a non-empty list"}), 400
-
-    existing = _read_patterns()
-    if not isinstance(existing, list):
-        existing = []
-
-    # خزّنها كبساطة (التحليل البنيوي المتقدم لاحقاً)
-    for p in posts:
-        if isinstance(p, str):
-            existing.append({"text": p})
-        elif isinstance(p, dict) and p.get("text"):
-            existing.append({
-                "text": p.get("text", ""),
-                "platform": (p.get("platform") or "").lower(),
-                "niche": (p.get("niche") or "").lower(),
-                "meta": p.get("meta", {})
-            })
-
-    _write_patterns(existing)
-
-    return jsonify({"ok": True, "count": len(existing)})
-
-
-@app.post("/wpil/ingest")
-def wpil_ingest():
-    return _ingest_handler()
-
-@app.post("/api/wpil/ingest")
-def api_wpil_ingest():
-    return _ingest_handler()
-
-
-@app.get("/wpil/health")
-def wpil_health():
-    patterns = _read_patterns()
-    return jsonify({"ok": True, "patterns_count": len(patterns) if isinstance(patterns, list) else 0})
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", "10000"))
+    app.run(host="0.0.0.0", port=port)
