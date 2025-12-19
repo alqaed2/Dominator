@@ -1,242 +1,209 @@
-from __future__ import annotations
-
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 import os
-import re
-
 import google.generativeai as genai
-
-from dominator_brain import strategic_intelligence_core
+from dominator_brain import strategic_intelligence_core, WPIL_DOMINATOR_SYSTEM
 from sic_memory import record_success, record_failure
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates", static_folder="static")
+CORS(app)
 
-# ----------------------------
-# Gemini (lazy init)
-# ----------------------------
-_MODEL = None
+# ========= Environment =========
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
-def _get_gemini_model():
-    global _MODEL
-    if _MODEL is not None:
-        return _MODEL
+if not GEMINI_API_KEY:
+    print("WARNING: GEMINI_API_KEY is missing.")
+else:
+    genai.configure(api_key=GEMINI_API_KEY)
 
-    api_key = os.getenv("GEMINI_API_KEY")
-    model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+model = genai.GenerativeModel(GEMINI_MODEL)
 
-    if not api_key:
-        raise RuntimeError("GEMINI_API_KEY missing")
-    genai.configure(api_key=api_key)
-    _MODEL = genai.GenerativeModel(model_name)
-    return _MODEL
 
-def _clean_text(x: str) -> str:
-    x = (x or "").strip()
-    # remove excessive whitespace
-    x = re.sub(r"\n{3,}", "\n\n", x)
-    return x
+def get_safe_response(prompt: str) -> str:
+    """
+    Wrapper to call Gemini with a single prompt and return text safely.
+    """
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception:
+        # Fallback (some SDK response shapes differ)
+        try:
+            return response.candidates[0].content.parts[0].text
+        except Exception as e:
+            return f"ERROR: Gemini call failed: {e}"
 
-# ----------------------------
-# Views
-# ----------------------------
-@app.route("/")
+
+def normalize_platform(p: str) -> str:
+    if not p:
+        return ""
+    p = p.strip().lower()
+    # Common aliases from UI labels
+    if p in {"x", "twitter"}:
+        return "twitter"
+    if p in {"ln", "linkedin"}:
+        return "linkedin"
+    if p in {"tt", "tiktok"}:
+        return "tiktok"
+    return p
+
+
+def extract_from_request():
+    """
+    Reads JSON from request body safely:
+    - idea: required
+    - style: optional
+    """
+    data = request.get_json(silent=True) or {}
+    idea = (data.get("idea") or "").strip()
+    style = (data.get("style") or "").strip()
+    return idea, style
+
+
+def remix_winning_post(niche: str, seed: str):
+    """
+    Uses SIC to remix a 'winning post' using a niche + seed phrase.
+    """
+    niche = (niche or "").strip()
+    seed = (seed or "").strip()
+
+    if not niche or not seed:
+        return jsonify({"error": "niche and seed are required"}), 400
+
+    prompt = f"""
+{WPIL_DOMINATOR_SYSTEM}
+
+Task: Remix a proven "winning post" into a new post in Arabic with the same structure and persuasion.
+
+Niche: {niche}
+Seed (winning post idea/text): {seed}
+
+Return:
+1) LinkedIn post
+2) X post
+3) TikTok short script
+"""
+    # You already have strategic_intelligence_core; keep it in the loop
+    # but here we directly generate output text; adjust as you prefer.
+    out = get_safe_response(prompt).strip()
+
+    return jsonify({"text": out, "niche": niche}), 200
+
+
+# ========= UI =========
+@app.route("/", methods=["GET"])
 def home():
     return render_template("index.html")
 
-@app.route("/health")
+
+# ========= Diagnostics =========
+@app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"ok": True})
+    return jsonify({"status": "ok", "model": GEMINI_MODEL}), 200
 
-# Optional: quick debugging endpoint
-@app.route("/debug/decision", methods=["POST"])
-def debug_decision():
+
+@app.route("/__routes", methods=["GET"])
+def __routes():
+    """
+    If this endpoint returns 404, you are NOT running Flask on Render
+    (likely a Static Site or wrong start command/module).
+    """
+    rules = sorted([str(r) for r in app.url_map.iter_rules()])
+    return jsonify({"routes": rules}), 200
+
+
+# ========= API =========
+@app.route("/remix", methods=["POST", "GET"], strict_slashes=False)
+def remix_endpoint():
+    if request.method == "GET":
+        return jsonify({"error": "API endpoint", "hint": "Send POST with JSON: {niche, seed}"}), 400
+
     data = request.get_json(silent=True) or {}
-    raw_text = (data.get("text") or "").strip()
-    payload = {
-        "text": raw_text,
-        "content_signal": {"raw_text": raw_text},
-        "style_signal": {"style_dna": data.get("style_dna", "Professional")},
-        "context_signal": {"platforms_available": ["linkedin", "twitter", "tiktok"]},
-    }
-    decision = strategic_intelligence_core(payload)
-    return jsonify(decision)
+    niche = data.get("niche", "")
+    seed = data.get("seed", "")
+    return remix_winning_post(niche, seed)
 
-# ----------------------------
-# Style Analysis (simple, safe)
-# ----------------------------
-@app.route("/analyze-style", methods=["POST"])
-def analyze_style():
-    data = request.get_json(silent=True) or {}
-    sample = (data.get("style_text") or "").strip()
 
-    # Heuristic fallback if empty
-    if not sample:
-        return jsonify({"style_dna": "Professional"})
+@app.route("/generate/<platform>", methods=["POST", "GET"], strict_slashes=False)
+def generate_platform(platform):
+    return execute_with_brain(platform)
 
-    # Try Gemini, but never crash the app if it fails
+
+@app.route("/generate/linkedin", methods=["POST", "GET"], strict_slashes=False)
+def generate_linkedin():
+    return execute_with_brain("linkedin")
+
+
+@app.route("/generate/twitter", methods=["POST", "GET"], strict_slashes=False)
+def generate_twitter():
+    return execute_with_brain("twitter")
+
+
+@app.route("/generate/tiktok", methods=["POST", "GET"], strict_slashes=False)
+def generate_tiktok():
+    return execute_with_brain("tiktok")
+
+
+def execute_with_brain(requested_platform):
+    requested_platform = normalize_platform(requested_platform)
+
+    if request.method == "GET":
+        return jsonify({"error": "API endpoint", "hint": "Send POST with JSON: {idea, style(optional)}"}), 400
+
+    idea, style = extract_from_request()
+    if not idea:
+        return jsonify({"error": "Idea is required"}), 400
+
     try:
-        model = _get_gemini_model()
-        prompt = (
-            "حلّل أسلوب الكتابة التالي وأعطني Label واحد فقط (1-3 كلمات) "
-            "بالإنجليزية مثل: Professional, Bold, Minimal, Storytelling, Analytical.\n\n"
-            f"TEXT:\n{sample}\n"
-        )
-        resp = model.generate_content(prompt)
-        style = _clean_text(getattr(resp, "text", "") or "")
-        style = re.sub(r"[^A-Za-z ]+", "", style).strip() or "Professional"
-        # Keep it compact
-        style = " ".join(style.split()[:3])
-        return jsonify({"style_dna": style})
-    except Exception:
-        return jsonify({"style_dna": "Professional"})
+        # SIC builds the structured content
+        result = strategic_intelligence_core(idea=idea, platform=requested_platform, style=style)
 
-# ----------------------------
-# Core generator per platform
-# IMPORTANT: matches index.html loop behavior.
-# - returns 404 if requested platform is not primary_platform
-# - returns 200 for the primary_platform
-# ----------------------------
-@app.route("/generate/<platform>", methods=["POST"])
-def generate(platform: str):
-    platform = (platform or "").strip().lower()
-    if platform not in ("linkedin", "twitter", "tiktok"):
-        return jsonify({"error": "Unsupported platform"}), 400
+        # Build prompt for Gemini generation (text + optional video prompt)
+        base_prompt = f"""
+{WPIL_DOMINATOR_SYSTEM}
 
-    data = request.get_json(silent=True) or {}
-    raw_text = (data.get("text") or "").strip()
-    style_text = (data.get("style_text") or "").strip()
-    image_style = (data.get("image_style") or "Cinematic").strip()
+You are generating content in Arabic.
 
-    if not raw_text:
-        return jsonify({"error": "Missing text"}), 400
+Platform: {requested_platform}
+Style: {style or "default"}
+Core idea: {idea}
 
-    # Build SIC payload
-    sic_payload = {
-        "text": raw_text,
-        "content_signal": {"raw_text": raw_text},
-        "style_signal": {"style_dna": data.get("style_dna", "Professional")},
-        "context_signal": {"platforms_available": ["linkedin", "twitter", "tiktok"]},
-    }
+SIC Output (use as guidance, do not dump raw unless appropriate):
+{result}
 
-    decision = strategic_intelligence_core(sic_payload)
+Return the final content only.
+"""
 
-    # If SIC ever says don't execute (should not), treat as reject
-    if not decision.get("execute", False):
-        return jsonify({"error": "Rejected by SIC", "decision": decision}), 404
+        generated_text = get_safe_response(base_prompt).strip()
 
-    primary = (decision.get("primary_platform") or "").strip().lower()
+        payload = {
+            "platform": requested_platform,
+            "idea": idea,
+            "style": style,
+            "text": generated_text
+        }
 
-    # Key behavior: only the primary platform returns 200 (to satisfy index.html)
-    if platform != primary:
-        return jsonify({"approved": False, "primary_platform": primary}), 404
+        # TikTok extra: generate "video prompt" + "image prompt" if your UI expects it
+        if requested_platform == "tiktok":
+            video_prompt = get_safe_response(
+                base_prompt + "\nAdditionally: Provide a concise cinematic video prompt for this script."
+            ).strip()
+            image_prompt = get_safe_response(
+                base_prompt + "\nAdditionally: Provide a concise cinematic image prompt for the thumbnail."
+            ).strip()
+            payload["video_prompt"] = video_prompt
+            payload["image_prompt"] = image_prompt
 
-    # Generate content
-    try:
-        model = _get_gemini_model()
+        record_success(requested_platform)
+        return jsonify(payload), 200
+
     except Exception as e:
-        # This should be 500, not 404
+        record_failure(requested_platform)
         return jsonify({"error": str(e)}), 500
-
-    transformed = decision.get("transformed_input", raw_text)
-    style_override = decision.get("style_override", "Professional")
-    mode = decision.get("content_mode", "post")
-    length = (decision.get("rules", {}) or {}).get("length", "short")
-
-    try:
-        if platform == "linkedin":
-            prompt = (
-                f"Write a high-quality LinkedIn post in Arabic.\n"
-                f"Style: {style_override}\n"
-                f"Length: {length}\n"
-                f"Must include: a strong hook, 3-5 short paragraphs, and a subtle CTA.\n\n"
-                f"INPUT:\n{transformed}\n"
-            )
-            resp = model.generate_content(prompt)
-            out = _clean_text(getattr(resp, "text", "") or "")
-            record_success(platform)
-
-            return jsonify({
-                **decision,
-                "approved": True,
-                "platform": platform,
-                "output_text": out
-            }), 200
-
-        if platform == "twitter":
-            prompt = (
-                f"Write an Arabic Twitter/X thread (6-9 tweets).\n"
-                f"Style: {style_override}\n"
-                f"Each tweet <= 240 chars.\n"
-                f"First tweet is a hook. End with a curiosity CTA.\n\n"
-                f"INPUT:\n{transformed}\n"
-            )
-            resp = model.generate_content(prompt)
-            out = _clean_text(getattr(resp, "text", "") or "")
-            record_success(platform)
-
-            return jsonify({
-                **decision,
-                "approved": True,
-                "platform": platform,
-                "output_text": out
-            }), 200
-
-        # tiktok
-        prompt = (
-            f"Create a TikTok video script in Arabic.\n"
-            f"Style: {style_override}\n"
-            f"Duration: 45-60 seconds.\n"
-            f"Return strictly in this format:\n"
-            f"VIDEO_PROMPT: <one paragraph visual prompt>\n"
-            f"SCRIPT:\n"
-            f"1) <0:00-0:05 hook>\n"
-            f"2) <0:05-0:20>\n"
-            f"3) <0:20-0:45>\n"
-            f"4) <0:45-0:60 CTA>\n"
-            f"IMAGE_PROMPT: <one paragraph prompt for a cover image, {image_style}>\n\n"
-            f"INPUT:\n{transformed}\n"
-        )
-        resp = model.generate_content(prompt)
-        txt = _clean_text(getattr(resp, "text", "") or "")
-
-        # Parse fields
-        video_prompt = ""
-        script = ""
-        image_prompt = ""
-
-        m1 = re.search(r"VIDEO_PROMPT:\s*(.+?)\nSCRIPT:", txt, flags=re.S | re.I)
-        if m1:
-            video_prompt = _clean_text(m1.group(1))
-
-        m2 = re.search(r"SCRIPT:\s*(.+?)\nIMAGE_PROMPT:", txt, flags=re.S | re.I)
-        if m2:
-            script = _clean_text(m2.group(1))
-
-        m3 = re.search(r"IMAGE_PROMPT:\s*(.+)$", txt, flags=re.S | re.I)
-        if m3:
-            image_prompt = _clean_text(m3.group(1))
-
-        # Fallback: if parsing failed, return the whole thing as script
-        if not script:
-            script = txt
-
-        record_success(platform)
-
-        return jsonify({
-            **decision,
-            "approved": True,
-            "platform": platform,
-            "video_prompt": video_prompt,
-            "script": script,
-            "image_prompt": image_prompt,
-            "output_text": txt
-        }), 200
-
-    except Exception as e:
-        record_failure(platform)
-        return jsonify({"error": str(e), "decision": decision}), 500
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", "10000"))
-    app.run(host="0.0.0.0", port=port)
+    # Local dev only. On Render use gunicorn.
+    port = int(os.getenv("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=True)
