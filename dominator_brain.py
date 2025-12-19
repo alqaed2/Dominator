@@ -1,53 +1,19 @@
 # =========================================================
 # Strategic Intelligence Core (SIC)
-# Strategic Transformer – Stable + WPIL-aware
-# AI DOMINATOR (WPIL + SIC)
+# Strategic Transformer – Stable Mode (No Confusing Outputs)
+# AI DOMINATOR V16.3+ (PATCHED)
 # =========================================================
 
-from typing import Dict, Any, List
+from __future__ import annotations
+from typing import Dict, Any, List, Tuple
 from sic_memory import get_platform_score
 
-# WPIL Runtime (اختياري)
-try:
-    from wpil_runtime import invoke_wpil  # type: ignore
-except Exception:
-    invoke_wpil = None  # fallback
-
-
-def _safe_invoke_wpil(content_signal: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    WPIL MUST NOT generate content. It returns enforced constraints only.
-    """
-    if invoke_wpil is None:
-        return {
-            "mode": content_signal.get("mode", "DIRECT"),
-            "constraints": {
-                "hook": {"type": "bold_claim", "max_words": 12},
-                "structure": {"line_density": "one_idea_per_line"},
-                "cta": {"type": "curiosity", "position": "end"}
-            },
-            "pattern_count": 0,
-            "source": "fallback"
-        }
-    try:
-        return invoke_wpil(content_signal)  # returns Dict
-    except Exception:
-        return {
-            "mode": content_signal.get("mode", "DIRECT"),
-            "constraints": {
-                "hook": {"type": "bold_claim", "max_words": 12},
-                "structure": {"line_density": "one_idea_per_line"},
-                "cta": {"type": "curiosity", "position": "end"}
-            },
-            "pattern_count": 0,
-            "source": "error_fallback"
-        }
-
+_ALLOWED_PLATFORMS = ("linkedin", "twitter", "tiktok")
 
 def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Transforms any raw idea into a dominance-ready execution plan.
-    Includes WPIL constraints layer (Winning Pattern Intelligence Layer).
+    Always returns a valid primary platform in: linkedin/twitter/tiktok.
     """
 
     content = payload.get("content_signal", {}) or {}
@@ -59,210 +25,101 @@ def strategic_intelligence_core(payload: Dict[str, Any]) -> Dict[str, Any]:
         or content.get("topic")
         or payload.get("text")
         or ""
-    ).strip()
+    )
+    raw_text = (raw_text or "").strip()
 
-    winning_post = (content.get("winning_post") or payload.get("winning_post") or "").strip()
-    remix_mode = bool(payload.get("remix")) or bool(winning_post)
-
-    # signals for WPIL
-    platform_hint = (content.get("platform") or context.get("platform") or payload.get("platform") or "linkedin").lower()
-    niche = (content.get("niche") or context.get("niche") or payload.get("niche") or "general").lower()
-    intent = (content.get("intent") or context.get("intent") or payload.get("intent") or "educational").lower()
-
-    if remix_mode:
-        mode = "WINNING_POSTS_REMIX"
-        wpil_input = {
-            "mode": mode,
-            "platform": platform_hint,
-            "niche": niche,
-            "intent": intent,
-            "has_winning_post": True
-        }
-        wpil = _safe_invoke_wpil(wpil_input)
-
-        # SIC لا يكتب المحتوى النهائي هنا — فقط يبني "مدخل" مُهيكل للموديل
-        remix_seed = _build_remix_seed(
-            winning_post=winning_post or raw_text,
-            niche=niche,
-            platform=platform_hint,
-            style_dna=style.get("style_dna", "Professional"),
-            constraints=wpil.get("constraints", {})
-        )
-
-        platforms = _select_platforms({"curiosity": 0.9, "skim": 0.8, "share": 0.8, "shock": 0.7, "hook": 0.8}, context)
-        if not platforms:
-            platforms = [platform_hint, "linkedin", "twitter", "tiktok"]
-
-        platforms = _unique(platforms)
-        platforms.sort(key=lambda p: get_platform_score(p), reverse=True)
-
-        return {
-            "execute": True,
-            "mode": mode,
-            "primary_platform": platforms[0],
-            "secondary_platforms": platforms[1:],
-            "content_mode": _content_mode_for(platforms[0]),
-            "style_override": style.get("style_dna", "Professional"),
-            "rules": _rules_from_constraints(wpil.get("constraints", {})),
-            "transformed_input": remix_seed,
-            "wpil_trace": {
-                "mode": mode,
-                "input": wpil_input,
-                "constraints": wpil.get("constraints", {}),
-                "pattern_count": wpil.get("pattern_count", 0),
-                "source": wpil.get("source", "wpil_runtime")
-            },
-            "decision_reason": "WPIL Remix Mode (Winning Posts)"
-        }
-
-    # DIRECT MODE
     metrics = _evaluate_metrics(raw_text)
     transformed_text, metrics = _inject_dominance(raw_text, metrics)
 
-    mode = "DIRECT"
-    wpil_input = {
-        "mode": mode,
-        "platform": platform_hint,
-        "niche": niche,
-        "intent": intent,
-        "has_winning_post": False
-    }
-    wpil = _safe_invoke_wpil(wpil_input)
-
     platforms = _select_platforms(metrics, context)
     if not platforms:
-        platforms = [platform_hint, "linkedin", "twitter", "tiktok"]
+        platforms = list(_ALLOWED_PLATFORMS)
 
-    platforms = _unique(platforms)
+    # Normalize + filter (safety)
+    platforms = [_normalize_platform(p) for p in platforms]
+    platforms = [p for p in platforms if p in _ALLOWED_PLATFORMS]
+    if not platforms:
+        platforms = list(_ALLOWED_PLATFORMS)
+
     platforms.sort(key=lambda p: get_platform_score(p), reverse=True)
+
+    primary = platforms[0]
+    secondary = platforms[1:]
 
     return {
         "execute": True,
-        "mode": mode,
-        "primary_platform": platforms[0],
-        "secondary_platforms": platforms[1:],
-        "content_mode": _content_mode_for(platforms[0]),
+        "primary_platform": primary,
+        "secondary_platforms": secondary,
+        "content_mode": _content_mode_for(primary),
         "style_override": style.get("style_dna", "Professional"),
-        "rules": _merge_rules(
-            base={
-                "hook_required": True,
-                "cta_type": "curiosity",
-                "length": _content_length(metrics),
-            },
-            wpil_constraints=wpil.get("constraints", {})
-        ),
-        "transformed_input": transformed_text,
-        "wpil_trace": {
-            "mode": mode,
-            "input": wpil_input,
-            "constraints": wpil.get("constraints", {}),
-            "pattern_count": wpil.get("pattern_count", 0),
-            "source": wpil.get("source", "wpil_runtime")
+        "rules": {
+            "hook_required": True,
+            "cta_type": "curiosity",
+            "length": _content_length(metrics),
         },
-        "decision_reason": "Auto-transformed with WPIL constraints"
+        "metrics": metrics,
+        "transformed_input": transformed_text,
+        "decision_reason": "Auto-transformed for dominance (patched stable routing)",
     }
 
-
-# ----------------------------
+# ---------------------------------------------------------
 # Helpers
-# ----------------------------
-
-def _unique(items: List[str]) -> List[str]:
-    seen = set()
-    out = []
-    for x in items:
-        if x not in seen:
-            out.append(x)
-            seen.add(x)
-    return out
-
-
-def _rules_from_constraints(constraints: Dict[str, Any]) -> Dict[str, Any]:
-    hook = constraints.get("hook", {})
-    cta = constraints.get("cta", {})
-    return {
-        "hook_required": True,
-        "hook_type": hook.get("type", "bold_claim"),
-        "hook_max_words": hook.get("max_words", 12),
-        "cta_type": cta.get("type", "curiosity"),
-        "cta_position": cta.get("position", "end"),
-        "structure": constraints.get("structure", {})
-    }
-
-
-def _merge_rules(base: Dict[str, Any], wpil_constraints: Dict[str, Any]) -> Dict[str, Any]:
-    out = dict(base)
-    out.update(_rules_from_constraints(wpil_constraints))
-    return out
-
-
-def _build_remix_seed(winning_post: str, niche: str, platform: str, style_dna: str, constraints: Dict[str, Any]) -> str:
-    # Seed = تعليمات + المادة المصدر (بدون نسخ حرفي)
-    hook = constraints.get("hook", {})
-    cta = constraints.get("cta", {})
-    structure = constraints.get("structure", {})
-
-    return f"""
-[WPIL WINNING POST REMIX SEED]
-- niche: {niche}
-- platform: {platform}
-- style_dna: {style_dna}
-- constraints:
-  - hook.type: {hook.get("type","bold_claim")}
-  - hook.max_words: {hook.get("max_words",12)}
-  - structure: {structure}
-  - cta.type: {cta.get("type","curiosity")}
-  - cta.position: {cta.get("position","end")}
-
-[IMPORTANT]
-- ممنوع النسخ الحرفي. أعد بناء الفكرة والهيكل ليبدو جديدًا 100%.
-- حافظ على "القوة البنيوية" (Hook → Value → Proof → CTA).
-- اجعل النص عربيًا طبيعيًا، بلا مبالغة مفتعلة.
-
-[WINNING_POST_INPUT]
-{winning_post}
-""".strip()
-
-
 # ---------------------------------------------------------
-# Dominance Injection (DIRECT)
-# ---------------------------------------------------------
+def _normalize_platform(p: str) -> str:
+    p = (p or "").strip().lower()
+    # common aliases
+    if p in ("x", "tweet", "tweets"):
+        return "twitter"
+    if p in ("tt", "tik tok", "tik-tok"):
+        return "tiktok"
+    return p
 
-def _inject_dominance(text: str, metrics: Dict[str, float]):
-    t = text
+def _inject_dominance(text: str, metrics: Dict[str, float]) -> Tuple[str, Dict[str, float]]:
+    """
+    IMPORTANT: Do not stack 4 prefixes blindly (it makes output noisy).
+    We apply at most 2 injections based on the weakest metrics.
+    """
+    t = (text or "").strip()
 
-    if metrics["curiosity"] < 0.7:
-        t = f"ماذا لو كان هذا مختلفًا تمامًا عمّا تعتقد؟ {t}"
-        metrics["curiosity"] = 0.85
+    # If empty, still create something safe
+    if not t:
+        t = "فكرة: كيف نصنع قيمة حقيقية بدل الانشغال الزائف؟"
 
-    if metrics["hook"] < 0.6:
-        t = f"{t} — هذه ليست تنبؤات… هذه إشارات مبكرة."
-        metrics["hook"] = 0.8
+    candidates = []
 
-    if metrics["shock"] < 0.6:
-        t = f"الحقيقة غير المريحة: {t}"
-        metrics["shock"] = 0.75
+    if metrics["curiosity"] < 0.70:
+        candidates.append(("curiosity", 0.85, lambda x: f"ماذا لو كان هذا مختلفًا تمامًا عمّا تعتقد؟ {x}"))
 
-    if metrics["share"] < 0.6:
-        t = f"أنت على وشك أن ترى لماذا يهتم الناس فعلًا بهذا: {t}"
-        metrics["share"] = 0.8
+    if metrics["hook"] < 0.60:
+        candidates.append(("hook", 0.80, lambda x: f"{x} — هذه ليست تنبؤات… هذه إشارات مبكرة."))
+
+    if metrics["shock"] < 0.60:
+        candidates.append(("shock", 0.75, lambda x: f"الحقيقة غير المريحة: {x}"))
+
+    if metrics["share"] < 0.60:
+        candidates.append(("share", 0.80, lambda x: f"ستفهم بعد لحظات لماذا يهتم الناس فعلًا بهذا: {x}"))
+
+    # Sort by lowest metric first, apply max 2
+    candidates.sort(key=lambda item: metrics[item[0]])
+    applied = 0
+    for key, new_val, fn in candidates:
+        if applied >= 2:
+            break
+        t = fn(t)
+        metrics[key] = max(metrics[key], new_val)
+        applied += 1
 
     return t, metrics
 
-
-# ---------------------------------------------------------
-# Metrics Evaluation
-# ---------------------------------------------------------
-
 def _evaluate_metrics(text: str) -> Dict[str, float]:
-    t = text.lower()
+    t = (text or "").lower()
     length = len(t)
 
-    curiosity = 0.5 + (0.25 if "?" in t else 0.0)
-    shock = 0.4 + (0.35 if any(w in t for w in ["الحقيقة", "لن", "لا أحد", "خطير"]) else 0.0)
-    skim = 0.6 + (0.2 if length < 280 else 0.0)
-    share = 0.5 + (0.3 if any(w in t for w in ["أنت", "لك", "لماذا"]) else 0.0)
-    hook = 0.5 + (0.25 if length < 140 else 0.0)
+    curiosity = 0.50 + (0.25 if "?" in t else 0.0)
+    shock = 0.40 + (0.35 if any(w in t for w in ["الحقيقة", "لن", "لا أحد", "خطير"]) else 0.0)
+    skim = 0.60 + (0.20 if length < 280 else 0.0)
+    share = 0.50 + (0.30 if any(w in t for w in ["أنت", "لك", "لماذا"]) else 0.0)
+    hook = 0.50 + (0.25 if length < 140 else 0.0)
 
     return {
         "curiosity": min(curiosity, 1.0),
@@ -272,26 +129,23 @@ def _evaluate_metrics(text: str) -> Dict[str, float]:
         "hook": min(hook, 1.0),
     }
 
-
-# ---------------------------------------------------------
-# Platform Logic
-# ---------------------------------------------------------
-
 def _select_platforms(metrics: Dict[str, float], context: Dict[str, Any]) -> List[str]:
-    available = context.get("platforms_available", ["linkedin", "twitter", "tiktok"])
+    available = context.get("platforms_available", list(_ALLOWED_PLATFORMS))
+    available = [_normalize_platform(p) for p in available]
+    available = [p for p in available if p in _ALLOWED_PLATFORMS]
+
     selected: List[str] = []
 
-    if "twitter" in available and (metrics["curiosity"] + metrics["skim"]) >= 1.6:
+    if "twitter" in available and (metrics["curiosity"] + metrics["skim"]) >= 1.60:
         selected.append("twitter")
 
-    if "linkedin" in available and (metrics["curiosity"] + metrics["share"]) >= 1.5:
+    if "linkedin" in available and (metrics["curiosity"] + metrics["share"]) >= 1.50:
         selected.append("linkedin")
 
-    if "tiktok" in available and (metrics["shock"] + metrics["hook"]) >= 1.4:
+    if "tiktok" in available and (metrics["shock"] + metrics["hook"]) >= 1.40:
         selected.append("tiktok")
 
     return selected
-
 
 def _content_mode_for(platform: str) -> str:
     return {
@@ -300,9 +154,8 @@ def _content_mode_for(platform: str) -> str:
         "tiktok": "video",
     }.get(platform, "post")
 
-
 def _content_length(metrics: Dict[str, float]) -> str:
-    if metrics["skim"] > 0.8:
+    if metrics["skim"] > 0.80:
         return "short"
     if metrics["curiosity"] > 0.85:
         return "medium"
