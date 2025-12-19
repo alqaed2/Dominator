@@ -1,84 +1,94 @@
 # =========================================================
-# sic_memory.py
-# Simple SIC Memory + Platform Scoring (File-backed JSON)
+# SIC Memory — Lightweight Platform Scoring + Feedback
 # =========================================================
 
 from __future__ import annotations
-from typing import Dict, Any, List, Optional
-import json
+from typing import Dict, Any
 import os
+import json
 import time
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MEMORY_FILE = os.path.join(BASE_DIR, "sic_memory_store.json")
+MEMORY_FILE = os.getenv("SIC_MEMORY_FILE", "sic_memory.json")
 
-# ثابت: درجات منصات افتراضية (يمكن تعديلها لاحقاً من الذاكرة)
-DEFAULT_PLATFORM_SCORES = {
-    "linkedin": 0.92,
-    "twitter": 0.88,
-    "tiktok": 0.85,
+# Base scores (static bias). Tweak as you like.
+_BASE: Dict[str, float] = {
+    "linkedin": 0.90,
+    "twitter":  0.82,
+    "tiktok":   0.78,
 }
 
 def _now() -> int:
     return int(time.time())
 
 def _load() -> Dict[str, Any]:
-    if not os.path.exists(MEMORY_FILE):
-        data = {
-            "platform_scores": DEFAULT_PLATFORM_SCORES.copy(),
-            "events": []
-        }
-        _save(data)
-        return data
-
     try:
+        if not os.path.exists(MEMORY_FILE):
+            return {"updated_at": _now(), "platforms": {}}
         with open(MEMORY_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if not isinstance(data, dict):
-                raise ValueError("Invalid memory format")
+            return json.load(f)
     except Exception:
-        data = {
-            "platform_scores": DEFAULT_PLATFORM_SCORES.copy(),
-            "events": []
-        }
-        _save(data)
-        return data
-
-    # ضمان وجود مفاتيح
-    data.setdefault("platform_scores", DEFAULT_PLATFORM_SCORES.copy())
-    data.setdefault("events", [])
-    return data
+        # If file is corrupted or unreadable, fail safe.
+        return {"updated_at": _now(), "platforms": {}}
 
 def _save(data: Dict[str, Any]) -> None:
     try:
+        data["updated_at"] = _now()
         with open(MEMORY_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception:
-        # على Render قد يكون الـ FS read-only في بعض الحالات — نتجاهل بدون كسر التشغيل
+        # Fail silently (Render FS can be ephemeral; do not crash requests)
         pass
 
+def _ensure_platform(data: Dict[str, Any], platform: str) -> Dict[str, int]:
+    plats = data.setdefault("platforms", {})
+    if platform not in plats:
+        plats[platform] = {"success": 0, "failure": 0}
+    return plats[platform]
+
+def record_success(platform: str) -> None:
+    platform = (platform or "").strip().lower()
+    if platform not in _BASE:
+        return
+    data = _load()
+    p = _ensure_platform(data, platform)
+    p["success"] += 1
+    _save(data)
+
+def record_failure(platform: str) -> None:
+    platform = (platform or "").strip().lower()
+    if platform not in _BASE:
+        return
+    data = _load()
+    p = _ensure_platform(data, platform)
+    p["failure"] += 1
+    _save(data)
+
 def get_platform_score(platform: str) -> float:
-    mem = _load()
-    scores = mem.get("platform_scores", DEFAULT_PLATFORM_SCORES)
-    return float(scores.get(platform, 0.5))
+    """
+    Returns a stable score in [0, 1.2] approx.
+    Used for sorting platforms — MUST remain deterministic and safe.
+    """
+    platform = (platform or "").strip().lower()
+    base = _BASE.get(platform, 0.50)
 
-def record_success(platform: str, meta: Optional[Dict[str, Any]] = None) -> None:
-    mem = _load()
-    mem["events"].append({
-        "ts": _now(),
-        "type": "success",
-        "platform": platform,
-        "meta": meta or {}
-    })
-    _save(mem)
+    data = _load()
+    p = data.get("platforms", {}).get(platform, {"success": 0, "failure": 0})
+    s = int(p.get("success", 0))
+    f = int(p.get("failure", 0))
+    total = s + f
 
-def record_failure(platform: str, reason: str = "", meta: Optional[Dict[str, Any]] = None) -> None:
-    mem = _load()
-    mem["events"].append({
-        "ts": _now(),
-        "type": "failure",
-        "platform": platform,
-        "reason": reason,
-        "meta": meta or {}
-    })
-    _save(mem)
+    # Simple reliability bonus/penalty, capped.
+    if total == 0:
+        adj = 0.0
+    else:
+        rate = s / total
+        # Map 0..1 to -0.05..+0.05
+        adj = (rate - 0.5) * 0.10
+
+    score = base + adj
+    # Keep within sane bounds:
+    if score < 0.10:
+        score = 0.10
+    if score > 1.20:
+        score = 1.20
+    return float(score)
