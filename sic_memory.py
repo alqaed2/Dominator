@@ -1,78 +1,84 @@
 # =========================================================
-# SIC Memory (Lightweight)
-# - Platform scoring
-# - Success/Failure counters (optional)
+# sic_memory.py
+# Simple SIC Memory + Platform Scoring (File-backed JSON)
 # =========================================================
 
 from __future__ import annotations
-from typing import Dict, Any, Optional
-import os
+from typing import Dict, Any, List, Optional
 import json
+import os
 import time
 
-SIC_STATS_FILE = os.environ.get("SIC_STATS_FILE", "sic_stats.json")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MEMORY_FILE = os.path.join(BASE_DIR, "sic_memory_store.json")
 
-_PLATFORM_SCORE = {
+# ثابت: درجات منصات افتراضية (يمكن تعديلها لاحقاً من الذاكرة)
+DEFAULT_PLATFORM_SCORES = {
     "linkedin": 0.92,
     "twitter": 0.88,
-    "tiktok": 0.84,
+    "tiktok": 0.85,
 }
 
+def _now() -> int:
+    return int(time.time())
+
+def _load() -> Dict[str, Any]:
+    if not os.path.exists(MEMORY_FILE):
+        data = {
+            "platform_scores": DEFAULT_PLATFORM_SCORES.copy(),
+            "events": []
+        }
+        _save(data)
+        return data
+
+    try:
+        with open(MEMORY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if not isinstance(data, dict):
+                raise ValueError("Invalid memory format")
+    except Exception:
+        data = {
+            "platform_scores": DEFAULT_PLATFORM_SCORES.copy(),
+            "events": []
+        }
+        _save(data)
+        return data
+
+    # ضمان وجود مفاتيح
+    data.setdefault("platform_scores", DEFAULT_PLATFORM_SCORES.copy())
+    data.setdefault("events", [])
+    return data
+
+def _save(data: Dict[str, Any]) -> None:
+    try:
+        with open(MEMORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        # على Render قد يكون الـ FS read-only في بعض الحالات — نتجاهل بدون كسر التشغيل
+        pass
 
 def get_platform_score(platform: str) -> float:
-    if not platform:
-        return 0.5
-    return _PLATFORM_SCORE.get(platform.lower().strip(), 0.5)
-
-
-def _load_stats() -> Dict[str, Any]:
-    try:
-        if os.path.exists(SIC_STATS_FILE):
-            with open(SIC_STATS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-    except Exception:
-        pass
-    return {
-        "total": {"success": 0, "failure": 0},
-        "platform": {},
-        "last_event": None,
-    }
-
-
-def _save_stats(stats: Dict[str, Any]) -> None:
-    try:
-        with open(SIC_STATS_FILE, "w", encoding="utf-8") as f:
-            json.dump(stats, f, ensure_ascii=False, indent=2)
-    except Exception:
-        # في Render قد تكون الكتابة محدودة حسب البيئة، لا نكسر التشغيل
-        pass
-
+    mem = _load()
+    scores = mem.get("platform_scores", DEFAULT_PLATFORM_SCORES)
+    return float(scores.get(platform, 0.5))
 
 def record_success(platform: str, meta: Optional[Dict[str, Any]] = None) -> None:
-    stats = _load_stats()
-    stats["total"]["success"] = int(stats["total"].get("success", 0)) + 1
-
-    p = (platform or "unknown").lower()
-    stats["platform"].setdefault(p, {"success": 0, "failure": 0})
-    stats["platform"][p]["success"] = int(stats["platform"][p].get("success", 0)) + 1
-
-    stats["last_event"] = {"ts": int(time.time()), "type": "success", "platform": p, "meta": meta or {}}
-    _save_stats(stats)
-
+    mem = _load()
+    mem["events"].append({
+        "ts": _now(),
+        "type": "success",
+        "platform": platform,
+        "meta": meta or {}
+    })
+    _save(mem)
 
 def record_failure(platform: str, reason: str = "", meta: Optional[Dict[str, Any]] = None) -> None:
-    stats = _load_stats()
-    stats["total"]["failure"] = int(stats["total"].get("failure", 0)) + 1
-
-    p = (platform or "unknown").lower()
-    stats["platform"].setdefault(p, {"success": 0, "failure": 0})
-    stats["platform"][p]["failure"] = int(stats["platform"][p].get("failure", 0)) + 1
-
-    stats["last_event"] = {
-        "ts": int(time.time()),
+    mem = _load()
+    mem["events"].append({
+        "ts": _now(),
         "type": "failure",
-        "platform": p,
+        "platform": platform,
         "reason": reason,
-        "meta": meta or {},
-    }
-    _save_stats(stats)
+        "meta": meta or {}
+    })
+    _save(mem)
