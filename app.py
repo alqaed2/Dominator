@@ -3,38 +3,31 @@ from flask_cors import CORS
 import os
 import google.generativeai as genai
 
-# استيراد المحرك المصلح
+# استيراد المكونات المحدثة
 from dominator_brain import strategic_intelligence_core, WPIL_DOMINATOR_SYSTEM
-
-# استيراد الذاكرة مع معالجة حالة عدم الوجود
-try:
-    from sic_memory import record_success, record_failure
-except ImportError:
-    def record_success(p): pass
-    def record_failure(p): pass
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-# ========= الإعدادات التقنية =========
+# ========= الإعدادات الذكية =========
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-# استخدام فلاش 2.0 للسرعة القصوى والاكتساح
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 if not GEMINI_API_KEY:
-    print("CRITICAL ERROR: GEMINI_API_KEY IS MISSING!")
+    print("CRITICAL: MISSING API KEY")
 else:
     genai.configure(api_key=GEMINI_API_KEY)
 
 def get_ai_response(prompt: str) -> str:
+    """استدعاء المحرك مع معالجة الأخطاء"""
     try:
         model = genai.GenerativeModel(GEMINI_MODEL)
         response = model.generate_content(prompt)
-        return response.text
+        return response.text.strip()
     except Exception as e:
-        return f"خطأ في الاتصال بالمحرك الذكي: {str(e)}"
+        return f"System Error: {str(e)}"
 
-# ========= المسارات الاستراتيجية (Endpoints) =========
+# ========= المسارات (Endpoints) =========
 
 @app.route("/", methods=["GET"])
 def home():
@@ -42,63 +35,70 @@ def home():
 
 @app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "active", "engine": "AI Dominator V2.0"}), 200
+    return jsonify({"status": "online", "system": "AI DOMINATOR V2"}), 200
 
-@app.route("/generate/<platform>", methods=["POST"])
-def generate_content(platform):
+@app.route("/generate/<platform>", methods=["POST", "GET"])
+@app.route("/generate/linkedin", methods=["POST", "GET"])
+@app.route("/generate/twitter", methods=["POST", "GET"])
+@app.route("/generate/tiktok", methods=["POST", "GET"])
+def handle_generation(platform=None):
+    # إذا نسي النظام تمرير المنصة من الرابط، نحاول استنتاجها
+    target_platform = platform or request.path.split('/')[-1] or "linkedin"
+    
+    if request.method == "GET":
+        return jsonify({"error": "Method not allowed. Use POST"}), 405
+
+    # دالة صائد البيانات الجريئة
     data = request.get_json(silent=True) or {}
-    idea = data.get("idea", "").strip()
-    style = data.get("style", "default").strip()
+    idea = (data.get("idea") or data.get("text") or data.get("content") or "").strip()
+    style = data.get("style", "professional").strip()
 
     if not idea:
-        return jsonify({"error": "الفكرة مطلوبة للبدء"}), 400
+        return jsonify({"error": "فشل التشغيل: الفكرة مطلوبة للبدء"}), 400
 
     try:
-        # 1. تشغيل الدماغ الاستراتيجي (SIC)
-        brain_result = strategic_intelligence_core(idea=idea, platform=platform, style=style)
+        # 1. المعالجة عبر الدماغ (SIC)
+        brain = strategic_intelligence_core(idea=idea, platform=target_platform, style=style)
         
-        # 2. بناء الأمر النهائي للذكاء الاصطناعي
-        final_prompt = f"""
+        # 2. توليد المحتوى النهائي
+        prompt = f"""
         {WPIL_DOMINATOR_SYSTEM}
         
-        الهدف: توليد محتوى مهيمن لمنصة {platform}.
-        الأسلوب المطلوب: {style}
-        النص بعد المعالجة الاستراتيجية: {brain_result['transformed_input']}
+        Platform: {brain['primary_platform']}
+        Style Context: {style}
+        Strategic Input: {brain['transformed_input']}
         
-        المطلوب:
-        - نص احترافي باللغة العربية.
-        - هيكلية قوية (Hook, Value, CTA).
-        - إذا كانت المنصة TikTok، اجعل النص سكريبت مقسم بلقطات.
+        المطلوب: توليد منشور كامل، احترافي، وجاهز للنشر فوراً بالعربية.
         """
+        
+        final_text = get_ai_response(prompt)
 
-        generated_text = get_ai_response(final_prompt)
-
-        # 3. تجهيز النتائج للبصريات (إذا لزم الأمر)
-        payload = {
-            "platform": platform,
-            "text": generated_text,
-            "trace": brain_result['logic_trace']
+        # 3. تجهيز الرد
+        response_payload = {
+            "platform": brain['primary_platform'],
+            "text": final_text,
+            "trace": brain['logic_trace']
         }
 
-        if platform == "tiktok":
-            payload["video_prompt"] = get_ai_response(f"Convert this script to a cinematic video generation prompt (English): {generated_text}")
+        # ميزة إضافية للـ TikTok
+        if brain['primary_platform'] == "tiktok":
+            response_payload["video_prompt"] = get_ai_response(f"Create a 1-sentence cinematic AI video prompt for this: {final_text}")
 
-        record_success(platform)
-        return jsonify(payload), 200
+        return jsonify(response_payload), 200
 
     except Exception as e:
-        record_failure(platform)
-        return jsonify({"error": f"انهيار في النظام: {str(e)}"}), 500
+        return jsonify({"error": f"Internal Crash: {str(e)}"}), 500
 
 @app.route("/remix", methods=["POST"])
 def remix():
     data = request.get_json(silent=True) or {}
-    niche = data.get("niche", "")
+    niche = data.get("niche", "General")
     seed = data.get("seed", "")
     
-    prompt = f"{WPIL_DOMINATOR_SYSTEM}\nأعد صياغة هذه الفكرة (Seed: {seed}) لمجال ({niche}) بأسلوب رابح ومؤثر."
-    result = get_ai_response(prompt)
-    return jsonify({"text": result}), 200
+    if not seed: return jsonify({"error": "Seed missing"}), 400
+
+    prompt = f"{WPIL_DOMINATOR_SYSTEM}\nRemix this idea for the ({niche}) niche in Arabic: {seed}"
+    return jsonify({"text": get_ai_response(prompt)}), 200
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
