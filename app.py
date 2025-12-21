@@ -2,103 +2,82 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
 import google.generativeai as genai
-
-# استيراد المكونات المحدثة
 from dominator_brain import strategic_intelligence_core, WPIL_DOMINATOR_SYSTEM
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-# ========= الإعدادات الذكية =========
+# ========= الإعدادات =========
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
-if not GEMINI_API_KEY:
-    print("CRITICAL: MISSING API KEY")
-else:
+if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
 def get_ai_response(prompt: str) -> str:
-    """استدعاء المحرك مع معالجة الأخطاء"""
     try:
         model = genai.GenerativeModel(GEMINI_MODEL)
         response = model.generate_content(prompt)
-        return response.text.strip()
+        return response.text
     except Exception as e:
-        return f"System Error: {str(e)}"
+        return f"Error: {str(e)}"
 
-# ========= المسارات (Endpoints) =========
+# ========= المسارات المصلحة =========
 
 @app.route("/", methods=["GET"])
 def home():
     return render_template("index.html")
 
-@app.route("/health", methods=["GET"])
-def health():
-    return jsonify({"status": "online", "system": "AI DOMINATOR V2"}), 200
-
-@app.route("/generate/<platform>", methods=["POST", "GET"])
-@app.route("/generate/linkedin", methods=["POST", "GET"])
-@app.route("/generate/twitter", methods=["POST", "GET"])
-@app.route("/generate/tiktok", methods=["POST", "GET"])
-def handle_generation(platform=None):
-    # إذا نسي النظام تمرير المنصة من الرابط، نحاول استنتاجها
-    target_platform = platform or request.path.split('/')[-1] or "linkedin"
-    
-    if request.method == "GET":
-        return jsonify({"error": "Method not allowed. Use POST"}), 405
-
-    # دالة صائد البيانات الجريئة
-    data = request.get_json(silent=True) or {}
-    idea = (data.get("idea") or data.get("text") or data.get("content") or "").strip()
-    style = data.get("style", "professional").strip()
-
-    if not idea:
-        return jsonify({"error": "فشل التشغيل: الفكرة مطلوبة للبدء"}), 400
-
-    try:
-        # 1. المعالجة عبر الدماغ (SIC)
-        brain = strategic_intelligence_core(idea=idea, platform=target_platform, style=style)
-        
-        # 2. توليد المحتوى النهائي
-        prompt = f"""
-        {WPIL_DOMINATOR_SYSTEM}
-        
-        Platform: {brain['primary_platform']}
-        Style Context: {style}
-        Strategic Input: {brain['transformed_input']}
-        
-        المطلوب: توليد منشور كامل، احترافي، وجاهز للنشر فوراً بالعربية.
-        """
-        
-        final_text = get_ai_response(prompt)
-
-        # 3. تجهيز الرد
-        response_payload = {
-            "platform": brain['primary_platform'],
-            "text": final_text,
-            "trace": brain['logic_trace']
-        }
-
-        # ميزة إضافية للـ TikTok
-        if brain['primary_platform'] == "tiktok":
-            response_payload["video_prompt"] = get_ai_response(f"Create a 1-sentence cinematic AI video prompt for this: {final_text}")
-
-        return jsonify(response_payload), 200
-
-    except Exception as e:
-        return jsonify({"error": f"Internal Crash: {str(e)}"}), 500
-
 @app.route("/remix", methods=["POST"])
 def remix():
     data = request.get_json(silent=True) or {}
-    niche = data.get("niche", "General")
-    seed = data.get("seed", "")
+    niche = data.get("niche", "Business Strategy")
+    seed = data.get("seed", "").strip()
     
-    if not seed: return jsonify({"error": "Seed missing"}), 400
+    # إذا كان الـ Seed مفقوداً، نقوم بصناعة فكرة رابحة تلقائياً بناءً على النيش
+    if not seed:
+        seed = f"أفضل طريقة للسيطرة على سوق الـ {niche} في 2025"
+        trace_msg = "MODE: WINNING POSTS REMIX | STATUS: SEED AUTO-GENERATED"
+    else:
+        trace_msg = "MODE: WINNING POSTS REMIX | STATUS: SUCCESS"
 
-    prompt = f"{WPIL_DOMINATOR_SYSTEM}\nRemix this idea for the ({niche}) niche in Arabic: {seed}"
-    return jsonify({"text": get_ai_response(prompt)}), 200
+    prompt = f"{WPIL_DOMINATOR_SYSTEM}\nTask: Remix this idea into a viral high-authority post.\nNiche: {niche}\nSeed: {seed}"
+    result = get_ai_response(prompt)
+    
+    return jsonify({
+        "text": result, 
+        "trace": trace_msg
+    }), 200
+
+@app.route("/generate/<platform>", methods=["POST"])
+def generate_content(platform):
+    data = request.get_json(silent=True) or {}
+    idea = data.get("idea", "").strip()
+    style = data.get("style", "cinematic").strip()
+
+    if not idea:
+        return jsonify({"error": "Idea missing"}), 400
+
+    # 1. تشغيل الدماغ
+    brain = strategic_intelligence_core(idea, platform, style)
+    
+    # 2. توليد المحتوى النصي
+    final_prompt = f"{WPIL_DOMINATOR_SYSTEM}\nGenerate {platform} content for: {brain['transformed_input']}\nStyle: {style}"
+    generated_text = get_ai_response(final_prompt)
+
+    # 3. بناء البايلود
+    payload = {
+        "platform": platform,
+        "text": generated_text,
+        "trace": brain["logic_trace"]
+    }
+
+    # تخصيص تيك توك ببرومبت فخم جداً
+    if platform == "tiktok":
+        payload["video_prompt"] = brain["visual_prompt"]
+        payload["script_details"] = "Luxury Cinematic Style - Supreme Advisor Character"
+
+    return jsonify(payload), 200
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
