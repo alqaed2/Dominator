@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
@@ -8,7 +9,7 @@ from dominator_brain import strategic_intelligence_core, WPIL_DOMINATOR_SYSTEM
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-# إعداد AI
+# إعدادات الـ AI
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 def get_ai_response(prompt: str) -> str:
@@ -18,45 +19,45 @@ def get_ai_response(prompt: str) -> str:
     except Exception as e:
         return f"AI Error: {str(e)}"
 
-# ========= مستخرج البيانات العبقري (The Omni-Scanner) =========
-def extract_data():
-    """يبحث في كل ثقب في الطلب (Request) عن البيانات"""
+# ========= مستخرج البيانات الخارق (The Absolute Ingestor) =========
+def extract_data_no_matter_what():
+    """
+    هذا التابع مصمم للامتصاص المطلق للبيانات مهما كان خطأ الواجهة.
+    """
     data = {}
     
-    # 1. محاولة قراءة JSON (حتى لو كان Content-Type خاطئاً)
+    # 1. محاولة جلب JSON (بشكل قسري)
     try:
         data = request.get_json(force=True, silent=True) or {}
     except:
         data = {}
 
-    # 2. دمج بيانات النماذج (Form Data)
+    # 2. دمج بيانات Form
     if request.form:
         data.update(request.form.to_dict())
 
-    # 3. دمج بيانات الروابط (Query Args)
+    # 3. دمج بيانات الروابط
     if request.args:
         data.update(request.args.to_dict())
 
-    # 4. البحث في البيانات الخام (Raw Body) إذا كان كل ما سبق فارغاً
+    # 4. الملاذ الأخير: البحث في الجسم الخام (Raw Body)
     if not data and request.data:
         try:
-            raw_json = json.loads(request.data)
-            data.update(raw_json)
+            # محاولة فك تشفير البيانات إذا كانت مرسلة كـ String
+            raw_text = request.data.decode('utf-8')
+            data = json.loads(raw_text)
         except:
-            pass
+            # إذا لم تكن JSON، نضعها في حقل 'idea' كافتراض
+            data = {"idea": request.data.decode('utf-8')}
 
-    # الخرائط الذهنية للمسميات (Mapping)
-    # الواجهة قد ترسل 'topic' أو 'idea' أو 'content'
-    idea = data.get("idea") or data.get("topic") or data.get("content") or ""
-    # الواجهة قد ترسل 'seed' أو 'winning_post' أو 'reference'
+    # استخراج القيم مع دعم كافة المسميات الممكنة (Mapping)
+    idea = data.get("idea") or data.get("topic") or data.get("content") or data.get("text") or ""
     seed = data.get("seed") or data.get("winning_post") or data.get("reference") or ""
-    # الأسلوب والنيش
     style = data.get("style") or "Professional"
-    niche = data.get("niche") or ""
+    
+    return str(idea).strip(), str(seed).strip(), str(style).strip()
 
-    return str(idea).strip(), str(seed).strip(), str(style).strip(), str(niche).strip()
-
-# ========= المسارات المهيمنة =========
+# ========= المسارات الاستراتيجية =========
 
 @app.route("/", methods=["GET"])
 def home():
@@ -64,40 +65,46 @@ def home():
 
 @app.route("/generate/<platform>", methods=["POST", "GET"])
 @app.route("/remix", methods=["POST", "GET"])
-def execute(platform="linkedin"):
-    # إذا تم استدعاء /remix نعتبر المنصة افتراضياً LinkedIn
+def universal_handler(platform="linkedin"):
     if request.path == "/remix":
         platform = "linkedin"
 
-    idea, seed, style, niche = extract_data()
+    # استخراج البيانات بالبروتوكول الشامل
+    idea, seed, style = extract_data_no_matter_what()
 
-    # محاولة الإنقاذ: إذا كان أحد الحقلين ممتلئاً، نعتبره هو المحتوى الأساسي
-    actual_input = idea if idea else seed
+    # التحقق النهائي للتشغيل
+    actual_content = idea if idea else seed
     
-    if not actual_input:
+    if not actual_content:
+        # رسالة خطأ ذكية تخبرنا ماذا وصل للسيرفر فعلياً للمساعدة في التشخيص
+        debug_info = {
+            "received_keys": list(request.form.keys()) if request.form else "None",
+            "has_json": bool(request.get_json(silent=True)),
+            "raw_data_length": len(request.data) if request.data else 0
+        }
         return jsonify({
-            "error": "فشل التشغيل: لم تصل أي بيانات للسيرفر. تأكد من الكتابة في الصناديق.",
-            "debug_received_keys": list(request.form.keys()) if request.form else "None"
+            "error": "فشل التشغيل: لم تصل بيانات. السيرفر مستعد ولكن الواجهة أرسلت طلباً فارغاً.",
+            "debug": debug_info
         }), 400
 
     try:
-        # 1. تشغيل الدماغ (SIC)
+        # تشغيل الدماغ (SIC)
         brain = strategic_intelligence_core(idea, platform, style, seed)
         
-        # 2. توليد المحتوى
-        final_prompt = f"{WPIL_DOMINATOR_SYSTEM}\nالمهمة: {brain['transformed_input']}\nالمنصة: {platform}\nالأسلوب: {style}"
+        # بناء الأمر النهائي للهيمنة
+        final_prompt = f"{WPIL_DOMINATOR_SYSTEM}\nالمنصة: {platform}\nالمهمة: {brain['transformed_input']}\nالأسلوب: {style}"
+        
         text = get_ai_response(final_prompt)
 
         return jsonify({
             "platform": platform,
             "text": text,
             "trace": brain["logic_trace"],
-            "video_prompt": brain.get("visual_prompt") if platform == "tiktok" else "",
-            "niche": niche
+            "video_prompt": brain.get("visual_prompt", "") if platform == "tiktok" else ""
         }), 200
 
     except Exception as e:
-        return jsonify({"error": f"Internal Server Crash: {str(e)}"}), 500
+        return jsonify({"error": f"Internal Crash: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
