@@ -15,35 +15,38 @@ CORS(app)
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# ========= إعداد محركات AI 2025 =========
+# ========= إعداد محركات AI (تحديث 21 ديسمبر 2025) =========
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
-# مصفوفة الهيمنة لتجاوز خطأ 429 (التحميل الزائد)
+# مصفوفة الهيمنة - تم اختيار الأسماء بناءً على قائمتك "المتاحة" يقيناً
 MODELS_PRIORITY = [
-    "gemini-2.0-flash",       # التوازن المثالي
-    "gemini-1.5-flash",       # سرعة فائقة وحدود عالية
-    "gemini-flash-latest"     # الملاذ الأخير للاستقرار
+    "gemini-2.5-flash",       # طراز القمة لعام 2025 (متاح في قائمتك)
+    "gemini-2.0-flash",       # الطراز المستقر فائق السرعة (متاح في قائمتك)
+    "gemini-flash-latest"     # البديل الشامل لضمان التشغيل (متاح في قائمتك)
 ]
 
 def get_ai_response_with_failover(prompt: str) -> str:
     last_error = ""
     for model_name in MODELS_PRIORITY:
         try:
-            logger.info(f"Attempting execution with: {model_name}")
+            logger.info(f"Deploying Brain on: {model_name}")
+            # نستخدم التسمية الكاملة للتأكد من الموثوقية
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
             return response.text
         except Exception as e:
             last_error = str(e)
-            if "429" in last_error:
-                logger.warning(f"Model {model_name} rate limited. Switching...")
+            logger.error(f"Execution failed on {model_name}: {last_error}")
+            # إذا كان الخطأ 404 أو 429، ننتقل للموديل التالي فوراً
+            if "404" in last_error or "429" in last_error:
                 continue
-            return f"Critical Engine Error: {last_error}"
-    return f"⚠️ عذراً، جميع المحركات مشغولة حالياً. يرجى الانتظار دقيقة واحدة. الخطأ: {last_error}"
+            return f"Strategic Engine Error: {last_error}"
+    
+    return f"⚠️ انقطاع في الاتصال بالشبكة العصبية العالمية. يرجى المحاولة لاحقاً. الخطأ الأخير: {last_error}"
 
-# ========= مستخرج البيانات المطابق لـ index.html =========
+# ========= مستخرج البيانات ذكياً =========
 def extract_ui_data():
     data = {}
     try:
@@ -59,37 +62,32 @@ def extract_ui_data():
     
     return str(idea).strip(), str(seed).strip(), str(style).strip()
 
-# ========= المسارات المهيمنة =========
+# ========= المسارات الاستراتيجية المهيمنة =========
 
 @app.route("/", methods=["GET"])
 def home():
     return render_template("index.html")
 
-@app.route("/health")
-def health():
-    return jsonify({"status": "online", "system": "AI DOMINATOR V3.0"}), 200
-
 @app.route("/generate/<platform>", methods=["POST", "GET"])
 @app.route("/remix", methods=["POST", "GET"])
 def handle_execution(platform="linkedin"):
     if request.method == "GET":
-        return jsonify({"info": "POST expected"}), 200
+        return jsonify({"status": "ready"}), 200
 
     if request.path == "/remix": platform = "linkedin"
 
-    # 1. استخراج البيانات
     idea, seed, style = extract_ui_data()
     actual_content = idea if idea else seed
     
     if not actual_content:
-        return jsonify({"error": "يرجى إدخال فكرة أو منشور مرجعي للبدء"}), 400
+        return jsonify({"error": "يرجى إدخال مادة خام للعمل عليها"}), 400
 
     try:
-        # 2. تشغيل الدماغ بمنطق المقاطع السينمائية
+        # 1. تشغيل الدماغ الاستراتيجي
         brain = strategic_intelligence_core(idea, platform, style, seed)
         
-        # 3. بناء الأمر وتوليد النص
-        final_prompt = f"{WPIL_DOMINATOR_SYSTEM}\nالمنصة: {platform}\nالمهمة: {brain['transformed_input']}\nالأسلوب: {style}"
+        # 2. بناء الميثاق وتوليد النتائج عبر نظام الـ Failover
+        final_prompt = f"{WPIL_DOMINATOR_SYSTEM}\nالمنصة المستهدفة: {platform}\nالمهمة: {brain['transformed_input']}\nالأسلوب: {style}"
         generated_text = get_ai_response_with_failover(final_prompt)
 
         payload = {
@@ -100,9 +98,9 @@ def handle_execution(platform="linkedin"):
             "sic_transformed_input": brain['transformed_input']
         }
 
-        # 4. معالجة مقاطع الفيديو لتيك توك (بصيغة كود)
+        # 3. معالجة الفيديو لمنصة TikTok
         if platform == "tiktok" and "video_segments" in brain:
-            formatted_prompts = "🚀 **SUPREME ADVISOR VIDEO BLUEPRINT (9:16)**\n\n"
+            formatted_prompts = "🎥 **SUPREME ADVISOR VIDEO BLUEPRINT (9:16)**\n\n"
             for seg in brain["video_segments"]:
                 formatted_prompts += f"### Scene: {seg['time']}\n```text\n{seg['prompt']}\n```\n\n"
             payload["video_prompt"] = formatted_prompts
@@ -112,7 +110,7 @@ def handle_execution(platform="linkedin"):
         return jsonify(payload), 200
 
     except Exception as e:
-        logger.error(f"DEPLOYMENT CRASH: {str(e)}")
+        logger.error(f"SYSTEM CRITICAL CRASH: {str(e)}")
         return jsonify({"error": f"Internal Crash: {str(e)}"}), 500
 
 if __name__ == "__main__":
