@@ -2,49 +2,51 @@ import os
 import sys
 import json
 import logging
+import time
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
-
-# استيراد الدماغ المطور
 from dominator_brain import strategic_intelligence_core, WPIL_DOMINATOR_SYSTEM
 
-# إعداد التطبيق والسجلات
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# ========= إعداد محركات AI (تحديث 21 ديسمبر 2025) =========
+# ========= إعداد محركات AI (بروتوكول الاستمرارية 2025) =========
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
-# مصفوفة الهيمنة - تم اختيار الأسماء بناءً على قائمتك "المتاحة" يقيناً
+# مصفوفة الهيمنة المحدثة: تعطي الأولوية للموديلات ذات الحدود العالية (High Quota)
 MODELS_PRIORITY = [
-    "gemini-2.5-flash",       # طراز القمة لعام 2025 (متاح في قائمتك)
-    "gemini-2.0-flash",       # الطراز المستقر فائق السرعة (متاح في قائمتك)
-    "gemini-flash-latest"     # البديل الشامل لضمان التشغيل (متاح في قائمتك)
+    "gemini-2.0-flash-lite",   # الأسرع والأعلى في حدود الطلبات (Quota)
+    "gemini-flash-latest",     # الموديل المستقر (1.5 Flash) - حدود عالية جداً
+    "gemini-2.0-flash",       # توازن بين الذكاء والسرعة
+    "gemini-2.5-flash-lite",  # موديل القمة بنسخة Lite
+    "gemini-2.5-flash"        # الخيار الأخير (قيود صارمة)
 ]
 
 def get_ai_response_with_failover(prompt: str) -> str:
     last_error = ""
     for model_name in MODELS_PRIORITY:
         try:
-            logger.info(f"Deploying Brain on: {model_name}")
-            # نستخدم التسمية الكاملة للتأكد من الموثوقية
+            logger.info(f"🚀 Deploying on: {model_name}")
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
             return response.text
         except Exception as e:
             last_error = str(e)
-            logger.error(f"Execution failed on {model_name}: {last_error}")
-            # إذا كان الخطأ 404 أو 429، ننتقل للموديل التالي فوراً
-            if "404" in last_error or "429" in last_error:
+            logger.warning(f"⚠️ {model_name} busy or limited. Error: {last_error[:50]}...")
+            # إذا كان الخطأ 429 (الحد المتجاوز)، ننتقل فوراً للتالي
+            if "429" in last_error or "Quota" in last_error:
+                continue
+            # إذا كان خطأ 404 (موديل غير موجود)، ننتقل للتالي
+            if "404" in last_error:
                 continue
             return f"Strategic Engine Error: {last_error}"
     
-    return f"⚠️ انقطاع في الاتصال بالشبكة العصبية العالمية. يرجى المحاولة لاحقاً. الخطأ الأخير: {last_error}"
+    return f"⚠️ جميع الشبكات العصبية مشغولة بالطلبات حالياً. يرجى الانتظار 30 ثانية والمحاولة مجدداً لفتح مسار جديد."
 
 # ========= مستخرج البيانات ذكياً =========
 def extract_ui_data():
@@ -52,17 +54,15 @@ def extract_ui_data():
     try:
         data = request.get_json(force=True, silent=True) or {}
     except: data = {}
-    
     if request.form: data.update(request.form.to_dict())
 
-    # المطابقة مع مسميات JavaScript في index.html
     idea = data.get('text') or data.get('idea') or data.get('topic') or ""
     seed = data.get('winning_post') or data.get('seed') or ""
     style = data.get('style_dna') or data.get('style') or "Professional"
     
     return str(idea).strip(), str(seed).strip(), str(style).strip()
 
-# ========= المسارات الاستراتيجية المهيمنة =========
+# ========= المسارات الاستراتيجية =========
 
 @app.route("/", methods=["GET"])
 def home():
@@ -80,14 +80,14 @@ def handle_execution(platform="linkedin"):
     actual_content = idea if idea else seed
     
     if not actual_content:
-        return jsonify({"error": "يرجى إدخال مادة خام للعمل عليها"}), 400
+        return jsonify({"error": "يرجى إدخال بيانات للتحليل"}), 400
 
     try:
-        # 1. تشغيل الدماغ الاستراتيجي
+        # 1. تشغيل الدماغ
         brain = strategic_intelligence_core(idea, platform, style, seed)
         
-        # 2. بناء الميثاق وتوليد النتائج عبر نظام الـ Failover
-        final_prompt = f"{WPIL_DOMINATOR_SYSTEM}\nالمنصة المستهدفة: {platform}\nالمهمة: {brain['transformed_input']}\nالأسلوب: {style}"
+        # 2. توليد المحتوى بنظام الـ Failover الذكي
+        final_prompt = f"{WPIL_DOMINATOR_SYSTEM}\nالمنصة: {platform}\nالمهمة: {brain['transformed_input']}\nالأسلوب: {style}"
         generated_text = get_ai_response_with_failover(final_prompt)
 
         payload = {
@@ -98,7 +98,7 @@ def handle_execution(platform="linkedin"):
             "sic_transformed_input": brain['transformed_input']
         }
 
-        # 3. معالجة الفيديو لمنصة TikTok
+        # 3. برومبت الفيديو لتيك توك
         if platform == "tiktok" and "video_segments" in brain:
             formatted_prompts = "🎥 **SUPREME ADVISOR VIDEO BLUEPRINT (9:16)**\n\n"
             for seg in brain["video_segments"]:
@@ -110,8 +110,8 @@ def handle_execution(platform="linkedin"):
         return jsonify(payload), 200
 
     except Exception as e:
-        logger.error(f"SYSTEM CRITICAL CRASH: {str(e)}")
-        return jsonify({"error": f"Internal Crash: {str(e)}"}), 500
+        logger.error(f"CRITICAL CRASH: {str(e)}")
+        return jsonify({"error": f"Internal Error: {str(e)}"}), 500
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
