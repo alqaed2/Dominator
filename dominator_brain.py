@@ -1,39 +1,40 @@
 from __future__ import annotations
-from typing import Any, Dict # هذا السطر هو الذي كان مفقوداً وسبب الانهيار
+from typing import Any, Dict
 
 # =========================================================
-# Strategic Intelligence Core (SIC) - V2.3 HYBRID FUSION
+# Strategic Intelligence Core (SIC) - V2.4 SUPREME FUSION
 # =========================================================
 
 WPIL_DOMINATOR_SYSTEM = """
 أنت 'المستشار الأعلى' (THE SUPREME ADVISOR). 
-قوتك تكمن في 'الذكاء التركيبي': دمج الأفكار الخام مع هياكل المحتوى الناجحة عالمياً.
-هويتك البصرية: واقعية سينمائية فخمة (Luxury Realism).
+قوتك في 'الذكاء التركيبي': دمج الأفكار مع هياكل المحتوى العالمية.
+هويتك البصرية: فخامة سينمائية (Luxury Realism).
 """
 
 def strategic_intelligence_core(idea: str = "", platform: str = "linkedin", style: str = "default", reference_post: str = "") -> Dict[str, Any]:
     """
-    الدماغ الاستراتيجي: يعالج المدخلات ويدمج الفكرة مع المنشور المرجعي.
+    الدماغ الاستراتيجي: يعالج المدخلات ويدمج الفكرة مع المنشور المرجعي بذكاء مطلق.
     """
-    primary_subject = (idea or "استراتيجية هيمنة حديثة").strip()
-    ref_content = (reference_post or "").strip()
+    # تنظيف المدخلات لضمان عدم وجود فراغات وهمية
+    primary_subject = str(idea or "").strip()
+    ref_content = str(reference_post or "").strip()
     
-    # منطق الاندماج الفائق
-    if ref_content and idea:
-        transformed_task = f"ادمج الفكرة التالية: [{primary_subject}] مع أسلوب وهيكل المنشور المرجعي هذا: [{ref_content}]"
-        logic_mode = "HYBRID FUSION"
+    # اختيار وضع التشغيل بناءً على المعطيات المتوفرة
+    if ref_content and primary_subject:
+        transformed_task = f"مهمة دمج: خذ الفكرة [{primary_subject}] وصبها في قالب المنشور المرجعي [{ref_content}]. حافظ على القوة والتأثير."
+        logic_mode = "HYBRID FUSION (Full Power)"
     elif ref_content:
-        transformed_task = f"أعد إنتاج القوة التأثيرية لهذا المنشور المرجعي: [{ref_content}]"
+        transformed_task = f"مهمة ريمكس: أعد إنتاج القوة الاستراتيجية لهذا المنشور المرجعي: [{ref_content}]."
         logic_mode = "REMIX MODE"
     else:
-        transformed_task = f"صمم محتوى أصلياً للفكرة: [{primary_subject}]"
+        # إذا لم يتوفر إلا الفكرة أو كانت محاولة تشغيل بالحد الأدنى
+        final_idea = primary_subject if primary_subject else "استراتيجية هيمنة شاملة"
+        transformed_task = f"مهمة توليد أصلي: صمم محتوى عالي السلطة للفكرة التالية: [{final_idea}]."
         logic_mode = "DIRECT MODE"
 
-    # برومبت بصري فخم جداً (المستشار الأعلى)
     visual_identity = (
-        "Ultra-realistic cinematic 8k shot of a high-status male strategic advisor, "
-        "bespoke charcoal suit, sharp facial features, confident gaze, "
-        "minimalist luxury obsidian office background, soft cinematic studio lighting."
+        "Ultra-realistic cinematic 8k, high-status male strategic advisor, "
+        "bespoke suit, sharp eyes, minimalist luxury office, cinematic lighting."
     )
 
     return {
@@ -41,5 +42,5 @@ def strategic_intelligence_core(idea: str = "", platform: str = "linkedin", styl
         "primary_platform": platform,
         "transformed_input": transformed_task,
         "visual_prompt": visual_identity,
-        "logic_trace": f"MODE: {logic_mode} | PLATFORM: {platform}"
+        "logic_trace": f"MODE: {logic_mode} | STATUS: SUCCESS"
     }
