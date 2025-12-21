@@ -1,99 +1,107 @@
 import os
 import json
 import logging
+import sys
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
 from dominator_brain import strategic_intelligence_core, WPIL_DOMINATOR_SYSTEM
 
+# إعداد السجلات لرؤية الحقيقة في Render Logs
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-# ========= مركز القيادة للموديلات 2025 =========
-# مصفوفة الهيمنة: المحرك سيجرب هذه الموديلات بالترتيب في حال فشل أحدهما
-MODELS_PRIORITY = [
-    "gemini-2.5-flash",       # الأعلى ذكاءً
-    "gemini-2.5-flash-lite",  # الأعلى في حدود الطلبات (Quota)
-    "gemini-flash-latest"     # الأكثر استقراراً (Legacy)
-]
-
+# إعداد AI مع نظام التبديل التلقائي (Failover)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
-def get_ai_response_with_failover(prompt: str) -> str:
-    """
-    نظام استجابة حصين: يجرب الموديلات بالترتيب لتجاوز خطأ 429.
-    """
-    last_error = ""
-    for model_name in MODELS_PRIORITY:
-        try:
-            print(f"[SYSTEM] Attempting with model: {model_name}")
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            last_error = str(e)
-            if "429" in last_error:
-                print(f"[WARNING] Model {model_name} reached limit. Switching to next...")
-                continue # جرب الموديل التالي
-            else:
-                return f"Critical Engine Error: {last_error}"
-    
-    return f"⚠️ جميع المحركات مشغولة حالياً (خطأ 429). يرجى المحاولة بعد دقيقة واحدة. آخر خطأ: {last_error}"
+MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"]
 
-# ========= مستخرج البيانات الشامل =========
-def extract_universal_data():
-    data = {}
-    try:
-        data = request.get_json(force=True, silent=True) or {}
-    except: pass
-    if request.form: data.update(request.form.to_dict())
+def get_ai_response(prompt):
+    for model_name in MODELS:
+        try:
+            logger.info(f"Using Model: {model_name}")
+            model = genai.GenerativeModel(model_name)
+            return model.generate_content(prompt).text
+        except Exception as e:
+            logger.error(f"Model {model_name} failed: {e}")
+            continue
+    return "Error: All AI engines are currently unavailable."
+
+# ========= الرادار الشامل لاستقبال البيانات (The Omni-Ingestor) =========
+def extract_data_from_anywhere():
+    """
+    يستخرج البيانات حتى لو أرسلتها الواجهة بشكل خاطئ تماماً.
+    """
+    final_payload = {}
     
-    idea = data.get("idea") or data.get("topic") or data.get("content") or ""
-    seed = data.get("seed") or data.get("winning_post") or data.get("reference") or ""
-    style = data.get("style") or "Professional"
+    # 1. محاولة JSON
+    try:
+        json_data = request.get_json(force=True, silent=True)
+        if json_data: final_payload.update(json_data)
+    except: pass
+    
+    # 2. محاولة Form Data
+    if request.form: final_payload.update(request.form.to_dict())
+    
+    # 3. محاولة Query Args
+    if request.args: final_payload.update(request.args.to_dict())
+    
+    # 4. محاولة البيانات الخام (Raw Body) - إذا أرسلها المتصفح كنص عادي
+    raw_body = request.get_data(as_text=True)
+    if raw_body and not final_payload:
+        try:
+            final_payload.update(json.loads(raw_body))
+        except:
+            final_payload['idea'] = raw_body # اعتباره فكرة مباشرة
+
+    # طباعة البيانات المستلمة في Logs للتشخيص
+    logger.debug(f"RECEIVED DATA: {final_payload}")
+
+    # توحيد المسميات (Mapping)
+    idea = final_payload.get('idea') or final_payload.get('topic') or final_payload.get('content') or ""
+    seed = final_payload.get('seed') or final_payload.get('winning_post') or final_payload.get('reference') or ""
+    style = final_payload.get('style') or "Professional"
     
     return str(idea).strip(), str(seed).strip(), str(style).strip()
 
-# ========= المسارات الاستراتيجية =========
+# ========= المسارات المهيمنة =========
 
-@app.route("/", methods=["GET"])
+@app.route("/")
 def home():
     return render_template("index.html")
 
 @app.route("/generate/<platform>", methods=["POST", "GET"])
 @app.route("/remix", methods=["POST", "GET"])
-def execute(platform="linkedin"):
+def handle_request(platform="linkedin"):
     if request.path == "/remix": platform = "linkedin"
-
-    idea, seed, style = extract_universal_data()
-    actual_input = idea if idea else seed
     
-    if not actual_input:
-        return jsonify({"error": "يرجى إدخال فكرة أو منشور مرجعي"}), 400
+    idea, seed, style = extract_data_from_anywhere()
+    
+    # الفحص النهائي قبل الرفض
+    if not idea and not seed:
+        logger.error("400 Error: No text found in any part of the request.")
+        return jsonify({
+            "error": "السيرفر لم يجد أي نصوص. تأكد أن الواجهة ترسل البيانات بشكل صحيح.",
+            "debug_keys": list(request.form.keys()) if request.form else "None"
+        }), 400
 
     try:
-        # 1. تشغيل الدماغ (SIC)
         brain = strategic_intelligence_core(idea, platform, style, seed)
+        prompt = f"{WPIL_DOMINATOR_SYSTEM}\nالمنصة: {platform}\nالمهمة: {brain['transformed_input']}\nالأسلوب: {style}"
         
-        # 2. توليد المحتوى بنظام الـ Failover
-        final_prompt = f"""
-        {WPIL_DOMINATOR_SYSTEM}
-        المنصة: {platform}
-        المهمة الاستراتيجية: {brain['transformed_input']}
-        الأسلوب: {style}
-        """
+        output = get_ai_response(prompt)
         
-        text = get_ai_response_with_failover(final_prompt)
-
         return jsonify({
+            "text": output,
             "platform": platform,
-            "text": text,
             "trace": brain["logic_trace"],
             "video_prompt": brain.get("visual_prompt") if platform == "tiktok" else ""
         }), 200
-
     except Exception as e:
         return jsonify({"error": f"Internal Crash: {str(e)}"}), 500
 
