@@ -1,42 +1,40 @@
+import os
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-import os
 import google.generativeai as genai
+
+# استيراد الدماغ المصلح
 from dominator_brain import strategic_intelligence_core, WPIL_DOMINATOR_SYSTEM
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-# ========= إعداد المحرك =========
+# ========= إعدادات المحرك الذكي =========
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_API_KEY)
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 def get_ai_response(prompt: str) -> str:
     try:
+        # استخدام موديل الفلاش لسرعة الاستجابة والاكتساح
         model = genai.GenerativeModel("gemini-2.0-flash")
-        return model.generate_content(prompt).text
+        response = model.generate_content(prompt)
+        return response.text
     except Exception as e:
-        return f"خطأ في المحرك الذكي: {str(e)}"
+        return f"فشل المحرك الذكي: {str(e)}"
 
-def extract_all_data():
-    """
-    مستخرج بيانات ذكي: يبحث في JSON و Form و Args عن أي محتوى.
-    """
-    # 1. محاولة جلب البيانات من JSON
+# ========= مركز استخراج البيانات ذكياً =========
+def extract_data():
+    """يجلب البيانات من JSON أو Form بكل مرونة"""
     data = request.get_json(silent=True) or {}
-    # 2. دمجها مع بيانات Form (إذا وجدت)
-    form_data = request.form.to_dict()
-    data.update(form_data)
+    form = request.form.to_dict()
+    data.update(form)
     
-    # البحث عن الفكرة بكل المسميات الممكنة
-    idea = data.get("idea") or data.get("topic") or data.get("content") or ""
-    # البحث عن المنشور المرجعي (Seed)
-    seed = data.get("seed") or data.get("reference") or data.get("winning_post") or ""
-    # البحث عن النيش والأسلوب
-    niche = data.get("niche") or ""
+    idea = data.get("idea") or data.get("topic") or ""
+    seed = data.get("seed") or data.get("reference") or ""
     style = data.get("style") or "Professional"
     
-    return str(idea).strip(), str(seed).strip(), str(niche).strip(), str(style).strip()
+    return str(idea).strip(), str(seed).strip(), str(style).strip()
 
 # ========= المسارات الاستراتيجية =========
 
@@ -45,33 +43,29 @@ def home():
     return render_template("index.html")
 
 @app.route("/generate/<platform>", methods=["POST", "GET"])
-def generate_content(platform):
-    # دعم GET فقط لإرجاع رسالة توضيحية، العمل الحقيقي في POST
+def generate(platform):
     if request.method == "GET":
-        return jsonify({"info": f"Endpoint for {platform} is active. Use POST."}), 200
+        return jsonify({"status": "active"}), 200
 
-    # استخراج البيانات بذكاء
-    idea, seed, niche, style = extract_all_data()
-
-    # إذا كان كلاهما فارغاً، نقوم بمحاولة أخيرة من الـ URL Parameters
-    if not idea and not seed:
-        idea = request.args.get("idea", "")
-        seed = request.args.get("seed", "")
-
-    # فحص القبول النهائي
-    actual_content = idea if idea else seed
-    if not actual_content:
-        return jsonify({"error": "فشل التشغيل: يرجى إدخال فكرة أو منشور مرجعي للبدء"}), 400
+    idea, seed, style = extract_data()
+    
+    # التحقق من وجود أي مدخل للعمل عليه
+    actual_input = idea if idea else seed
+    if not actual_input:
+        return jsonify({"error": "يرجى إدخال فكرة أو منشور مرجعي"}), 400
 
     try:
-        # تشغيل الدماغ بمنطق الاندماج
+        # 1. تشغيل الدماغ بمنطق الاندماج (Fusion)
         brain = strategic_intelligence_core(idea=idea, platform=platform, style=style, reference_post=seed)
         
+        # 2. بناء الأمر النهائي للذكاء الاصطناعي
         final_prompt = f"""
         {WPIL_DOMINATOR_SYSTEM}
-        المهمة: {brain['transformed_input']}
+        المهمة المطلوبة: {brain['transformed_input']}
         المنصة: {platform}
-        الأسلوب: {style}
+        الأسلوب البصري واللفظي: {style}
+        
+        المطلوب: توليد محتوى مهيمن باللغة العربية بجودة استشارية عليا.
         """
         
         generated_text = get_ai_response(final_prompt)
@@ -79,16 +73,18 @@ def generate_content(platform):
         return jsonify({
             "platform": platform,
             "text": generated_text,
-            "trace": brain["logic_trace"]
+            "trace": brain["logic_trace"],
+            "video_prompt": brain.get("visual_prompt", "") if platform == "tiktok" else ""
         }), 200
 
     except Exception as e:
-        return jsonify({"error": f"Internal Crash: {str(e)}"}), 500
+        return jsonify({"error": f"Internal Error: {str(e)}"}), 500
 
 @app.route("/remix", methods=["POST", "GET"])
-def remix():
-    # توحيد مسار الريمكس مع المحرك الرئيسي لضمان القوة
-    return generate_content("linkedin")
+def remix_legacy():
+    # توجيد مسار الريمكس القديم مع المحرك الجديد
+    return generate("linkedin")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
