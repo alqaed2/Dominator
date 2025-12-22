@@ -2,47 +2,56 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 # =========================================================
-# Strategic Intelligence Core (SIC) - V5.0 ALCHEMY EDITION
+# Strategic Intelligence Core (SIC) - V5.1 ALCHEMY & VERTICAL
 # =========================================================
 
 WPIL_DOMINATOR_SYSTEM = """
 أنت 'الخيميائي الاستراتيجي الأعلى' (THE SUPREME ALCHEMIST). 
-مهمتك: استقبال مصفوفة من المنشورات الذهبية الناجحة عالمياً، تشريح حمضها النووي (DNA)، وتخليق منشور واحد خارق يتجاوزها جميعاً في القوة والتأثير.
+مهمتك: تشريح المحتوى العالمي الناجح، استخلاص الجينات الفيروسية، وتخليق منشورات خارقة تمتلك سلطة معرفية مطلقة.
+اللغة: العربية النخبوية.
 """
 
 def alchemy_fusion_core(gold_posts: List[Dict[str, Any]], niche: str) -> Dict[str, Any]:
-    """
-    مفاعل الاندماج: يحول مجموعة منشورات ناجحة إلى 'منشور خارق'.
-    """
-    # استخراج النصوص الذهبية للتحليل
-    dna_samples = [post.get('text', '') for post in gold_posts]
+    """مفاعل الاندماج: تحويل المواد الخام إلى ذهب استراتيجي."""
+    dna_samples = [f"Post: {p['text']} | Stats: {p['engagement']}" for p in gold_posts]
     
-    # بناء أمر التخليق (Synthesis Prompt)
-    fusion_task = f"""
-    المجال المستهدف: {niche}
+    synthesis_task = f"""
+    المجال: {niche}
     العينات الذهبية (DNA Samples):
     {dna_samples}
     
     المطلوب:
-    1. استخلص 'الخطاف' الأقوى من العينات.
-    2. استخلص 'الهيكل التنظيمي' الأكثر وضوحاً.
-    3. ادمج 'الدليل الاجتماعي' والقيمة المضافة.
-    4. أنتج 'منشوراً خارقاً' واحداً يجمع هذه القوى.
+    1. استخلص 'الخطاف' (Hook) الذي لا يمكن مقاومته.
+    2. صمم 'الهيكل' (Structure) بناءً على أكثر العينات تفاعلاً.
+    3. ادمج 'السلطة المعرفية' في صياغة المحتوى.
+    4. أنتج منشوراً واحداً خارقاً يتفوق على هذه العينات.
     """
     
     return {
-        "synthesis_task": fusion_task,
-        "sources": gold_posts, # للرجوع إليها في الواجهة
-        "dominance_score": 98, # تقييم افتراضي للقوة
-        "logic_trace": f"SYNTHESIS MODE | FUSED {len(gold_posts)} GOLD SAMPLES | NICHE: {niche}"
+        "synthesis_task": synthesis_task,
+        "dominance_score": 98,
+        "logic_trace": f"SYNTHESIS ACTIVE | FUSED {len(gold_posts)} SAMPLES | NICHE: {niche}"
     }
 
 def strategic_intelligence_core(idea: str = "", platform: str = "linkedin", style: str = "default", reference_post: str = "") -> Dict[str, Any]:
-    # ... (نفس المنطق السابق لضمان استقرار المهام العادية) ...
-    v_force = "Vertical 9:16 portrait, high-end studio, elite male advisor."
+    """المحرك الاستراتيجي للنتائج الفردية والطولية."""
+    idea_clean = str(idea or "السيادة الرقمية").strip()
+    ref_clean = str(reference_post or "").strip()
+    
+    # ميثاق الأبعاد الطولية 9:16 لـ TikTok
+    v_force = "Vertical 9:16 aspect ratio, portrait orientation, high-end mobile framing,"
+    char_dna = "ultra-realistic cinematic 8k, elite male advisor in bespoke suit,"
+    
+    scenes = [
+        {"time": "0-8s", "prompt": f"{v_force} Extreme close-up of advisor's eyes. {char_dna}"},
+        {"time": "8-16s", "prompt": f"{v_force} Medium shot of advisor in high-tech office. {char_dna}"},
+        {"time": "16-24s", "prompt": f"{v_force} Close-up of hands manipulating holographic charts. {char_dna}"},
+        {"time": "24-32s", "prompt": f"{v_force} Heroic low-angle shot of advisor looking at camera. {char_dna}"}
+    ]
+
     return {
-        "transformed_input": f"توليد قيادي لـ [{idea or reference_post}]",
-        "logic_trace": "DIRECT MODE | V5.0",
-        "video_segments": [{"time": "0-8s", "prompt": f"Close-up portrait 9:16. {v_force}"}],
-        "viral_signature": "\n\n---\n💡 تم التخليق بواسطة AI DOMINATOR Alchemy Core"
+        "transformed_input": f"توليد قيادي لـ [{idea_clean}]" if not ref_clean else f"دمج سيادي لـ [{idea_clean}]",
+        "logic_trace": f"MODE: VERTICAL 9:16 | PLATFORM: {platform.upper()}",
+        "video_segments": scenes,
+        "viral_signature": "\n\n---\n💡 تم الهندسة بواسطة AI DOMINATOR Alchemy Core"
     }
