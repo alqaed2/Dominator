@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 # =========================================================
-# Strategic Intelligence Core (SIC) - V4.0 VERTICAL DOMINANCE
+# Strategic Intelligence Core (SIC) - V4.0 SUPREME
 # =========================================================
 
 WPIL_DOMINATOR_SYSTEM = """
@@ -11,28 +11,23 @@ WPIL_DOMINATOR_SYSTEM = """
 """
 
 def strategic_intelligence_core(idea: str = "", platform: str = "linkedin", style: str = "default", reference_post: str = "") -> Dict[str, Any]:
-    idea_clean = str(idea or "الهيمنة الرقمية").strip()
+    idea_clean = str(idea or "السيادة التقنية").strip()
     ref_clean = str(reference_post or "").strip()
     
-    # درجة الهيمنة
-    dominance_score = 92 
+    # ميثاق الأبعاد الطولية لـ TikTok
+    v_force = "Vertical 9:16 portrait orientation, mobile-first view, high-end studio,"
+    char_dna = "ultra-realistic cinematic 8k, elite male advisor, bespoke suit,"
     
-    # ميثاق الأبعاد الطولية لـ TikTok (إجبار المحرك البصري)
-    # نستخدم كلمات (Vertical, Portrait, 9:16) في البداية والوسط والنهاية
-    vertical_force = "Vertical 9:16 portrait orientation, full-body smartphone framing, mobile-first view,"
-    character_dna = "ultra-realistic cinematic 8k, elite male advisor in bespoke suit, high-status atmosphere,"
-    background_dna = "luxurious minimalist obsidian office, soft cinematic lighting, bokeh background."
-
     scenes = [
-        {"time": "0-8s", "prompt": f"{vertical_force} Extreme close-up of the advisor's face, 9:16 portrait mode. {character_dna} {background_dna} Vertical framing."},
-        {"time": "8-16s", "prompt": f"{vertical_force} Medium shot of the advisor walking, 9:16 portrait orientation. {character_dna} {background_dna} Mobile format."},
-        {"time": "16-24s", "prompt": f"{vertical_force} Portrait shot, advisor looking at holographic charts, 9:16 aspect ratio. {character_dna} {background_dna} Smartphone layout."},
-        {"time": "24-32s", "prompt": f"{vertical_force} Final heroic portrait shot, advisor looking into camera, 9:16 vertical. {character_dna} {background_dna}"}
+        {"time": "0-8s", "prompt": f"{v_force} Extreme close-up of advisor's face. {char_dna}"},
+        {"time": "8-16s", "prompt": f"{v_force} Medium shot of advisor in luxury office. {char_dna}"},
+        {"time": "16-24s", "prompt": f"{v_force} Close-up of hands with luxury watch. {char_dna}"},
+        {"time": "24-32s", "prompt": f"{v_force} Advisor looking at holographic data. {char_dna}"}
     ]
 
     return {
-        "transformed_input": f"توليد قيادي للفكرة [{idea_clean}]" if not ref_clean else f"دمج سيادي للفكرة [{idea_clean}]",
-        "logic_trace": f"MODE: VERTICAL 9:16 | SCORE: {dominance_score}% | STATUS: OPTIMIZED FOR MOBILE",
+        "transformed_input": f"توليد قيادي لـ [{idea_clean}]" if not ref_clean else f"دمج سيادي لـ [{idea_clean}]",
+        "logic_trace": f"MODE: VERTICAL 9:16 | STATUS: OPTIMIZED",
         "video_segments": scenes,
-        "viral_signature": f"\n\n---\n💡 تم هندسة هذا المحتوى بصرياً بواسطة AI DOMINATOR (v4.0)"
+        "viral_signature": "\n\n---\n💡 تم تصميم هذه الاستراتيجية بواسطة AI DOMINATOR (SIC v4.0)"
     }
