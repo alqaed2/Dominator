@@ -1,192 +1,24 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI DOMINATOR | Sovereign Alchemy</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    :root { --neon-blue: #00f2ff; --neon-red: #ff0055; --bg-dark: #050505; }
-    body { background-color: var(--bg-dark); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-    .app-container { max-width: 1250px; margin: 0 auto; padding: 20px; }
-    .cyber-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .alchemy-radar { border: 1px solid var(--neon-red); box-shadow: 0 0 20px rgba(255,0,85,0.15); }
-    .cyber-btn-main { width: 100%; padding: 18px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.4s; font-size: 16px; text-transform: uppercase; }
-    .cyber-btn-main:hover { transform: translateY(-3px); box-shadow: 0 0 30px var(--neon-blue); }
-    .status-dot-pulse { width: 12px; height: 12px; background: var(--neon-red); border-radius: 50%; display: inline-block; margin-left: 10px; animation: pulse-red 1.5s infinite; }
-    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255,0,85,0.7); } 70% { box-shadow: 0 0 0 10px rgba(255,0,85,0); } 100% { box-shadow: 0 0 0 0 rgba(255,0,85,0); } }
-    .dashboard-grid { display: grid; grid-template-columns: 380px 1fr; gap: 30px; }
-    textarea, input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid #222; color: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-family: inherit; box-sizing: border-box; font-size: 14px; }
-    .suggestion-item { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 5px solid var(--neon-blue); animation: fadeIn 0.5s; }
-    .modal { position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
-    .modal-content { width: 95%; max-width: 900px; max-height: 90vh; overflow-y: auto; background: #080808; border: 1px solid var(--neon-blue); padding: 40px; border-radius: 25px; position: relative; }
-    .source-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px; }
-    .source-item { background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px dashed #333; font-size: 13px; line-height: 1.6; }
-    .tab-btn { padding: 12px 25px; background: none; border: 1px solid #222; color: #888; cursor: pointer; border-radius: 10px 10px 0 0; font-weight: 700; transition: 0.3s; }
-    .tab-btn.active { background: var(--neon-blue); color: #000; border-color: var(--neon-blue); }
-    .tab-content { display: none; padding: 25px; border: 1px solid rgba(255,255,255,0.05); border-radius: 0 0 15px 15px; line-height: 1.8; background: rgba(255,255,255,0.01); }
-    .tab-content.active { display: block; }
-    .cyber-btn-small { padding: 8px 20px; background: none; border: 1px solid var(--neon-blue); color: var(--neon-blue); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; }
-  </style>
-</head>
-
-<body>
-  <div class="app-container">
-    <header class="cyber-header">
-      <h1>AI DOMINATOR <span class="version-tag">ALCHEMY v5.6</span></h1>
-      <div><span class="status-dot-pulse"></span> SYSTEM COMMAND LIVE</div>
-    </header>
-
-    <main class="dashboard-grid">
-      <div class="sidebar">
-        <div class="cyber-card alchemy-radar">
-            <h3 style="color: var(--neon-red);"><i class="fas fa-radiation"></i> رادار الهيمنة الاستباقي</h3>
-            <div id="alchemyStatus" style="font-size: 13px; color: #888; margin-bottom: 15px;">جاهز لاكتساح الترندات...</div>
-            <div id="goldSuggestions"></div>
-            <button onclick="triggerDiscovery()" class="cyber-btn-main" style="background: var(--neon-red);">اكتشاف الفرص الذهبية</button>
-        </div>
-
-        <div class="cyber-card">
-          <h3><i class="fas fa-trophy"></i> Winning Posts</h3>
-          <input id="niche" placeholder="النيش (مثلاً: الاقتصاد)" value="التجارة الإلكترونية">
-          <textarea id="winningPost" rows="4" placeholder="الصق منشوراً مرجعياً هنا..."></textarea>
-        </div>
-      </div>
-
-      <div class="main-content">
-        <div class="cyber-card">
-          <h3><i class="fas fa-bolt"></i> محرك الهيمنة</h3>
-          <textarea id="inputText" rows="5" placeholder="أدخل فكرتك الخام أو استخدم المنشور الخارق من الرادار..."></textarea>
-          <button id="generateBtn" class="cyber-btn-main" onclick="startDominanceEngine()">إطلاق التوليد العابر للمنصات</button>
-          <div id="engineStatus" style="font-size: 13px; margin-top: 15px; color: var(--neon-blue); font-weight: 700;"></div>
-        </div>
-
-        <div id="outputSection" style="display:none; margin-top:40px;">
-          <div class="tabs-header">
-            <button class="tab-btn active" onclick="openTab(event, 'linkedin')">LinkedIn</button>
-            <button class="tab-btn" onclick="openTab(event, 'twitter')">X (Twitter)</button>
-            <button class="tab-btn" onclick="openTab(event, 'tiktok')">TikTok</button>
-          </div>
-          <div class="cyber-card" style="border-radius: 0 0 15px 15px;">
-            <div id="linkedinContent" class="tab-content active"></div>
-            <div id="twitterContent" class="tab-content"></div>
-            <div id="tiktokContent" class="tab-content">
-                <div id="videoPromptText" style="background:#000; padding:20px; border-radius:12px; font-family:monospace; font-size:12px; color:var(--neon-blue); margin-bottom:20px; border:1px solid #111; white-space:pre-wrap;"></div>
-                <div id="tiktokScriptText"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <div id="superPostModal" class="modal">
-    <div class="modal-content">
-        <h2 style="color:var(--neon-red); margin-top:0;"><i class="fas fa-atom"></i> تم تخليق المنشور الخارق</h2>
-        <div id="superPostContent" style="background:rgba(255,255,255,0.03); padding:25px; border-radius:15px; line-height:1.8; white-space:pre-wrap; border: 1px solid rgba(255,255,255,0.05);"></div>
-        <h3>🔗 الجينات المستخلصة (DNA Sources)</h3>
-        <div id="sourcePosts" class="source-grid"></div>
-        <div style="margin-top:40px; display:flex; gap:15px;">
-            <button onclick="closeModal()" class="cyber-btn-small" style="padding: 12px 30px;">إغلاق</button>
-            <button onclick="useAsIdea()" class="cyber-btn-small" style="padding: 12px 30px; border-color:var(--neon-blue); color:var(--neon-blue); background: rgba(0,242,255,0.05);">استخدام كفكرة أساسية</button>
-        </div>
-    </div>
-  </div>
-
-  <script>
-    let lastAlchemyResult = null;
-
-    async function triggerDiscovery() {
-        const niche = document.getElementById('niche').value;
-        const btn = document.querySelector('.alchemy-radar button');
-        const status = document.getElementById('alchemyStatus');
-        
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-atom fa-spin"></i> جاري استخلاص الجينات...';
-        status.innerText = "⏳ جاري التنقيب في الإنترنت (قد يستغرق 30 ثانية)...";
-
-        try {
-            const res = await fetch('/alchemy/discover', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({niche: niche})
-            });
-            lastAlchemyResult = await res.json();
-            
-            document.getElementById('goldSuggestions').innerHTML = `
-                <div class="suggestion-item">
-                    <span style="font-size:13px; font-weight:700;">🌟 منشور خارق جاهز لـ ${niche}</span>
-                    <button onclick="openAlchemyModal()" class="cyber-btn-small">عرض</button>
-                </div>`;
-            status.innerText = "✅ تم العثور على فرصة هيمنة!";
-        } catch (e) {
-            status.innerText = "❌ فشل الاتصال بالمفاعل.";
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = 'اكتشاف الفرص الذهبية';
-        }
-    }
-
+<!-- استبدل فقط دالة openAlchemyModal داخل ملف index.html -->
     function openAlchemyModal() {
         if(!lastAlchemyResult) return;
-        document.getElementById('superPostModal').style.display = 'flex';
-        document.getElementById('superPostContent').innerText = lastAlchemyResult.super_post;
-        let h = "";
-        lastAlchemyResult.sources.forEach(s => {
-            h += `<div class="source-item"><b style="color:var(--neon-blue);">${s.engagement}</b><p style="margin:10px 0 0 0; opacity:0.8;">${s.text.substring(0,150)}...</p></div>`;
-        });
-        document.getElementById('sourcePosts').innerHTML = h;
-    }
-
-    function closeModal() { document.getElementById('superPostModal').style.display = 'none'; }
-    function useAsIdea() {
-        document.getElementById('inputText').value = document.getElementById('superPostContent').innerText;
-        closeModal();
-    }
-
-    async function startDominanceEngine() {
-        const idea = document.getElementById('inputText').value;
-        const btn = document.getElementById('generateBtn');
-        if(!idea) return alert("أدخل فكرة أو استخدم الرادار أولاً");
-
-        btn.disabled = true;
-        document.getElementById('outputSection').style.display = 'block';
-        document.getElementById('engineStatus').innerText = "🧠 جاري هندسة المحتوى للمنصات الثلاث...";
+        const modal = document.getElementById('superPostModal');
+        const content = document.getElementById('superPostContent');
+        const sourceGrid = document.getElementById('sourcePosts');
         
-        for(let p of ['linkedin', 'twitter', 'tiktok']) {
-            const el = document.getElementById(p+'Content') || document.getElementById('tiktokScriptText');
-            el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التوليد...';
-            try {
-                const res = await fetch('/generate/'+p, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: idea, style_dna: "Professional"})
-                });
-                const data = await res.json();
-                if(p === 'tiktok') {
-                    document.getElementById('tiktokScriptText').innerText = data.text;
-                    let v = "";
-                    if(Array.isArray(data.video_prompt)) {
-                        data.video_prompt.forEach(s => v += `### Scene ${s.time}:\n${s.prompt}\n\n`);
-                    } else { v = data.video_prompt; }
-                    document.getElementById('videoPromptText').innerText = v;
-                } else {
-                    document.getElementById(p+'Content').innerText = data.text;
-                }
-            } catch(e) { el.innerText = "فشل التوليد."; }
-        }
-        document.getElementById('engineStatus').innerText = "✅ تم الإطلاق بنجاح!";
-        btn.disabled = false;
+        modal.style.display = 'flex';
+        content.innerText = lastAlchemyResult.super_post;
+        
+        // بناء شبكة الجينات مع ضمان امتلاء البيانات
+        let html = "";
+        const sources = lastAlchemyResult.sources || [];
+        sources.forEach(s => {
+            html += `
+                <div class="source-item" style="border-left: 3px solid var(--neon-red); background: rgba(255,255,255,0.01);">
+                    <div style="color:var(--neon-blue); font-weight:800; margin-bottom:8px;">
+                        <i class="fas fa-chart-line"></i> ${s.engagement || 'متفاعل جداً'}
+                    </div>
+                    <p style="margin:0; font-size:12px; opacity:0.85;">${s.text ? s.text.substring(0,130) : 'جاري تحليل الحمض النووي لهذا المنشور...'}...</p>
+                </div>`;
+        });
+        sourceGrid.innerHTML = html;
     }
-
-    function openTab(evt, p) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(p+'Content').classList.add('active');
-        evt.currentTarget.classList.add('active');
-    }
-  </script>
-</body>
-</html>
