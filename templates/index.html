@@ -1,102 +1,15 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI DOMINATOR | Alchemy Edition</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    .alchemy-radar { border: 2px solid var(--neon-red) !important; background: rgba(255, 0, 0, 0.05) !important; margin-bottom:20px; }
-    .suggestion-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--neon-blue); }
-    .modal { position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
-    .modal-content { width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; padding: 40px; border: 1px solid var(--neon-red); box-shadow: 0 0 30px rgba(255,0,0,0.2); }
-    .source-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-    .source-item { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; font-size: 12px; border: 1px dashed var(--neon-blue); }
-    .status-dot-pulse { width: 12px; height: 12px; background: var(--neon-red); border-radius: 50%; display: inline-block; margin-left: 10px; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); } }
-  </style>
-</head>
-<body>
-  <div class="app-container">
-    <header class="cyber-header">
-      <h1>AI DOMINATOR <span class="version-tag">ALCHEMY v5.1</span></h1>
-      <div class="system-status"><div class="status-dot"></div>ONLINE</div>
-    </header>
-
-    <main class="dashboard-grid">
-      <div class="sidebar">
-        <!-- رادار الهيمنة -->
-        <div class="cyber-card alchemy-radar">
-            <div class="card-title"><h3><i class="fas fa-radiation"></i> رادار الهيمنة الاستباقي</h3></div>
-            <div id="alchemyStatus"><span class="status-dot-pulse"></span> مراقبة النبض العالمي...</div>
-            <div id="goldSuggestions"></div>
-            <button onclick="triggerDiscovery()" class="cyber-btn-main" style="background:var(--neon-red); margin-top:15px;">اكتشاف الفرص الذهبية</button>
-        </div>
-
-        <div class="cyber-card">
-          <div class="card-title"><h3><i class="fas fa-trophy"></i> Winning Posts</h3></div>
-          <input id="niche" class="cyber-input" value="التجارة الإلكترونية" style="width:100%; margin-bottom:10px;">
-          <textarea id="winningPost" rows="4" placeholder="الصق منشوراً مرجعياً..."></textarea>
-          <input type="hidden" id="styleDNA" value="Professional">
-        </div>
-      </div>
-
-      <div class="main-content">
-        <div class="cyber-card">
-          <div class="card-title"><h3><i class="fas fa-bolt"></i> محرك الهيمنة</h3></div>
-          <textarea id="inputText" rows="3" placeholder="أدخل فكرتك الخام هنا..."></textarea>
-          <button id="generateBtn" class="cyber-btn-main" onclick="startDominanceEngine()">إطلاق التوليد العابر للمنصات</button>
-          <div id="engineStatus" style="font-size:12px; margin-top:10px;"></div>
-        </div>
-
-        <div id="outputSection" style="display:none; margin-top:25px;">
-          <div class="tabs-header">
-            <button class="tab-btn active" onclick="openTab('linkedin')">LinkedIn</button>
-            <button class="tab-btn" onclick="openTab('twitter')">X (Twitter)</button>
-            <button class="tab-btn" onclick="openTab('tiktok')">TikTok</button>
-          </div>
-          <div class="cyber-card">
-            <div id="linkedinContent" class="tab-content active simple-text-content"></div>
-            <div id="twitterContent" class="tab-content simple-text-content"></div>
-            <div id="tiktokContent" class="tab-content">
-                <h4><i class="fas fa-video"></i> Video Blueprint (9:16)</h4>
-                <div id="videoPromptText" style="background:#000; padding:15px; border-radius:10px; font-family:monospace; font-size:11px; white-space:pre-wrap; color:var(--neon-blue); border:1px solid #333;"></div>
-                <hr>
-                <div id="tiktokScriptText" class="simple-text-content"></div>
-            </div>
-          </div>
-          <div class="cyber-card" style="margin-top:20px;">
-            <div class="card-title"><h3><i class="fas fa-brain"></i> WPIL Trace</h3></div>
-            <pre id="wpilTrace" style="font-size:10px; color:#888; white-space:pre-wrap;"></pre>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- Modal -->
-  <div id="superPostModal" class="modal">
-    <div class="modal-content cyber-card">
-        <h2 style="color:var(--neon-red);"><i class="fas fa-atom"></i> تم تخليق المنشور الخارق</h2>
-        <div id="superPostContent" style="background:rgba(255,255,255,0.05); padding:20px; border-radius:10px; margin:20px 0; line-height:1.7; white-space:pre-wrap;"></div>
-        <div class="card-title"><h3><i class="fas fa-dna"></i> الجينات المستخلصة</h3></div>
-        <div id="sourcePosts" class="source-grid"></div>
-        <div style="margin-top:30px; display:flex; gap:15px;">
-            <button onclick="closeModal()" class="cyber-btn-small">إغلاق</button>
-            <button onclick="useAsIdea()" class="cyber-btn-small" style="border-color:var(--neon-blue);">استخدام كفكرة أساسية</button>
-        </div>
-    </div>
-  </div>
-
-  <script>
+<!-- استبدل قسم الـ Script في نهاية الملف بهذا الكود المحصن -->
+<script>
     let lastAlchemyResult = null;
 
     async function triggerDiscovery() {
         const niche = document.getElementById('niche').value;
         const btn = document.querySelector('.alchemy-radar button');
-        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري التخليق...';
+        const status = document.getElementById('alchemyStatus');
+        
+        btn.innerHTML = '<i class="fas fa-atom fa-spin"></i> جاري استخلاص الجينات...';
+        status.innerHTML = '<span class="status-dot-pulse"></span> جاري الربط بالرادار العالمي...';
+        
         try {
             const res = await fetch('/alchemy/discover', {
                 method: 'POST',
@@ -104,68 +17,82 @@
                 body: JSON.stringify({niche: niche})
             });
             lastAlchemyResult = await res.json();
+            
             document.getElementById('goldSuggestions').innerHTML = `
-                <div class="suggestion-item">
-                    <span>🌟 منشور خارق جاهز لـ ${niche}</span>
-                    <button onclick="openAlchemyModal()" class="cyber-btn-small">عرض</button>
+                <div class="suggestion-item" style="animation: slideIn 0.5s ease-out;">
+                    <span>🌟 فرصة هيمنة في: ${niche}</span>
+                    <button onclick="openAlchemyModal()" class="cyber-btn-small">فتح المختبر</button>
                 </div>`;
-            document.getElementById('alchemyStatus').innerHTML = "✅ تم العثور على فرصة هيمنة!";
-        } catch (e) { alert("خطأ في المفاعل"); }
+            status.innerHTML = "✅ تم تخليق المنشور الخارق بنجاح!";
+        } catch (e) {
+            status.innerHTML = "❌ فشل في الاتصال بالرادار.";
+        }
         btn.innerHTML = 'اكتشاف الفرص الذهبية';
     }
 
     function openAlchemyModal() {
         if(!lastAlchemyResult) return;
-        document.getElementById('superPostModal').style.display = 'flex';
-        document.getElementById('superPostContent').innerText = lastAlchemyResult.super_post;
+        const modal = document.getElementById('superPostModal');
+        const content = document.getElementById('superPostContent');
+        const sourceGrid = document.getElementById('sourcePosts');
+        
+        modal.style.display = 'flex';
+        content.innerText = lastAlchemyResult.super_post;
+        
+        // بناء شبكة الجينات المستخلصة بدقة
         let html = "";
         lastAlchemyResult.sources.forEach(s => {
-            html += `<div class="source-item"><b>تفاعل: ${s.engagement}</b><p>${s.text.substring(0,100)}...</p></div>`;
+            html += `
+                <div class="source-item" style="border-right: 3px solid var(--neon-red);">
+                    <div style="color:var(--neon-blue); font-weight:800; margin-bottom:5px;">
+                        <i class="fab fa-twitter"></i> تفاعل: ${s.engagement}
+                    </div>
+                    <p style="margin:0; opacity:0.9;">${s.text.substring(0,120)}...</p>
+                </div>`;
         });
-        document.getElementById('sourcePosts').innerHTML = html;
+        sourceGrid.innerHTML = html;
     }
 
     function closeModal() { document.getElementById('superPostModal').style.display = 'none'; }
     function useAsIdea() {
         document.getElementById('inputText').value = document.getElementById('superPostContent').innerText;
         closeModal();
+        alert("تم نقل المنشور الخارق إلى محرك الهيمنة.");
     }
 
+    // منطق التوليد (Generate)
     async function startDominanceEngine() {
         const idea = document.getElementById('inputText').value;
-        const winning = document.getElementById('winningPost').value;
-        if(!idea && !winning) return alert("أدخل بيانات");
+        if(!idea) return alert("أدخل فكرة أو استخدم المنشور الخارق");
 
         document.getElementById('outputSection').style.display = 'block';
-        document.getElementById('engineStatus').innerText = "🧠 جاري التحليل...";
+        document.getElementById('engineStatus').innerText = "🧠 جاري التحليل الاستراتيجي...";
         
         for(let p of ['linkedin', 'twitter', 'tiktok']) {
-            document.getElementById(p+'Content')?.classList.remove('active');
+            const el = document.getElementById(p+'Content') || document.getElementById(p+'ScriptText');
+            if(el) el.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري هندسة المحتوى...';
+            
             try {
                 const res = await fetch('/generate/'+p, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: idea, winning_post: winning, style_dna: "Professional"})
+                    body: JSON.stringify({text: idea})
                 });
                 const data = await res.json();
+                
                 if(p === 'tiktok') {
-                    document.getElementById('videoPromptText').innerText = data.video_prompt;
                     document.getElementById('tiktokScriptText').innerText = data.text;
+                    let vHtml = "";
+                    data.video_prompt.forEach(v => {
+                        vHtml += `### Scene ${v.time}:\n\`\`\`text\n${v.prompt}\n\`\`\`\n\n`;
+                    });
+                    document.getElementById('videoPromptText').innerText = vHtml;
                 } else {
                     document.getElementById(p+'Content').innerText = data.text;
                 }
                 document.getElementById('wpilTrace').innerText = data.trace;
             } catch(e) { }
         }
-        document.getElementById('engineStatus').innerText = "✅ تم الإطلاق";
-        openTab('linkedin');
+        document.getElementById('engineStatus').innerText = "✅ تم الإطلاق للمنصات";
     }
-
-    function openTab(p) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(p+'Content').classList.add('active');
-    }
-  </script>
-</body>
-</html>
+</script>
