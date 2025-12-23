@@ -2,39 +2,36 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 # =========================================================
-# Strategic Intelligence Core (SIC) - V5.7 FINAL STABILITY
+# Strategic Intelligence Core (SIC) - V6.0 FINAL AUTHORITY
 # =========================================================
 
 WPIL_DOMINATOR_SYSTEM = """
 أنت 'الخيميائي الاستراتيجي الأعلى' (THE SUPREME ALCHEMIST). 
-مهمتك: تشريح المحتوى العالمي، استخلاص الجينات الفيروسية، وتخليق منشورات خارقة تمتلك سلطة معرفية مطلقة.
-الهوية البصرية: واقعية سينمائية فخمة (9:16).
-اللغة: العربية النخبوية الاستراتيجية.
+مهمتك: استقبال الجينات الفيروسية وتخليق محتوى مهيمن يمتلك سلطة معرفية مطلقة.
+الهوية: واقعية سينمائية فخمة (9:16).
 """
 
 def strategic_intelligence_core(idea: str = "", platform: str = "linkedin", style: str = "default", reference_post: str = "") -> Dict[str, Any]:
-    idea_clean = str(idea or "السيادة والنمو").strip()
-    # أوامر تقنية قهرية للأبعاد الطولية 9:16
+    idea_clean = str(idea or "السيادة المطلقة").strip()
     v_force = "Vertical 9:16 aspect ratio, portrait orientation, smartphone mobile view, --ar 9:16,"
-    char_dna = "ultra-realistic cinematic 8k, elite male strategic advisor, bespoke suit, luxury office,"
+    char_dna = "ultra-realistic cinematic 8k, elite male strategic advisor, bespoke suit,"
     
     scenes = [
-        {"time": "0-8s", "prompt": f"{v_force} Extreme close-up of advisor looking sharp. {char_dna} Vertical framing."},
-        {"time": "8-16s", "prompt": f"{v_force} Full vertical shot, advisor walking towards camera. {char_dna} Mobile format."},
-        {"time": "16-32s", "prompt": f"{v_force} Portrait shot of advisor gesturing with hands. {char_dna} 9:16 AR."}
+        {"time": "0-10s", "prompt": f"{v_force} Close-up of advisor's face. {char_dna}"},
+        {"time": "10-20s", "prompt": f"{v_force} Advisor in a high-tech obsidian office. {char_dna}"},
+        {"time": "20-30s", "prompt": f"{v_force} Full body shot, advisor walking confidently. {char_dna}"}
     ]
     return {
-        "transformed_input": f"صمم محتوى قيادي للفكرة: [{idea_clean}]",
-        "logic_trace": "VERTICAL OPTIMIZED v5.7 | SUPREME COMMAND",
+        "transformed_input": f"توليد محتوى قيادي حاد لـ [{idea_clean}]",
+        "logic_trace": "V6.0 | SUPREME COMMAND ENABLED",
         "video_segments": scenes,
-        "viral_signature": "\n\n---\n💡 تم الهندسة بواسطة مفاعل AI DOMINATOR الاستباقي"
+        "viral_signature": "\n\n---\n💡 تم الهندسة بواسطة مفاعل AI DOMINATOR v6.0"
     }
 
 def alchemy_fusion_core(gold_posts: List[Dict[str, Any]], niche: str) -> Dict[str, Any]:
-    dna = [f"Post: {p['text']} | Stats: {p['engagement']}" for p in gold_posts]
-    task = f"دمج وتخليق منشور واحد خارق لنيش {niche} بناءً على الجينات الحقيقية التالية: {dna}"
+    dna = [f"Text: {p['text']} | Stats: {p['engagement']}" for p in gold_posts]
     return {
-        "synthesis_task": task,
+        "synthesis_task": f"دمج وتخليق منشور واحد خارق لنيش {niche} بناءً على الجينات: {dna}",
         "dominance_score": 99,
-        "logic_trace": f"LIVE INGESTION ACTIVE | NICHE: {niche} | v5.7"
+        "logic_trace": f"SYNTHESIS ACTIVE | v6.0"
     }
