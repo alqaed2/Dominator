@@ -1,78 +1,62 @@
 import os
-import sys
-import json
-import logging
+import time
 import requests
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
-
-# استيراد النواة المصلحة
 from dominator_brain import strategic_intelligence_core, alchemy_fusion_core, WPIL_DOMINATOR_SYSTEM
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
-# إعداد AI مع مصفوفة الـ Failover
+# إعداد AI مع مصفوفة ذكية
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-MODELS_PRIORITY = ["gemini-2.0-flash-lite", "gemini-flash-latest", "gemini-2.0-flash"]
 APIFY_API_KEY = os.getenv("APIFY_API_KEY")
 
-def get_ai_response_elite(prompt: str) -> str:
-    for model_name in MODELS_PRIORITY:
+def get_ai_response_final(prompt: str) -> str:
+    # نستخدم الموديل المستقر أولاً لتفادي الـ 429
+    models = ["gemini-1.5-flash", "gemini-2.0-flash-lite", "gemini-flash-latest"]
+    for m in models:
         try:
-            model = genai.GenerativeModel(model_name)
+            model = genai.GenerativeModel(m)
             return model.generate_content(prompt).text
-        except: continue
-    return "⚠️ النظام قيد التحديث، يرجى إعادة المحاولة."
-
-def fetch_real_gold_posts(niche):
-    try:
-        if APIFY_API_KEY:
-            actor_url = "https://api.apify.com/v2/acts/apidojo~tweet-scraper/run-sync-get-dataset-items"
-            res = requests.post(f"{actor_url}?token={APIFY_API_KEY}", 
-                                json={"searchTerms": [niche], "maxTweets": 5, "searchMode": "top"}, timeout=25)
-            if res.status_code in [200, 201]:
-                data = res.json()
-                if data:
-                    return [{"text": i.get("full_text") or i.get("text"), "engagement": f"{i.get('favorite_count', '10K')}+ Likes"} for i in data if i.get("text")]
-        
-        # بيانات بديلة احترافية في حال فشل الربط لضمان عدم تعطل الواجهة
-        return [
-            {"text": f"المعادلة السرية للنمو في مجال {niche} لعام 2026", "engagement": "125K Likes"},
-            {"text": f"لماذا يسيطر القادة على سوق {niche}؟ إليك التحليل", "engagement": "89K Likes"}
-        ]
-    except:
-        return [{"text": f"تحليل سيادي لقطاع {niche}", "engagement": "50K+"}]
+        except Exception as e:
+            if "429" in str(e): time.sleep(2) # انتظار ذكي في حال الزحام
+            continue
+    return "⚠️ المحرك مشغول حالياً، يرجى المحاولة بعد لحظات."
 
 @app.route("/")
 def home(): return render_template("index.html")
 
 @app.route("/alchemy/discover", methods=["POST"])
 def discover():
-    try:
-        data = request.get_json(silent=True) or {}
-        niche = data.get("niche", "السيادة الرقمية")
-        gold_posts = fetch_real_gold_posts(niche)
-        fusion = alchemy_fusion_core(gold_posts, niche)
-        output = get_ai_response_elite(f"{WPIL_DOMINATOR_SYSTEM}\n{fusion['synthesis_task']}")
-        return jsonify({"super_post": output, "sources": gold_posts, "trace": fusion["logic_trace"]}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    data = request.get_json(silent=True) or {}
+    niche = data.get("niche", "القيادة")
+    
+    # جلب البيانات مع fallback ذكي
+    gold_posts = []
+    if APIFY_API_KEY:
+        try:
+            res = requests.post("https://api.apify.com/v2/acts/apidojo~tweet-scraper/run-sync-get-dataset-items?token="+APIFY_API_KEY, 
+                                json={"searchTerms": [niche], "maxTweets": 5, "searchMode": "top"}, timeout=30)
+            if res.status_code in [200, 201]:
+                gold_posts = [{"text": i.get("full_text") or i.get("text"), "engagement": f"{i.get('favorite_count',0)} Likes"} for i in res.json() if i.get("text")]
+        except: pass
+
+    if not gold_posts:
+        gold_posts = [{"text": f"المعادلة الاستراتيجية للنجاح في {niche}", "engagement": "100K+"}]
+
+    fusion = alchemy_fusion_core(gold_posts, niche)
+    output = get_ai_response_final(f"{WPIL_DOMINATOR_SYSTEM}\n{fusion['synthesis_task']}")
+    return jsonify({"super_post": output, "sources": gold_posts, "trace": fusion["logic_trace"]}), 200
 
 @app.route("/generate/<platform>", methods=["POST"])
 def generate(platform):
-    try:
-        data = request.get_json(force=True, silent=True) or {}
-        idea = data.get('text') or data.get('idea') or "فكرة هيمنة"
-        brain = strategic_intelligence_core(idea, platform)
-        prompt = f"{WPIL_DOMINATOR_SYSTEM}\nالمنصة: {platform}\nالمهمة: {brain['transformed_input']}"
-        output = get_ai_response_elite(prompt)
-        return jsonify({"text": output, "trace": brain["logic_trace"], "video_prompt": brain.get("video_segments")}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    data = request.get_json(silent=True) or {}
+    idea = data.get('text') or data.get('idea') or "استراتيجية هيمنة"
+    brain = strategic_intelligence_core(idea, platform)
+    output = get_ai_response_final(f"{WPIL_DOMINATOR_SYSTEM}\nالمنصة: {platform}\nالمهمة: {brain['transformed_input']}")
+    return jsonify({"text": f"{output}{brain.get('viral_signature','')}", "trace": brain["logic_trace"], "video_prompt": brain.get("video_segments")}), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
