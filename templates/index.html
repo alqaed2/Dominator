@@ -3,77 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR GOLDEN EDITION</title>
+    <title>AI DOMINATOR | GOLD v7.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --neon-blue: #00f2ff; --neon-red: #ff0055; --bg: #050505; --card: rgba(255,255,255,0.03); }
+        :root { --neon-blue: #00f2ff; --neon-red: #ff0055; --bg: #050505; }
         body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
-        .cyber-card { background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin-bottom: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        .sidebar-grid { display: grid; grid-template-columns: 400px 1fr; gap: 30px; }
-        .header-title { color: var(--neon-blue); text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid var(--neon-red); display: inline-block; margin-bottom: 20px; }
-        textarea { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 15px; border-radius: 12px; font-size: 15px; line-height: 1.6; }
-        .cyber-btn { width: 100%; padding: 18px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 16px; }
-        .copy-btn { background: var(--neon-red); color: #fff; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; margin-top: 10px; }
-        .platform-box { background: rgba(0,242,255,0.02); border: 1px solid rgba(0,242,255,0.1); padding: 25px; border-radius: 15px; margin-top: 20px; }
-        .dna-bar { height: 8px; background: #222; border-radius: 4px; overflow: hidden; margin-top: 10px; }
-        .dna-fill { height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-red)); }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(20px); }
-        .modal-content { width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto; background: #080808; border: 1px solid var(--neon-blue); padding: 50px; border-radius: 30px; }
-        .header-main { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #222; margin-bottom: 30px; }
+        .cyber-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        .cyber-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 15px; }
+        .cyber-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(15px); }
+        .modal-content { width: 90%; max-width: 900px; background: #080808; border: 1px solid var(--neon-blue); padding: 40px; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
+        .dna-bar { height: 6px; background: #222; border-radius: 3px; margin-top: 8px; }
+        .dna-fill { height: 100%; background: var(--neon-red); }
+        .copy-btn { background: var(--neon-red); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 15px; }
+        textarea, input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; font-family: inherit; box-sizing: border-box; }
     </style>
 </head>
 <body>
-    <div class="header-main">
-        <h1>AI DOMINATOR <span style="font-size:14px; background:var(--neon-red); padding:4px 10px; border-radius:5px;">GOLD v7.0</span></h1>
-        <div style="color:var(--neon-blue); font-weight:700;"><i class="fas fa-shield-alt"></i> SOVEREIGN ACCESS GRANTED</div>
-    </div>
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid #222; padding-bottom:15px;">
+        <h1>AI DOMINATOR <span style="background:var(--neon-red); padding:2px 8px; border-radius:4px; font-size:12px;">GOLD v7.1</span></h1>
+        <div style="color:var(--neon-blue); font-weight:700;"><i class="fas fa-check-circle"></i> SOVEREIGN SYSTEM LIVE</div>
+    </header>
 
-    <div class="sidebar-grid">
+    <div class="dashboard-grid">
         <div class="sidebar">
-            <div class="cyber-card" style="border: 1px solid var(--neon-red);">
-                <h3 style="color:var(--neon-red);"><i class="fas fa-satellite-dish"></i> رادار الهيمنة الاستباقي</h3>
-                <div id="alchemyStatus" style="font-size: 13px; opacity:0.7; margin-bottom: 15px;">جاهز لمسح النبض العالمي...</div>
+            <div class="cyber-card" style="border:1px solid var(--neon-red);">
+                <h3><i class="fas fa-satellite-dish"></i> رادار الهيمنة</h3>
+                <div id="alchemyStatus" style="font-size:12px; opacity:0.6; margin-bottom:15px;">جاهز لمسح النبض العالمي...</div>
                 <div id="goldSuggestions"></div>
-                <button onclick="triggerDiscovery()" class="cyber-btn" style="background:var(--neon-red); color:#fff;">اكتشاف الفرص الذهبية</button>
+                <button id="discoverBtn" onclick="triggerDiscovery()" class="cyber-btn" style="background:var(--neon-red); color:#fff;">اكتشاف الفرص الذهبية</button>
             </div>
             <div class="cyber-card">
-                <h3 class="header-title">النيش الاستراتيجي</h3>
-                <input id="niche" value="التجارة الإلكترونية" style="width:100%; background:#000; border:1px solid #333; color:#fff; padding:12px; border-radius:10px;">
+                <h3>النيش الاستراتيجي</h3>
+                <input id="niche" value="التجارة الإلكترونية">
             </div>
         </div>
 
         <div class="main-content">
             <div class="cyber-card">
-                <h3 class="header-title">محرك الهيمنة - الطلقة الواحدة</h3>
-                <textarea id="inputText" rows="6" placeholder="أدخل فكرتك أو استخدم المنشور الخارق المستخلص..."></textarea>
+                <h3>محرك الهيمنة - الطلقة الواحدة</h3>
+                <textarea id="inputText" rows="5" placeholder="أدخل فكرتك هنا..."></textarea>
                 <button id="generateBtn" onclick="startDominanceEngine()" class="cyber-btn">إطلاق التوليد العابر للمنصات</button>
-                <div id="engineStatus" style="margin-top:15px; font-weight:700; color:var(--neon-blue);"></div>
+                <div id="engineStatus" style="margin-top:10px; color:var(--neon-blue); font-weight:700;"></div>
             </div>
 
             <div id="outputSection" style="display:none;">
                 <div class="cyber-card">
-                    <h2 style="color:var(--neon-blue); border-bottom:1px solid #333; padding-bottom:10px;">📦 حزمة النشر الجاهزة</h2>
-                    <div id="combinedOutput"></div>
+                    <h2 style="color:var(--neon-blue);">🏁 حزمة النشر</h2>
+                    <pre id="finalPublishText" style="white-space:pre-wrap; font-family:inherit; font-size:15px; line-height:1.7; background:rgba(255,255,255,0.02); padding:20px; border-radius:15px;"></pre>
+                    <button onclick="copyText('finalPublishText')" class="cyber-btn" style="margin-top:20px;">نسخ الحزمة كاملة</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal المختبر -->
+    <!-- Modal -->
     <div id="superPostModal" class="modal">
         <div class="modal-content">
-            <h1 style="color:var(--neon-red); margin-top:0;">🧬 مختبر التخليق الجيني</h1>
-            <div class="platform-box">
-                <h3 style="color:var(--neon-blue); margin-top:0;">المنشور الخارق الناتج:</h3>
-                <div id="superPostContent" style="white-space: pre-wrap; line-height:1.8;"></div>
-                <button onclick="copyText('superPostContent')" class="copy-btn"><i class="fas fa-copy"></i> نسخ المنشور الخارق</button>
-            </div>
-            <h3>🔗 جينات النجاح المستخلصة (Analytics)</h3>
-            <div id="sourcePosts" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;"></div>
-            <div style="margin-top:40px; display:flex; gap:20px;">
-                <button onclick="document.getElementById('superPostModal').style.display='none'" class="cyber-btn" style="background:none; border:1px solid #fff; color:#fff;">إغلاق المختبر</button>
-                <button onclick="useAsIdea()" class="cyber-btn">استخدام كفكرة أساسية</button>
+            <h1 style="color:var(--neon-red);">🧬 مختبر التخليق</h1>
+            <div id="superPostContent" style="white-space:pre-wrap; background:rgba(0,242,255,0.03); padding:20px; border-radius:15px; border:1px solid rgba(0,242,255,0.1);"></div>
+            <h3 style="margin-top:30px;">🔗 الجينات المستخلصة</h3>
+            <div id="sourcePosts" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;"></div>
+            <div style="margin-top:30px; display:flex; gap:15px;">
+                <button onclick="document.getElementById('superPostModal').style.display='none'" class="cyber-btn" style="background:none; border:1px solid #fff; color:#fff;">إغلاق</button>
+                <button onclick="useAsIdea()" class="cyber-btn">استخدام كفكرة</button>
             </div>
         </div>
     </div>
@@ -82,8 +77,11 @@
         let lastAlchemyResult = null;
 
         async function triggerDiscovery() {
-            const btn = document.querySelector('.alchemy-radar button');
-            btn.innerHTML = "جاري التخليق..."; btn.disabled = true;
+            const btn = document.getElementById('discoverBtn');
+            const status = document.getElementById('alchemyStatus');
+            btn.disabled = true; btn.innerHTML = "جاري التخليق...";
+            status.innerText = "⏳ جاري التنقيب في الإنترنت...";
+            
             try {
                 const res = await fetch('/alchemy/discover', {
                     method: 'POST',
@@ -92,28 +90,28 @@
                 });
                 lastAlchemyResult = await res.json();
                 document.getElementById('goldSuggestions').innerHTML = `
-                    <div class="platform-box" style="margin-bottom:15px;">
-                        <span style="font-size:13px;">🌟 تم تخليق استراتيجية كاملة</span>
+                    <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:15px;">
+                        <span style="font-size:13px;">🌟 منشور خارق جاهز</span>
                         <button onclick="openModal()" class="copy-btn" style="width:100%;">فتح المختبر</button>
                     </div>`;
-                document.getElementById('alchemyStatus').innerText = "✅ تم العثور على فرصة!";
-            } catch (e) { alert("خطأ في الاتصال"); }
-            btn.innerHTML = "اكتشاف الفرص الذهبية"; btn.disabled = false;
+                status.innerText = "✅ تم العثور على فرصة هيمنة!";
+            } catch (e) { status.innerText = "❌ خطأ في الاتصال."; }
+            btn.disabled = false; btn.innerHTML = "اكتشاف الفرص الذهبية";
         }
 
         function openModal() {
+            if(!lastAlchemyResult) return;
             document.getElementById('superPostModal').style.display = 'flex';
             document.getElementById('superPostContent').innerText = lastAlchemyResult.super_post;
-            let html = "";
+            let h = "";
             lastAlchemyResult.sources.forEach(s => {
-                html += `
-                <div class="source-item" style="background:rgba(255,255,255,0.02); padding:15px; border-radius:10px; border-left:3px solid var(--neon-red);">
-                    <div style="font-size:12px; font-weight:700; color:var(--neon-blue);">التفاعل: ${s.engagement}</div>
-                    <div class="dna-bar"><div class="dna-fill" style="width:${s.score || 85}%"></div></div>
-                    <p style="font-size:11px; opacity:0.7; margin-top:10px;">${s.text.substring(0,120)}...</p>
-                </div>`;
+                h += `<div style="background:rgba(255,255,255,0.02); padding:15px; border-radius:10px; border-left:3px solid var(--neon-red);">
+                        <div style="font-size:12px; color:var(--neon-blue);">قوة التفاعل</div>
+                        <div class="dna-bar"><div class="dna-fill" style="width:${s.score || 90}%"></div></div>
+                        <p style="font-size:11px; opacity:0.7; margin-top:10px;">${s.text.substring(0,100)}...</p>
+                      </div>`;
             });
-            document.getElementById('sourcePosts').innerHTML = html;
+            document.getElementById('sourcePosts').innerHTML = h;
         }
 
         function useAsIdea() {
@@ -122,12 +120,11 @@
         }
 
         async function startDominanceEngine() {
+            const btn = document.getElementById('generateBtn');
             const idea = document.getElementById('inputText').value;
             if(!idea) return alert("أدخل فكرة");
-            document.getElementById('generateBtn').disabled = true;
-            document.getElementById('outputSection').style.display = 'block';
+            btn.disabled = true; document.getElementById('outputSection').style.display = 'block';
             document.getElementById('engineStatus').innerText = "🚀 جاري التوليد الموحد (الطلقة الواحدة)...";
-            
             try {
                 const res = await fetch('/generate_all', {
                     method: 'POST',
@@ -135,26 +132,15 @@
                     body: JSON.stringify({text: idea})
                 });
                 const data = await res.json();
-                
-                // تنسيق وعرض النتائج الموحدة
-                document.getElementById('combinedOutput').innerHTML = `
-                    <div class="platform-box">
-                        <h2 style="color:var(--neon-blue);">🏁 النتائج النهائية</h2>
-                        <pre id="finalPublishText" style="white-space:pre-wrap; font-family:inherit; font-size:15px; line-height:1.7;">${data.combined_text}</pre>
-                        <button onclick="copyText('finalPublishText')" class="cyber-btn" style="margin-top:20px;">
-                            <i class="fas fa-copy"></i> نسخ كافة المنشورات بضغطة واحدة
-                        </button>
-                    </div>
-                `;
+                document.getElementById('finalPublishText').innerText = data.combined_text;
                 document.getElementById('engineStatus').innerText = "✅ تم الإطلاق بنجاح!";
             } catch (e) { alert("فشل التوليد"); }
-            document.getElementById('generateBtn').disabled = false;
+            btn.disabled = false;
         }
 
         function copyText(id) {
-            const text = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(text);
-            alert("تم النسخ لخزنة النشر!");
+            navigator.clipboard.writeText(document.getElementById(id).innerText);
+            alert("تم النسخ بنجاح!");
         }
     </script>
 </body>
