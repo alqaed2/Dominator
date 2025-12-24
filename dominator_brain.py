@@ -2,36 +2,39 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 # =========================================================
-# Strategic Intelligence Core (SIC) - V6.0 FINAL AUTHORITY
+# Strategic Intelligence Core (SIC) - V7.0 GOLDEN NUCLEUS
 # =========================================================
 
 WPIL_DOMINATOR_SYSTEM = """
-أنت 'الخيميائي الاستراتيجي الأعلى' (THE SUPREME ALCHEMIST). 
-مهمتك: استقبال الجينات الفيروسية وتخليق محتوى مهيمن يمتلك سلطة معرفية مطلقة.
-الهوية: واقعية سينمائية فخمة (9:16).
+أنت 'الخيميائي الاستراتيجي الأعلى'. مهمتك تخليق 3 نسخ من المحتوى المهيمن (LinkedIn, Twitter, TikTok) في آن واحد.
+القواعد:
+1. العناوين: يجب أن تكون حادة، استراتيجية، ومميزة بصرياً.
+2. الهيكل: استخدم الرموز، المسافات البيضاء، والقوائم النقطية لسهولة القراءة.
+3. التوقيع: أضف توقيع المهيمن في نهاية كل منشور.
 """
 
-def strategic_intelligence_core(idea: str = "", platform: str = "linkedin", style: str = "default", reference_post: str = "") -> Dict[str, Any]:
-    idea_clean = str(idea or "السيادة المطلقة").strip()
-    v_force = "Vertical 9:16 aspect ratio, portrait orientation, smartphone mobile view, --ar 9:16,"
-    char_dna = "ultra-realistic cinematic 8k, elite male strategic advisor, bespoke suit,"
+def get_unified_prompt(idea: str, niche: str, sources: List[Dict[str, Any]]) -> str:
+    dna_str = "\n".join([f"- {s['text']} (Engagement: {s['engagement']})" for s in sources])
+    return f"""
+    المجال: {niche} | الفكرة الأساسية: {idea}
+    الجينات المستخلصة: {dna_str}
     
-    scenes = [
-        {"time": "0-10s", "prompt": f"{v_force} Close-up of advisor's face. {char_dna}"},
-        {"time": "10-20s", "prompt": f"{v_force} Advisor in a high-tech obsidian office. {char_dna}"},
-        {"time": "20-30s", "prompt": f"{v_force} Full body shot, advisor walking confidently. {char_dna}"}
-    ]
+    المطلوب: توليد 3 صناديق محتوى (LinkedIn, Twitter, TikTok) بتنسيق Markdown احترافي.
+    اجعل كل منصة داخل قسم واضح يبدأ بـ [PLATFORM_NAME].
+    """
+
+def strategic_intelligence_core(idea: str = "") -> Dict[str, Any]:
+    v_force = "Vertical 9:16 aspect ratio, high-end cinematic, elite advisor."
     return {
-        "transformed_input": f"توليد محتوى قيادي حاد لـ [{idea_clean}]",
-        "logic_trace": "V6.0 | SUPREME COMMAND ENABLED",
-        "video_segments": scenes,
-        "viral_signature": "\n\n---\n💡 تم الهندسة بواسطة مفاعل AI DOMINATOR v6.0"
+        "logic_trace": "V7.0 UNIFIED | GOLDEN EDITION",
+        "video_segments": [
+            {"time": "0-15s", "prompt": f"Close-up portrait 9:16. {v_force}"},
+            {"time": "15-30s", "prompt": f"Advisor in obsidian office. {v_force}"}
+        ]
     }
 
 def alchemy_fusion_core(gold_posts: List[Dict[str, Any]], niche: str) -> Dict[str, Any]:
-    dna = [f"Text: {p['text']} | Stats: {p['engagement']}" for p in gold_posts]
     return {
-        "synthesis_task": f"دمج وتخليق منشور واحد خارق لنيش {niche} بناءً على الجينات: {dna}",
-        "dominance_score": 99,
-        "logic_trace": f"SYNTHESIS ACTIVE | v6.0"
+        "synthesis_task": get_unified_prompt("دمج جيني", niche, gold_posts),
+        "logic_trace": "GOLDEN SYNTHESIS ACTIVE v7.0"
     }
