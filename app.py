@@ -1,10 +1,11 @@
 import os
 import re
 import requests
-import logging
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
+
+# استيراد النواة السيادية
 from dominator_brain import strategic_intelligence_core, alchemy_fusion_core, WPIL_DOMINATOR_SYSTEM
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -31,20 +32,30 @@ def get_ai_response_nebula(prompt: str) -> str:
     return "🚨 كافة المحركات مشغولة حالياً."
 
 def fetch_live_dna(niche):
+    # رابط البحث الافتراضي لضمان عدم توجيه المستخدم للرئيسية أبداً
+    fallback_url = f"https://twitter.com/search?q={niche}&f=live"
+    
     if APIFY_KEY:
         try:
             url = f"https://api.apify.com/v2/acts/apidojo~tweet-scraper/run-sync-get-dataset-items?token={APIFY_KEY}"
-            res = requests.post(url, json={"searchTerms": [niche], "maxTweets": 4, "searchMode": "top"}, timeout=20)
+            res = requests.post(url, json={"searchTerms": [niche], "maxTweets": 5, "searchMode": "top"}, timeout=20)
             if res.status_code in [200, 201]:
-                return [{
-                    "text": i.get("text", "DNA"), 
-                    "engagement": f"{i.get('favorite_count', 0)}",
-                    "author": i.get("user", {}).get("screen_name", "Elite_User"),
-                    "url": i.get("url") or f"https://twitter.com/i/web/status/{i.get('id_str')}",
-                    "score": 85 + (i.get('favorite_count', 0) % 15)
-                } for i in res.json()]
+                data = res.json()
+                if data:
+                    return [{
+                        "text": i.get("text", "DNA Sample"), 
+                        "engagement": f"{i.get('favorite_count', 0)}",
+                        "author": i.get("user", {}).get("screen_name", "Elite_Insight"),
+                        "url": i.get("url") or f"https://twitter.com/i/web/status/{i.get('id_str')}",
+                        "score": 85 + (i.get('favorite_count', 0) % 15)
+                    } for i in data if i.get("text")]
         except: pass
-    return [{"text": f"استراتيجية {niche} لعام 2026", "engagement": "120K", "author": "Strategic_AI", "url": "#", "score": 95}]
+    
+    # بيانات بديلة احترافية مع روابط بحث حقيقية في النيش
+    return [
+        {"text": f"تحليل استراتيجي لاكتساح {niche} في 2026", "engagement": "120K", "author": "Dominator_AI", "url": fallback_url, "score": 95},
+        {"text": f"لماذا يسيطر القادة على سوق {niche}؟", "engagement": "85K", "author": "Market_Oracle", "url": fallback_url, "score": 90}
+    ]
 
 def parse_output(text):
     parts = {"linkedin": "", "twitter": "", "tiktok": ""}
@@ -58,7 +69,8 @@ def home(): return render_template("index.html")
 
 @app.route("/alchemy/discover", methods=["POST"])
 def discover():
-    niche = request.get_json().get("niche", "القيادة")
+    data = request.get_json(silent=True) or {}
+    niche = data.get("niche", "ريادة الأعمال")
     posts = fetch_live_dna(niche)
     fusion = alchemy_fusion_core(posts, niche)
     output = get_ai_response_nebula(f"{WPIL_DOMINATOR_SYSTEM}\n{fusion['synthesis_task']}")
@@ -66,8 +78,8 @@ def discover():
 
 @app.route("/generate_all", methods=["POST"])
 def generate():
-    idea = request.get_json().get("text", "الهيمنة")
-    prompt = f"{WPIL_DOMINATOR_SYSTEM}\nتوليد محتوى لـ [LINKEDIN], [TWITTER], [TIKTOK] للفكرة: {idea}"
+    idea = request.get_json().get("text", "السيادة")
+    prompt = f"{WPIL_DOMINATOR_SYSTEM}\nتوليد محتوى لـ [LINKEDIN], [TWITTER], [TIKTOK] لهذه الفكرة: {idea}"
     raw = get_ai_response_nebula(prompt)
     parsed = parse_output(raw)
     brain = strategic_intelligence_core(idea)
