@@ -2,6 +2,8 @@ import os
 import re
 import requests
 import json
+import logging
+import time
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
@@ -12,7 +14,7 @@ from dominator_brain import strategic_intelligence_core, alchemy_fusion_core, WP
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-# ========= ترسانة الموديلات والمفاتيح =========
+# ========= ترسانة Nebula لعام 2025 =========
 MODELS_POOL = ["gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-flash-latest"]
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 APIFY_KEY = os.getenv("APIFY_API_KEY")
@@ -21,16 +23,13 @@ def get_ai_response_nebula(prompt: str) -> str:
     for model_name in MODELS_POOL:
         try:
             model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            return response.text
+            return model.generate_content(prompt).text
         except: continue
-    return "🚨 كافة خطوط الاتصال مشغولة حالياً."
+    return "🚨 المحركات مشغولة حالياً."
 
 @app.route("/test_apify")
 def test_apify():
-    """مسار تشخيصي إجباري للتحقق من المفتاح"""
-    if not APIFY_KEY:
-        return jsonify({"status": "failed", "message": "APIFY_API_KEY is missing in Render environment!"}), 400
+    if not APIFY_KEY: return jsonify({"status": "error", "message": "Key missing"}), 400
     try:
         res = requests.get(f"https://api.apify.com/v2/users/me?token={APIFY_KEY}", timeout=10)
         return jsonify({"status": "success", "apify_user": res.json()}), 200
@@ -38,31 +37,51 @@ def test_apify():
         return jsonify({"status": "failed", "error": str(e)}), 500
 
 def fetch_live_dna(niche):
-    fallback_url = f"https://x.com/search?q={niche}&f=live"
+    """بروتوكول Stealth Hunter: اقتناص المنشورات الحقيقية بروابط مباشرة"""
+    search_url = f"https://x.com/search?q={niche}&f=live"
+    
     if APIFY_KEY:
         try:
+            # استخدام إعدادات بحث أكثر دقة لضمان العثور على نتائج
             url = f"https://api.apify.com/v2/acts/apidojo~tweet-scraper/run-sync-get-dataset-items?token={APIFY_KEY}"
-            payload = {"searchTerms": [niche], "maxTweets": 5, "searchMode": "top", "addUserInfo": True}
-            res = requests.post(url, json=payload, timeout=35)
+            payload = {
+                "searchTerms": [niche],
+                "maxTweets": 5,
+                "searchMode": "latest", # البحث في الأحدث يضمن روابط حية أكثر من 'top'
+                "addUserInfo": True
+            }
+            # زيادة المهلة لـ 50 ثانية لإعطاء السكرابر وقتاً لتجاوز الحماية
+            res = requests.post(url, json=payload, timeout=50)
+            
             if res.status_code in [200, 201]:
                 data = res.json()
-                if data:
+                if data and len(data) > 0:
                     refined = []
                     for i in data:
-                        user = i.get("user", {}).get("screen_name", "user")
+                        text = i.get("full_text") or i.get("text")
+                        if not text: continue
+                        user = i.get("user", {}).get("screen_name") or "user"
                         tid = i.get("id_str") or i.get("id")
-                        link = f"https://x.com/{user}/status/{tid}" if tid else fallback_url
+                        # بناء الرابط المباشر القهري
+                        direct_link = f"https://x.com/{user}/status/{tid}" if tid else search_url
+                        
                         refined.append({
-                            "text": i.get("full_text") or i.get("text", "DNA"),
-                            "engagement": f"{i.get('favorite_count', 0)}",
+                            "text": text,
+                            "engagement": f"{i.get('favorite_count', 0) + i.get('retweet_count', 0)} Interactions",
                             "author": user,
-                            "url": link,
+                            "url": direct_link,
                             "is_live": True if tid else False,
-                            "score": 85 + (hash(str(tid)) % 15 if tid else 10)
+                            "score": 85 + (len(text) % 15)
                         })
-                    return refined
-        except: pass
-    return [{"text": f"تحليل سيادي لترندات {niche}", "engagement": "Simulated", "author": "Dominator_AI", "url": fallback_url, "is_live": False, "score": 98}]
+                    if refined: return refined
+        except Exception as e:
+            print(f"Extraction Log: {e}")
+
+    # السقوط الآمن (Synthetic DNA) في حال فشل الإنترنت
+    return [
+        {"text": f"المعادلة السيادية للاكتساح في {niche} لعام 2026", "engagement": "AI Simulated", "author": "Dominator_SIC", "url": search_url, "is_live": False, "score": 98},
+        {"text": f"لماذا ينهار المنافسون في سوق {niche}؟", "engagement": "AI Simulated", "author": "Market_Oracle", "url": search_url, "is_live": False, "score": 95}
+    ]
 
 @app.route("/")
 def home(): return render_template("index.html")
@@ -70,7 +89,7 @@ def home(): return render_template("index.html")
 @app.route("/alchemy/discover", methods=["POST"])
 def discover():
     data = request.get_json(silent=True) or {}
-    niche = data.get("niche", "السيادة الرقمية")
+    niche = data.get("niche", "القيادة")
     posts = fetch_live_dna(niche)
     fusion = alchemy_fusion_core(posts, niche)
     output = get_ai_response_nebula(f"{WPIL_DOMINATOR_SYSTEM}\n{fusion['synthesis_task']}")
