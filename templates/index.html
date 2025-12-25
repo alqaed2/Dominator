@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR | GOLD v10.8</title>
+    <title>AI DOMINATOR | GOLD v10.9</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root { --neon-blue: #00f2ff; --neon-red: #ff0055; --bg: #050505; }
-        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
+        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
         .cyber-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
         .dashboard-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
         .cyber-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 15px; }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(15px); }
-        .modal-content { width: 95%; max-width: 1000px; background: #080808; border: 1px solid var(--neon-blue); padding: 40px; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
+        .modal-content { width: 95%; max-width: 950px; background: #080808; border: 1px solid var(--neon-blue); padding: 40px; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
         .source-item { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 15px; border-left: 4px solid var(--neon-red); margin-bottom: 15px; }
         .dna-bar { height: 6px; background: #222; border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .dna-fill { height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-red)); transition: 1.5s ease-out; }
@@ -22,15 +22,15 @@
         .tab-btn.active { background: var(--neon-blue); color: #000; }
         .tab-content { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; line-height: 1.8; border-radius: 0 15px 15px 15px; position: relative; }
         .tab-content.active { display: block; }
-        .copy-btn { position: absolute; top: 20px; left: 20px; background: var(--neon-red); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: 700; }
+        .copy-btn { position: absolute; top: 20px; left: 20px; background: var(--neon-red); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 700; }
         .status-dot { width: 10px; height: 10px; background: var(--neon-red); border-radius: 50%; display: inline-block; margin-left: 8px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
     <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid #222; padding-bottom:15px;">
-        <h1>AI DOMINATOR <span style="background:var(--neon-red); padding:2px 8px; border-radius:4px; font-size:12px;">v10.8 ABSOLUTE</span></h1>
-        <div style="color:var(--neon-blue); font-weight:700;"><span class="status-dot"></span> SOVEREIGN SYSTEM LIVE</div>
+        <h1>AI DOMINATOR <span style="background:var(--neon-red); padding:2px 8px; border-radius:4px; font-size:12px;">v10.9 SOVEREIGN</span></h1>
+        <div style="color:var(--neon-blue); font-weight:700;"><span class="status-dot"></span> SYSTEM RECOVERY LIVE</div>
     </header>
 
     <div class="dashboard-grid">
@@ -54,6 +54,7 @@
                 <button id="generateBtn" onclick="startDominanceEngine()" class="cyber-btn">إطلاق التوليد الموحد</button>
                 <div id="engineStatus" style="margin-top:10px; color:var(--neon-blue); font-weight:700;"></div>
             </div>
+
             <div id="outputSection" style="display:none;">
                 <div class="tabs-header">
                     <button class="tab-btn active" onclick="openTab(event, 'linkedin')">LinkedIn</button>
@@ -82,7 +83,7 @@
         <div class="modal-content">
             <h1 style="color:var(--neon-red); margin-top:0;">🧬 مختبر التخليق الحي</h1>
             <div id="superPostContent" style="white-space:pre-wrap; background:rgba(0,242,255,0.03); padding:25px; border-radius:15px; border:1px solid rgba(0,242,255,0.1); line-height:1.8; margin-bottom:20px;"></div>
-            <h3>🔗 الجينات المسحوبة</h3>
+            <h3>🔗 الجينات المسحوبة (Sources)</h3>
             <div id="sourcePosts" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"></div>
             <div style="margin-top:40px; display:flex; gap:20px;">
                 <button onclick="document.getElementById('superPostModal').style.display='none'" class="cyber-btn" style="background:none; border:1px solid #fff; color:#fff; width:auto; padding:10px 30px;">إغلاق</button>
@@ -97,7 +98,7 @@
             const btn = document.getElementById('discoverBtn');
             const status = document.getElementById('alchemyStatus');
             btn.disabled = true; btn.innerHTML = "جاري التخليق...";
-            status.innerText = "⏳ جاري التنقيب في الإنترنت (50 ثانية)...";
+            status.innerText = "⏳ جاري التنقيب عن الجينات الحية...";
             try {
                 const res = await fetch('/alchemy/discover', {
                     method: 'POST',
@@ -107,7 +108,7 @@
                 lastAlchemyResult = await res.json();
                 document.getElementById('goldSuggestions').innerHTML = `
                     <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:15px;">
-                        <span style="font-size:13px;">🌟 مرسوم جاهز</span>
+                        <span style="font-size:13px;">🌟 مرسوم خارق جاهز</span>
                         <button onclick="openModal()" class="copy-btn" style="position:static; margin-top:10px; width:100%;">فتح المختبر</button>
                     </div>`;
                 status.innerText = "✅ تم العثور على فرصة هيمنة!";
@@ -122,14 +123,12 @@
             let html = "";
             lastAlchemyResult.sources.forEach(s => {
                 const isLive = s.is_live === true;
-                const btnColor = isLive ? "#0055ff" : "#333";
-                const btnLabel = isLive ? "زيارة المنشور المباشر" : "مسح السوق (X)";
                 html += `
-                <div class="source-item" style="border-right: 4px solid ${isLive ? 'var(--neon-blue)' : 'var(--neon-red)'};">
+                <div class="source-item">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <span style="color:var(--neon-blue); font-weight:700;">@${s.author}</span>
-                        <a href="${s.url}" target="_blank" style="color:#fff; font-size:10px; text-decoration:none; background:${btnColor}; padding:4px 8px; border-radius:4px; font-weight:700;">
-                            ${btnLabel}
+                        <a href="${s.url}" target="_blank" style="color:#fff; font-size:10px; text-decoration:none; background:${isLive ? '#0055ff' : '#333'}; padding:4px 8px; border-radius:4px; font-weight:700;">
+                            ${isLive ? 'المصدر المباشر' : 'مسح السوق'}
                         </a>
                     </div>
                     <div style="font-size:11px;">تفاعل: ${s.engagement}</div>
@@ -173,11 +172,7 @@
             evt.currentTarget.classList.add('active');
         }
 
-        function copyContent(id) { 
-            const text = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(text); 
-            alert("تم النسخ!"); 
-        }
+        function copyContent(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); alert("تم النسخ!"); }
     </script>
 </body>
 </html>
