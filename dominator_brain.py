@@ -2,28 +2,29 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 # =========================================================
-# Strategic Intelligence Core (SIC) - V11.0 COMMAND & CONTROL
+# Strategic Intelligence Core (SIC) - V12.0 VISUAL DOMINANCE
 # =========================================================
 
 WPIL_DOMINATOR_SYSTEM = """
-أنت 'الخيميائي الاستراتيجي الأعلى'. مهمتك تخليق حزم محتوى سيادية لـ (LinkedIn, X, TikTok).
-اللغة: عربية نخبوية حادة. التنسيق: فخامة استراتيجية.
-يجب فصل المنصات بـ [LINKEDIN], [TWITTER], [TIKTOK].
+أنت 'الخيميائي الاستراتيجي الأعلى'. مهمتك تخليق حزم محتوى (LinkedIn, X, TikTok) + تصميم مفهوم بصري فخم.
+اللغة: عربية نخبوية. التنسيق: فخامة استراتيجية مطلقة.
+الرد: يجب فصل المنصات بـ [LINKEDIN], [TWITTER], [TIKTOK] وإضافة قسم [VISUAL_PROMPT] بالإنجليزية في النهاية.
 """
 
 def strategic_intelligence_core(idea: str = "") -> Dict[str, Any]:
-    v_force = "Vertical 9:16 aspect ratio, cinematic 8k, advisor character."
+    # أوامر الأبعاد الطولية لـ TikTok
+    v_force = "Vertical 9:16, cinematic 8k, mobile framing."
     return {
-        "logic_trace": "SIC v11.0 | DUAL-MODE ENABLED",
+        "logic_trace": "SIC v12.0 | VISUAL ENGINE ACTIVE",
         "video_segments": [
-            {"time": "0-15s", "prompt": f"Extreme close-up of advisor with holographic eyes 9:16. {v_force}"},
-            {"time": "15-30s", "prompt": f"Advisor walking in digital obsidian vault 9:16. {v_force}"}
+            {"time": "0-15s", "prompt": f"Close-up of advisor with holographic data eyes. {v_force}"},
+            {"time": "15-30s", "prompt": f"Advisor walking in digital obsidian sanctuary. {v_force}"}
         ]
     }
 
 def alchemy_fusion_core(gold_posts: List[Dict[str, Any]], niche: str) -> Dict[str, Any]:
     dna_str = "\n".join([f"- {str(p.get('text'))[:150]}" for p in gold_posts])
     return {
-        "synthesis_task": f"تخليق مرسوم خارق لنيش {niche} بناءً على هذه الجينات المستهدفة:\n{dna_str}",
-        "logic_trace": "ALCHEMY FUSION v11.0 ACTIVE"
+        "synthesis_task": f"تخليق مرسوم سيادي لنيش {niche} بناءً على هذه الجينات:\n{dna_str}\nصمم أيضاً [VISUAL_PROMPT] بالإنجليزية يصف صورة سينمائية فخمة تعبر عن هذا المحتوى.",
+        "logic_trace": "ALCHEMY v12.0 | VISUAL SYNTHESIS ENABLED"
     }
