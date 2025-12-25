@@ -2,8 +2,6 @@ import os
 import re
 import requests
 import json
-import logging
-import time
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
@@ -15,7 +13,14 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
 # ========= ترسانة Nebula لعام 2025 =========
-MODELS_POOL = ["gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-flash-latest"]
+MODELS_POOL = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash-lite-001",
+    "gemini-flash-latest",
+    "gemini-pro-latest"
+]
+
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 APIFY_KEY = os.getenv("APIFY_API_KEY")
 
@@ -23,9 +28,10 @@ def get_ai_response_nebula(prompt: str) -> str:
     for model_name in MODELS_POOL:
         try:
             model = genai.GenerativeModel(model_name)
-            return model.generate_content(prompt).text
+            response = model.generate_content(prompt)
+            return response.text
         except: continue
-    return "🚨 المحركات مشغولة حالياً."
+    return "🚨 كافة خطوط الاتصال مشغولة حالياً."
 
 @app.route("/test_apify")
 def test_apify():
@@ -37,51 +43,38 @@ def test_apify():
         return jsonify({"status": "failed", "error": str(e)}), 500
 
 def fetch_live_dna(niche):
-    """بروتوكول Stealth Hunter: اقتناص المنشورات الحقيقية بروابط مباشرة"""
-    search_url = f"https://x.com/search?q={niche}&f=live"
-    
+    search_url = f"https://x.com/search?q={encodeURIComponent(niche)}&f=live"
     if APIFY_KEY:
         try:
-            # استخدام إعدادات بحث أكثر دقة لضمان العثور على نتائج
             url = f"https://api.apify.com/v2/acts/apidojo~tweet-scraper/run-sync-get-dataset-items?token={APIFY_KEY}"
-            payload = {
-                "searchTerms": [niche],
-                "maxTweets": 5,
-                "searchMode": "latest", # البحث في الأحدث يضمن روابط حية أكثر من 'top'
-                "addUserInfo": True
-            }
-            # زيادة المهلة لـ 50 ثانية لإعطاء السكرابر وقتاً لتجاوز الحماية
+            payload = {"searchTerms": [niche], "maxTweets": 5, "searchMode": "latest", "addUserInfo": True}
             res = requests.post(url, json=payload, timeout=50)
-            
             if res.status_code in [200, 201]:
                 data = res.json()
-                if data and len(data) > 0:
+                if data:
                     refined = []
                     for i in data:
-                        text = i.get("full_text") or i.get("text")
-                        if not text: continue
-                        user = i.get("user", {}).get("screen_name") or "user"
+                        user = i.get("user", {}).get("screen_name", "user")
                         tid = i.get("id_str") or i.get("id")
-                        # بناء الرابط المباشر القهري
-                        direct_link = f"https://x.com/{user}/status/{tid}" if tid else search_url
-                        
+                        link = f"https://x.com/{user}/status/{tid}" if tid else search_url
                         refined.append({
-                            "text": text,
-                            "engagement": f"{i.get('favorite_count', 0) + i.get('retweet_count', 0)} Interactions",
+                            "text": i.get("full_text") or i.get("text", "DNA"),
+                            "engagement": f"{int(i.get('favorite_count', 0)) + int(i.get('retweet_count', 0))}",
                             "author": user,
-                            "url": direct_link,
+                            "url": link,
                             "is_live": True if tid else False,
-                            "score": 85 + (len(text) % 15)
+                            "score": 85 + (len(str(tid)) % 15 if tid else 10)
                         })
-                    if refined: return refined
-        except Exception as e:
-            print(f"Extraction Log: {e}")
+                    return refined
+        except: pass
+    return [{"text": f"تحليل سيادي لترندات {niche}", "engagement": "Simulated", "author": "Dominator_AI", "url": search_url, "is_live": False, "score": 98}]
 
-    # السقوط الآمن (Synthetic DNA) في حال فشل الإنترنت
-    return [
-        {"text": f"المعادلة السيادية للاكتساح في {niche} لعام 2026", "engagement": "AI Simulated", "author": "Dominator_SIC", "url": search_url, "is_live": False, "score": 98},
-        {"text": f"لماذا ينهار المنافسون في سوق {niche}؟", "engagement": "AI Simulated", "author": "Market_Oracle", "url": search_url, "is_live": False, "score": 95}
-    ]
+def parse_output(text):
+    parts = {"linkedin": "", "twitter": "", "tiktok": ""}
+    for p in parts:
+        match = re.search(rf"\[{p.upper()}\](.*?)(\[|$)", text, re.S | re.I)
+        parts[p] = match.group(1).strip() if match else "فشل استخراج القسم"
+    return parts
 
 @app.route("/")
 def home(): return render_template("index.html")
@@ -89,7 +82,7 @@ def home(): return render_template("index.html")
 @app.route("/alchemy/discover", methods=["POST"])
 def discover():
     data = request.get_json(silent=True) or {}
-    niche = data.get("niche", "القيادة")
+    niche = data.get("niche", "السيادة الرقمية")
     posts = fetch_live_dna(niche)
     fusion = alchemy_fusion_core(posts, niche)
     output = get_ai_response_nebula(f"{WPIL_DOMINATOR_SYSTEM}\n{fusion['synthesis_task']}")
@@ -101,14 +94,9 @@ def generate():
     idea = data.get("text", "الهيمنة")
     prompt = f"{WPIL_DOMINATOR_SYSTEM}\nتوليد حزمة سيادية لـ [LINKEDIN], [TWITTER], [TIKTOK] للفكرة: {idea}"
     raw = get_ai_response_nebula(prompt)
-    
-    parts = {"linkedin": "", "twitter": "", "tiktok": ""}
-    for p in parts:
-        match = re.search(rf"\[{p.upper()}\](.*?)(\[|$)", raw, re.S | re.I)
-        parts[p] = match.group(1).strip() if match else "فشل استخراج القسم"
-    
+    parsed = parse_output(raw)
     brain = strategic_intelligence_core(idea)
-    return jsonify({**parts, "video_prompt": brain["video_segments"]}), 200
+    return jsonify({**parsed, "video_prompt": brain["video_segments"]}), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
