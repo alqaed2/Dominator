@@ -2,28 +2,28 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 # =========================================================
-# Strategic Intelligence Core (SIC) - V10.0 ABSOLUTE
+# Strategic Intelligence Core (SIC) - V10.5 ABSOLUTE
 # =========================================================
 
 WPIL_DOMINATOR_SYSTEM = """
 أنت 'الخيميائي الاستراتيجي الأعلى'. مهمتك تخليق محتوى مهيمن لـ (LinkedIn, X, TikTok).
-القواعد: لغة نخبوية، عناوين حادة، تنسيق فخم.
+القواعد: لغة نخبوية، عناوين حادة، تنسيق فخم. 
 الرد الموحد: يجب فصل المنصات بـ [LINKEDIN], [TWITTER], [TIKTOK].
 """
 
 def strategic_intelligence_core(idea: str = "") -> Dict[str, Any]:
-    v_force = "Vertical 9:16 portrait orientation, cinematic 8k, advisor character."
+    v_force = "Vertical 9:16 aspect ratio, cinematic 8k, mobile-first framing."
     return {
-        "logic_trace": "SIC v10 | FULL AUTHORITY",
+        "logic_trace": "SIC v10.5 | DIRECT LINK PROTOCOL",
         "video_segments": [
-            {"time": "0-15s", "prompt": f"Close-up of elite advisor with glowing data overlay. {v_force}"},
-            {"time": "15-30s", "prompt": f"Advisor walking in obsidian digital vault. {v_force}"}
+            {"time": "0-15s", "prompt": f"Close-up of advisor with holographic data eyes 9:16. {v_force}"},
+            {"time": "15-30s", "prompt": f"Advisor walking in digital obsidian sanctuary 9:16. {v_force}"}
         ]
     }
 
 def alchemy_fusion_core(gold_posts: List[Dict[str, Any]], niche: str) -> Dict[str, Any]:
-    dna = [f"Post: {p['text']} | Stats: {p['engagement']}" for p in gold_posts]
+    dna_str = "\n".join([f"- {str(p.get('text'))[:150]}" for p in gold_posts])
     return {
-        "synthesis_task": f"تخليق مرسوم سيادي لنيش {niche} بناءً على الجينات الحية: {dna}",
-        "logic_trace": "GOLDEN SYNTHESIS v10 ACTIVE"
+        "synthesis_task": f"تخليق مرسوم خارق لنيش {niche} بناءً على هذه الجينات:\n{dna_str}",
+        "logic_trace": "NEBULA SYNTHESIS v10.5 ACTIVE"
     }
