@@ -1,89 +1,178 @@
-import os
-import re
-import requests
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
-import google.generativeai as genai
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI DOMINATOR | v10.1 ABSOLUTE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --neon-blue: #00f2ff; --neon-red: #ff0055; --bg: #050505; }
+        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
+        .cyber-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        .cyber-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(20px); }
+        .modal-content { width: 90%; max-width: 950px; background: #080808; border: 1px solid var(--neon-blue); padding: 40px; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
+        .source-item { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 15px; border-left: 4px solid var(--neon-red); margin-bottom: 15px; }
+        .dna-bar { height: 6px; background: #222; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+        .dna-fill { height: 100%; background: var(--neon-red); }
+        textarea, input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
+        .tab-btn { padding: 12px 25px; background: #111; border: 1px solid #333; color: #888; cursor: pointer; border-radius: 12px 12px 0 0; }
+        .tab-btn.active { background: var(--neon-blue); color: #000; }
+        .tab-content { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; line-height: 1.8; border-radius: 0 15px 15px 15px; }
+        .tab-content.active { display: block; }
+        .copy-btn { background: var(--neon-red); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: 700; }
+        .status-dot { width: 10px; height: 10px; background: var(--neon-red); border-radius: 50%; display: inline-block; margin-left: 8px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid #222; padding-bottom:15px;">
+        <h1>AI DOMINATOR <span style="background:var(--neon-red); padding:2px 8px; border-radius:4px; font-size:12px;">v10.1 ABSOLUTE</span></h1>
+        <div style="color:var(--neon-blue); font-weight:700;"><span class="status-dot"></span> SOVEREIGN PROMPT LIVE</div>
+    </header>
 
-# استيراد النواة السيادية
-from dominator_brain import strategic_intelligence_core, alchemy_fusion_core, WPIL_DOMINATOR_SYSTEM
+    <div class="dashboard-grid">
+        <div class="sidebar">
+            <div class="cyber-card" style="border:1px solid var(--neon-red);">
+                <h3><i class="fas fa-radiation"></i> رادار النبض الحي</h3>
+                <div id="alchemyStatus" style="font-size:12px; opacity:0.6; margin-bottom:15px;">جاهز لاكتساح الترندات...</div>
+                <div id="goldSuggestions"></div>
+                <button onclick="triggerDiscovery()" id="discoverBtn" class="cyber-btn" style="background:var(--neon-red); color:#fff;">اكتشاف الفرص الذهبية</button>
+            </div>
+            <div class="cyber-card">
+                <h3>النيش الاستراتيجي</h3>
+                <input id="niche" value="ريادة الأعمال">
+            </div>
+        </div>
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
-CORS(app)
+        <div class="main-content">
+            <div class="cyber-card">
+                <h3>محرك الهيمنة - الطلقة الواحدة</h3>
+                <textarea id="inputText" rows="6" placeholder="أدخل فكرتك هنا..."></textarea>
+                <button id="generateBtn" onclick="startDominanceEngine()" class="cyber-btn">إطلاق التوليد الموحد</button>
+                <div id="engineStatus" style="margin-top:10px; color:var(--neon-blue); font-weight:700;"></div>
+            </div>
 
-# ========= ترسانة Nebula لعام 2025 =========
-MODELS_POOL = [
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-2.0-flash-lite-001",
-    "gemini-flash-latest",
-    "gemini-pro-latest"
-]
+            <div id="outputSection" style="display:none;">
+                <div class="tabs-header">
+                    <button class="tab-btn active" onclick="openTab(event, 'linkedin')">LinkedIn</button>
+                    <button class="tab-btn" onclick="openTab(event, 'twitter')">X (Twitter)</button>
+                    <button class="tab-btn" onclick="openTab(event, 'tiktok')">TikTok</button>
+                </div>
+                <div id="linkedin" class="tab-content active">
+                    <button class="copy-btn" onclick="copyContent('linkedinContent')">نسخ المرسوم</button>
+                    <div id="linkedinContent" style="white-space: pre-wrap;"></div>
+                </div>
+                <div id="twitter" class="tab-content">
+                    <button class="copy-btn" onclick="copyContent('twitterContent')">نسخ الثريد</button>
+                    <div id="twitterContent" style="white-space: pre-wrap;"></div>
+                </div>
+                <div id="tiktok" class="tab-content">
+                    <button class="copy-btn" onclick="copyContent('tiktokScript')">نسخ السكريبت</button>
+                    <div id="videoPrompt" style="background:#000; padding:15px; border-radius:10px; font-family:monospace; font-size:11px; color:var(--neon-blue); margin-bottom:15px; white-space:pre-wrap; border:1px solid #222;"></div>
+                    <div id="tiktokScript" style="white-space: pre-wrap;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-APIFY_KEY = os.getenv("APIFY_API_KEY")
+    <!-- Modal -->
+    <div id="superPostModal" class="modal">
+        <div class="modal-content">
+            <h1 style="color:var(--neon-red); margin-top:0;">🧬 مختبر التخليق الحي</h1>
+            <div id="superPostContent" style="white-space:pre-wrap; background:rgba(0,242,255,0.03); padding:25px; border-radius:15px; border:1px solid rgba(0,242,255,0.1); line-height:1.8; margin-bottom:25px;"></div>
+            <h3>🔗 الجينات المسحوبة (Sources)</h3>
+            <div id="sourcePosts" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"></div>
+            <div style="margin-top:40px; display:flex; gap:20px;">
+                <button onclick="document.getElementById('superPostModal').style.display='none'" class="cyber-btn" style="background:none; border:1px solid #fff; color:#fff;">إغلاق</button>
+                <button onclick="useAsIdea()" class="cyber-btn">استخدام كفكرة أساسية</button>
+            </div>
+        </div>
+    </div>
 
-def get_ai_response_nebula(prompt: str) -> str:
-    for model_name in MODELS_POOL:
-        try:
-            model = genai.GenerativeModel(model_name)
-            return model.generate_content(prompt).text
-        except: continue
-    return "🚨 كافة المحركات مشغولة حالياً."
+    <script>
+        let lastAlchemyResult = null;
 
-def fetch_live_dna(niche):
-    # رابط البحث الافتراضي لضمان عدم توجيه المستخدم للرئيسية أبداً
-    fallback_url = f"https://twitter.com/search?q={niche}&f=live"
-    
-    if APIFY_KEY:
-        try:
-            url = f"https://api.apify.com/v2/acts/apidojo~tweet-scraper/run-sync-get-dataset-items?token={APIFY_KEY}"
-            res = requests.post(url, json={"searchTerms": [niche], "maxTweets": 5, "searchMode": "top"}, timeout=20)
-            if res.status_code in [200, 201]:
-                data = res.json()
-                if data:
-                    return [{
-                        "text": i.get("text", "DNA Sample"), 
-                        "engagement": f"{i.get('favorite_count', 0)}",
-                        "author": i.get("user", {}).get("screen_name", "Elite_Insight"),
-                        "url": i.get("url") or f"https://twitter.com/i/web/status/{i.get('id_str')}",
-                        "score": 85 + (i.get('favorite_count', 0) % 15)
-                    } for i in data if i.get("text")]
-        except: pass
-    
-    # بيانات بديلة احترافية مع روابط بحث حقيقية في النيش
-    return [
-        {"text": f"تحليل استراتيجي لاكتساح {niche} في 2026", "engagement": "120K", "author": "Dominator_AI", "url": fallback_url, "score": 95},
-        {"text": f"لماذا يسيطر القادة على سوق {niche}؟", "engagement": "85K", "author": "Market_Oracle", "url": fallback_url, "score": 90}
-    ]
+        async function triggerDiscovery() {
+            const btn = document.getElementById('discoverBtn');
+            const status = document.getElementById('alchemyStatus');
+            btn.disabled = true; btn.innerHTML = "جاري التخليق...";
+            status.innerText = "⏳ جاري التنقيب في الإنترنت...";
+            try {
+                const res = await fetch('/alchemy/discover', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({niche: document.getElementById('niche').value})
+                });
+                lastAlchemyResult = await res.json();
+                document.getElementById('goldSuggestions').innerHTML = `
+                    <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:15px;">
+                        <span style="font-size:13px;">🌟 مرسوم خارق جاهز</span>
+                        <button onclick="openModal()" class="copy-btn" style="position:static; margin-top:10px; width:100%;">فتح المختبر</button>
+                    </div>`;
+                status.innerText = "✅ تم العثور على فرصة!";
+            } catch (e) { status.innerText = "❌ خطأ في الاتصال."; }
+            btn.disabled = false; btn.innerHTML = "اكتشاف الفرص الذهبية";
+        }
 
-def parse_output(text):
-    parts = {"linkedin": "", "twitter": "", "tiktok": ""}
-    for p in parts:
-        match = re.search(rf"\[{p.upper()}\](.*?)(\[|$)", text, re.S | re.I)
-        parts[p] = match.group(1).strip() if match else "فشل استخراج القسم"
-    return parts
+        function openModal() {
+            if(!lastAlchemyResult) return;
+            document.getElementById('superPostModal').style.display = 'flex';
+            document.getElementById('superPostContent').innerText = lastAlchemyResult.super_post;
+            let html = "";
+            lastAlchemyResult.sources.forEach(s => {
+                // التأكد من أن الرابط ليس فارغاً أو #
+                const validUrl = (s.url && s.url !== "#") ? s.url : `https://twitter.com/search?q=${encodeURIComponent(document.getElementById('niche').value)}`;
+                html += `
+                <div class="source-item">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="color:var(--neon-blue); font-weight:700;">@${s.author}</span>
+                        <a href="${validUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--neon-red); font-size:11px; text-decoration:none; border:1px solid var(--neon-red); padding:3px 8px; border-radius:5px;">زيارة المصدر <i class="fas fa-external-link-alt"></i></a>
+                    </div>
+                    <div style="font-size:11px; opacity:0.8;">تفاعل: ${s.engagement}</div>
+                    <div class="dna-bar"><div class="dna-fill" style="width:${s.score}%"></div></div>
+                    <p style="font-size:12px; margin-top:10px;">${s.text.substring(0,140)}...</p>
+                </div>`;
+            });
+            document.getElementById('sourcePosts').innerHTML = html;
+        }
 
-@app.route("/")
-def home(): return render_template("index.html")
+        function useAsIdea() { document.getElementById('inputText').value = lastAlchemyResult.super_post; document.getElementById('superPostModal').style.display = 'none'; }
 
-@app.route("/alchemy/discover", methods=["POST"])
-def discover():
-    data = request.get_json(silent=True) or {}
-    niche = data.get("niche", "ريادة الأعمال")
-    posts = fetch_live_dna(niche)
-    fusion = alchemy_fusion_core(posts, niche)
-    output = get_ai_response_nebula(f"{WPIL_DOMINATOR_SYSTEM}\n{fusion['synthesis_task']}")
-    return jsonify({"super_post": output, "sources": posts}), 200
+        async function startDominanceEngine() {
+            const btn = document.getElementById('generateBtn');
+            const idea = document.getElementById('inputText').value;
+            if(!idea) return alert("أدخل فكرة");
+            btn.disabled = true; document.getElementById('outputSection').style.display = 'block';
+            document.getElementById('engineStatus').innerText = "🚀 جاري التوليد الموحد عبر Nebula v10.1...";
+            try {
+                const res = await fetch('/generate_all', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: idea})
+                });
+                const data = await res.json();
+                document.getElementById('linkedinContent').innerText = data.linkedin;
+                document.getElementById('twitterContent').innerText = data.twitter;
+                document.getElementById('tiktokScript').innerText = data.tiktok;
+                let v = "";
+                data.video_prompt.forEach(s => v += `### Scene ${s.time}:\n${s.prompt}\n\n`);
+                document.getElementById('videoPrompt').innerText = v;
+                document.getElementById('engineStatus').innerText = "✅ تم الإطلاق بنجاح!";
+            } catch(e) { alert("خطأ في الاتصال"); }
+            btn.disabled = false;
+        }
 
-@app.route("/generate_all", methods=["POST"])
-def generate():
-    idea = request.get_json().get("text", "السيادة")
-    prompt = f"{WPIL_DOMINATOR_SYSTEM}\nتوليد محتوى لـ [LINKEDIN], [TWITTER], [TIKTOK] لهذه الفكرة: {idea}"
-    raw = get_ai_response_nebula(prompt)
-    parsed = parse_output(raw)
-    brain = strategic_intelligence_core(idea)
-    return jsonify({**parsed, "video_prompt": brain["video_segments"]}), 200
+        function openTab(evt, p) {
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(p).style.display = 'block';
+            evt.currentTarget.classList.add('active');
+        }
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+        function copyContent(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); alert("تم النسخ بنجاح!"); }
+    </script>
+</body>
+</html>
