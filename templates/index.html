@@ -1,51 +1,112 @@
-<!-- استبدل قسم الـ Script والتبويبات في ملف index.html بهذا الكود المطور -->
-<script>
-    async function startDominanceEngine() {
-        const idea = document.getElementById('inputText').value;
-        if(!idea) return alert("أدخل فكرة");
-        document.getElementById('generateBtn').disabled = true;
-        document.getElementById('outputSection').style.display = 'block';
-        document.getElementById('engineStatus').innerText = "🚀 جاري تخليق الحزمة السيادية والسيناريوهات...";
-        
-        try {
-            const res = await fetch('/generate_all', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: idea})
-            });
-            const data = await res.json();
-            
-            document.getElementById('linkedinContent').innerText = data.linkedin;
-            document.getElementById('twitterContent').innerText = data.twitter;
-            document.getElementById('tiktokScript').innerText = data.tiktok;
-            
-            // عرض مخطط الفيديو السينمائي (v13.0)
-            let videoHtml = "<h3 style='color:var(--neon-blue); border-bottom:1px solid #333; padding-bottom:10px;'>🎬 المخطط السينمائي (9:16)</h3>";
-            data.video_blueprint.forEach(scene => {
-                videoHtml += `
-                <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:10px; border-right:3px solid var(--neon-red); margin-bottom:15px;">
-                    <div style="font-weight:900; font-size:12px; color:var(--neon-red); margin-bottom:5px;">${scene.time}</div>
-                    <code style="font-size:11px; color:#aaa; display:block; margin-bottom:10px;">${scene.prompt}</code>
-                    <button onclick="copyRaw('${scene.prompt}')" class="cyber-btn" style="padding:5px 10px; width:auto; font-size:11px;">نسخ البرومبت</button>
-                </div>`;
-            });
-            document.getElementById('videoPrompt').innerHTML = videoHtml;
-            
-            // عرض الصورة
-            const img = document.getElementById('finalImage');
-            img.src = data.image_url;
-            img.onload = () => { 
-                document.getElementById('imageLoader').style.display = 'none'; 
-                img.style.display = 'block'; 
-            };
-            
-            document.getElementById('engineStatus').innerText = "✅ اكتملت الحزمة بنجاح!";
-        } catch(e) { alert("فشل التوليد"); }
-        document.getElementById('generateBtn').disabled = false;
-    }
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI DOMINATOR | GOLD v13.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --neon-blue: #00f2ff; --neon-red: #ff0055; --bg: #050505; }
+        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
+        .cyber-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        .output-wrapper { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
+        .cyber-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .image-vault { border: 2px solid var(--neon-blue); border-radius: 20px; overflow: hidden; background: #000; height: 450px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+        .image-vault img { width: 100%; height: 100%; object-fit: cover; }
+        .tab-btn { padding: 12px 25px; background: #111; border: 1px solid #333; color: #888; cursor: pointer; border-radius: 12px 12px 0 0; }
+        .tab-btn.active { background: var(--neon-blue); color: #000; }
+        .tab-content { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; line-height: 1.8; border-radius: 0 15px 15px 15px; position: relative; }
+        .tab-content.active { display: block; }
+        .blueprint-card { background:rgba(0,0,0,0.3); padding:15px; border-radius:10px; border-right:3px solid var(--neon-red); margin-bottom:15px; }
+        textarea, input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
+        .copy-btn { position: absolute; top: 20px; left: 20px; background: var(--neon-red); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid #222; padding-bottom:15px;">
+        <h1>AI DOMINATOR <span style="background:var(--neon-red); padding:2px 8px; border-radius:4px; font-size:12px;">GOLD v13.0</span></h1>
+        <div style="color:var(--neon-blue); font-weight:700;"><i class="fas fa-crown"></i> CINEMATIC EMPIRE LIVE</div>
+    </header>
 
-    function copyRaw(text) {
-        navigator.clipboard.writeText(text);
-        alert("تم نسخ برومبت المشهد!");
-    }
-</script>
+    <div class="dashboard-grid">
+        <div class="sidebar">
+            <div class="cyber-card" style="border:1px solid var(--neon-red);">
+                <h3><i class="fas fa-radiation"></i> رادار الهيمنة</h3>
+                <textarea id="targetData" rows="3" placeholder="رابط هدف مباشر..."></textarea>
+                <input id="niche" value="ريادة الأعمال">
+                <button onclick="triggerDiscovery()" id="discoverBtn" class="cyber-btn" style="background:var(--neon-red); color:#fff;">اكتشاف / استهداف</button>
+                <div id="goldSuggestions"></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="cyber-card">
+                <h3>محرك الهيمنة الموحد</h3>
+                <textarea id="inputText" rows="6" placeholder="أدخل فكرتك هنا..."></textarea>
+                <button id="generateBtn" onclick="startDominanceEngine()" class="cyber-btn">إطلاق الحزمة المتكاملة</button>
+                <div id="engineStatus" style="margin-top:10px; color:var(--neon-blue); font-weight:700;"></div>
+            </div>
+            <div id="outputSection" style="display:none;">
+                <div class="output-wrapper">
+                    <div class="text-side">
+                        <div class="tabs-header">
+                            <button class="tab-btn active" onclick="openTab(event, 'linkedin')">LinkedIn</button>
+                            <button class="tab-btn" onclick="openTab(event, 'twitter')">X</button>
+                            <button class="tab-btn" onclick="openTab(event, 'tiktok')">TikTok</button>
+                        </div>
+                        <div id="linkedin" class="tab-content active"><div id="linkedinContent" style="white-space: pre-wrap;"></div></div>
+                        <div id="twitter" class="tab-content"><div id="twitterContent" style="white-space: pre-wrap;"></div></div>
+                        <div id="tiktok" class="tab-content">
+                            <div id="videoBlueprintArea"></div>
+                            <div id="tiktokScript" style="white-space: pre-wrap; margin-top:20px; border-top:1px solid #333; padding-top:20px;"></div>
+                        </div>
+                    </div>
+                    <div class="image-side">
+                        <h3 style="color:var(--neon-blue);"><i class="fas fa-image"></i> الأصل البصري</h3>
+                        <div class="image-vault" id="imageVault">
+                            <div id="imageLoader">جاري التظهير...</div>
+                            <img id="finalImage" style="display:none;" />
+                        </div>
+                        <button onclick="copyCurrentContent()" class="cyber-btn" style="background:var(--neon-red); color:#fff;">نسخ النص 📋</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lastAlchemyResult = null;
+        let activeTab = 'linkedin';
+
+        async function triggerDiscovery() {
+            const btn = document.getElementById('discoverBtn');
+            btn.disabled = true; btn.innerHTML = "جاري التخليق...";
+            try {
+                const res = await fetch('/alchemy/discover', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({niche: document.getElementById('niche').value, target_data: document.getElementById('targetData').value})});
+                lastAlchemyResult = await res.json();
+                document.getElementById('goldSuggestions').innerHTML = `<div class="cyber-card" style="padding:10px; margin-top:10px;">🌟 مرسوم جاهز <button onclick="openModal()" class="cyber-btn" style="padding:5px; margin-top:5px;">فتح</button></div>`;
+            } catch (e) { alert("خطأ في الاتصال"); }
+            btn.disabled = false; btn.innerHTML = "اكتشاف / استهداف";
+        }
+
+        async function startDominanceEngine() {
+            const idea = document.getElementById('inputText').value;
+            if(!idea) return alert("أدخل فكرة");
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('outputSection').style.display = 'block';
+            document.getElementById('imageLoader').style.display = 'block';
+            document.getElementById('finalImage').style.display = 'none';
+            document.getElementById('engineStatus').innerText = "🚀 جاري تخليق الإمبراطورية...";
+            
+            try {
+                const res = await fetch('/generate_all', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text: idea})});
+                const data = await res.json();
+                document.getElementById('linkedinContent').innerText = data.linkedin;
+                document.getElementById('twitterContent').innerText = data.twitter;
+                document.getElementById('tiktokScript').innerText = data.tiktok;
+                
+                let vHtml = "<h3 style='color:var(--neon-blue);'>🎬 المخطط السينمائي (9:16)</h3>";
+                data.video_blueprint.forEach(s => {
+                    vHtml += `<div class="blueprint-card"><div style="color:var(--neon-re
