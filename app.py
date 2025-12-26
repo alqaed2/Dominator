@@ -1,40 +1,80 @@
 import os
 import re
-import random
+import requests
+import json
 import urllib.parse
+import random
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
 
-from dominator_brain import WPIL_DOMINATOR_SYSTEM, alchemy_fusion_core
+# استيراد النواة السيادية
+from dominator_brain import strategic_intelligence_core, alchemy_fusion_core, WPIL_DOMINATOR_SYSTEM
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-# مصفوفة النماذج للتبديل التلقائي (Failover System)
-MODELS_POOL = ["gemini-2.0-flash-lite-001", "gemini-1.5-flash", "gemini-1.5-pro"]
+# ========= ترسانة Nebula لعام 2025 (قائمة المتاح) =========
+MODELS_POOL = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash-lite-001",
+    "gemini-flash-latest",
+    "gemini-pro-latest"
+]
+
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+APIFY_KEY = os.getenv("APIFY_API_KEY")
 
 def get_ai_response_nebula(prompt: str) -> str:
-    """نظام التبديل التلقائي لضمان استقرار 100%"""
-    last_error = ""
+    """بروتوكول Nebula للتبديل التلقائي القسري"""
     for model_name in MODELS_POOL:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
             return response.text
-        except Exception as e:
-            last_error = str(e)
-            continue
-    return f"🚨 خطأ في كافة النماذج: {last_error}"
+        except: continue
+    return "🚨 كافة محركات الذكاء مشغولة حالياً."
 
-def generate_visual_identity(idea: str) -> str:
-    """استخدام Gemini لابتكار وصف بصري احترافي"""
-    prompt = f"Create a short, highly detailed English image prompt for: {idea}. Focus on: professional lighting, 8k, cinematic, business environment. No text in image. Max 20 words."
-    visual_description = get_ai_response_nebula(prompt)
-    # تنظيف النص من أي زيادات
-    clean_prompt = re.sub(r'[^a-zA-Z0-9\s,]', '', visual_description)
-    return clean_prompt
+def fetch_live_dna(niche, target_data=None):
+    encoded_niche = urllib.parse.quote(niche)
+    search_url = f"https://x.com/search?q={encoded_niche}&f=live"
+    if target_data and len(target_data.strip()) > 10:
+        return [{"text": target_data, "engagement": "Confirmed", "author": "Target_Source", "url": target_data, "is_live": True, "score": 100}]
+    
+    if APIFY_KEY:
+        try:
+            url = f"https://api.apify.com/v2/acts/apidojo~tweet-scraper/run-sync-get-dataset-items?token={APIFY_KEY}"
+            payload = {"searchTerms": [niche], "maxTweets": 3, "searchMode": "top", "addUserInfo": True}
+            res = requests.post(url, json=payload, timeout=28)
+            if res.status_code in [200, 201]:
+                data = res.json()
+                return [{
+                    "text": i.get("full_text") or i.get("text", "DNA"),
+                    "engagement": f"{i.get('favorite_count', 0)}",
+                    "author": i.get("user", {}).get("screen_name", "user"),
+                    "url": f"https://x.com/i/status/{i.get('id_str')}",
+                    "is_live": True, "score": 90
+                } for i in data if i.get("text")]
+        except: pass
+    return [{"text": f"تحليل سيادي لـ {niche}", "engagement": "Simulated", "author": "Dominator_AI", "url": search_url, "is_live": False, "score": 95}]
+
+def robust_parse(text):
+    parts = {"linkedin": "", "twitter": "", "tiktok": "", "visual": "Professional business office background, cinematic lighting"}
+    ln = re.search(r"\[LINKEDIN\](.*?)(?=\[TWITTER\]|\[TIKTOK\]|\[VISUAL_PROMPT\]|$)", text, re.S | re.I)
+    tw = re.search(r"\[TWITTER\](.*?)(?=\[LINKEDIN\]|\[TIKTOK\]|\[VISUAL_PROMPT\]|$)", text, re.S | re.I)
+    tk = re.search(r"\[TIKTOK\](.*?)(?=\[LINKEDIN\]|\[TWITTER\]|\[VISUAL_PROMPT\]|$)", text, re.S | re.I)
+    vs = re.search(r"\[VISUAL_PROMPT\](.*?)$", text, re.S | re.I)
+    
+    if ln: parts["linkedin"] = ln.group(1).strip()
+    if tw: parts["twitter"] = tw.group(1).strip()
+    if tk: parts["tiktok"] = tk.group(1).strip()
+    if vs: 
+        raw_vs = vs.group(1).strip()
+        parts["visual"] = "High-end professional business photography, " + raw_vs[:300]
+    
+    if not parts["linkedin"]: parts["linkedin"] = text
+    return parts
 
 @app.route("/")
 def home(): return render_template("index.html")
@@ -45,43 +85,27 @@ def discover():
         data = request.get_json(silent=True) or {}
         niche = data.get("niche", "السيادة")
         target = data.get("target_data", "")
-        posts = [{"text": target if target else f"ترند {niche} 2026"}]
+        posts = fetch_live_dna(niche, target)
         fusion = alchemy_fusion_core(posts, niche)
         output = get_ai_response_nebula(f"{WPIL_DOMINATOR_SYSTEM}\n{fusion['synthesis_task']}")
-        return jsonify({"super_post": output, "status": "success"}), 200
+        return jsonify({"super_post": output, "sources": posts}), 200
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route("/generate_all", methods=["POST"])
 def generate():
     try:
         data = request.get_json(silent=True) or {}
-        idea = data.get("text", "Business Success")
+        idea = data.get("text", "السيادة")
+        prompt = f"{WPIL_DOMINATOR_SYSTEM}\nتوليد حزمة سيادية كاملة (نص + وصف بصري واقعي للأعمال) للفكرة: {idea}\nيجب إنهاء الرد بـ [VISUAL_PROMPT]."
+        raw = get_ai_response_nebula(prompt)
+        parsed = robust_parse(raw)
         
-        # 1. توليد النصوص
-        prompt = f"{WPIL_DOMINATOR_SYSTEM}\nتوليد حزمة سيادية (LinkedIn, X, TikTok) للفكرة: {idea}\nأنهِ الرد بـ [VISUAL_PROMPT] يصف الصورة المناسبة بالإنجليزية."
-        raw_text = get_ai_response_nebula(prompt)
+        seed = random.randint(1, 9999)
+        quoted_v = urllib.parse.quote(parsed['visual'])
+        image_url = f"https://image.pollinations.ai/prompt/{quoted_v}?seed={seed}&nologo=true"
         
-        # 2. تحليل النصوص
-        parts = {"linkedin": "", "twitter": "", "tiktok": "", "visual": ""}
-        ln = re.search(r"\[LINKEDIN\](.*?)(?=\[TWITTER\]|\[TIKTOK\]|\[VISUAL_PROMPT\]|$)", raw_text, re.S | re.I)
-        tw = re.search(r"\[TWITTER\](.*?)(?=\[LINKEDIN\]|\[TIKTOK\]|\[VISUAL_PROMPT\]|$)", raw_text, re.S | re.I)
-        tk = re.search(r"\[TIKTOK\](.*?)(?=\[LINKEDIN\]|\[TWITTER\]|\[VISUAL_PROMPT\]|$)", raw_text, re.S | re.I)
-        vs = re.search(r"\[VISUAL_PROMPT\](.*?)$", raw_text, re.S | re.I)
-        
-        parts["linkedin"] = ln.group(1).strip() if ln else raw_text
-        parts["twitter"] = tw.group(1).strip() if tw else ""
-        parts["tiktok"] = tk.group(1).strip() if tk else ""
-        
-        # 3. توليد الصورة عبر محرك Nebula (Gemini + High-Res Renderer)
-        visual_idea = vs.group(1).strip() if vs else idea
-        refined_visual_prompt = generate_visual_identity(visual_idea)
-        
-        seed = random.randint(1, 99999)
-        encoded_prompt = urllib.parse.quote(refined_visual_prompt)
-        # استخدام نظام توزيع الحمل (Load Balancing) للصور
-        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?seed={seed}&width=1080&height=1350&nologo=true"
-        
-        return jsonify({**parts, "image_url": image_url}), 200
+        brain = strategic_intelligence_core(idea)
+        return jsonify({**parsed, "image_url": image_url, "video_prompt": brain["video_segments"]}), 200
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
