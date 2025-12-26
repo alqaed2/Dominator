@@ -1,44 +1,51 @@
-from __future__ import annotations
-from typing import Any, Dict, List
-
-# =========================================================
-# Strategic Intelligence Core (SIC) - V13.0 CINEMATIC EMPIRE
-# =========================================================
-
-WPIL_DOMINATOR_SYSTEM = """
-أنت 'الخيميائي الاستراتيجي الأعلى'. مهمتك تخليق حزمة سيادية (نص + صورة + مخطط فيديو سينمائي).
-لغة الفيديو [TIKTOK]: يجب أن تكون المشاهد واقعية (Hyper-Realistic)، تركز على الكاريزما القيادية، المكاتب الفاخرة، والبيانات الرقمية الهادئة.
-الرد الموحد: افصل المنصات بـ [LINKEDIN], [TWITTER], [TIKTOK] وأنهِ بـ [VISUAL_PROMPT].
-"""
-
-def strategic_intelligence_core(idea: str = "") -> Dict[str, Any]:
-    # أوامر قهرية للفيديو السينمائي الفخم 9:16
-    v_force = "Vertical 9:16 portrait, ultra-realistic 8k cinematic, shot on 35mm lens, high-end studio lighting."
-    advisor_dna = "Elite Middle-Eastern strategic advisor, sharp features, tailored charcoal suit, authoritative presence."
-
-    scenes = [
-        {
-            "time": "0-10s (The Hook)",
-            "prompt": f"{v_force} Close-up of {advisor_dna} eyes reflecting holographic market data, intense gaze, blurred luxury office background."
-        },
-        {
-            "time": "10-20s (The Logic)",
-            "prompt": f"{v_force} Medium shot of {advisor_dna} standing by a floor-to-ceiling window overlooking a futuristic Riyadh/Dubai skyline, evening lighting."
-        },
-        {
-            "time": "20-30s (The Command)",
-            "prompt": f"{v_force} Hand shot of the advisor signing a digital glass tablet with a glowing gold stylus, extreme detail, 8k macro."
-        }
-    ]
-
-    return {
-        "logic_trace": "SIC v13.0 | CINEMATIC BLUEPRINT ACTIVE",
-        "video_segments": scenes
+<!-- استبدل قسم الـ Script والتبويبات في ملف index.html بهذا الكود المطور -->
+<script>
+    async function startDominanceEngine() {
+        const idea = document.getElementById('inputText').value;
+        if(!idea) return alert("أدخل فكرة");
+        document.getElementById('generateBtn').disabled = true;
+        document.getElementById('outputSection').style.display = 'block';
+        document.getElementById('engineStatus').innerText = "🚀 جاري تخليق الحزمة السيادية والسيناريوهات...";
+        
+        try {
+            const res = await fetch('/generate_all', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text: idea})
+            });
+            const data = await res.json();
+            
+            document.getElementById('linkedinContent').innerText = data.linkedin;
+            document.getElementById('twitterContent').innerText = data.twitter;
+            document.getElementById('tiktokScript').innerText = data.tiktok;
+            
+            // عرض مخطط الفيديو السينمائي (v13.0)
+            let videoHtml = "<h3 style='color:var(--neon-blue); border-bottom:1px solid #333; padding-bottom:10px;'>🎬 المخطط السينمائي (9:16)</h3>";
+            data.video_blueprint.forEach(scene => {
+                videoHtml += `
+                <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:10px; border-right:3px solid var(--neon-red); margin-bottom:15px;">
+                    <div style="font-weight:900; font-size:12px; color:var(--neon-red); margin-bottom:5px;">${scene.time}</div>
+                    <code style="font-size:11px; color:#aaa; display:block; margin-bottom:10px;">${scene.prompt}</code>
+                    <button onclick="copyRaw('${scene.prompt}')" class="cyber-btn" style="padding:5px 10px; width:auto; font-size:11px;">نسخ البرومبت</button>
+                </div>`;
+            });
+            document.getElementById('videoPrompt').innerHTML = videoHtml;
+            
+            // عرض الصورة
+            const img = document.getElementById('finalImage');
+            img.src = data.image_url;
+            img.onload = () => { 
+                document.getElementById('imageLoader').style.display = 'none'; 
+                img.style.display = 'block'; 
+            };
+            
+            document.getElementById('engineStatus').innerText = "✅ اكتملت الحزمة بنجاح!";
+        } catch(e) { alert("فشل التوليد"); }
+        document.getElementById('generateBtn').disabled = false;
     }
 
-def alchemy_fusion_core(gold_posts: List[Dict[str, Any]], niche: str) -> Dict[str, Any]:
-    dna = [f"Source: {p.get('text')[:100]}" for p in gold_posts]
-    return {
-        "synthesis_task": f"تخليق مرسوم سيادي لنيش {niche} بناءً على الجينات: {dna}\nصمم [VISUAL_PROMPT] لصورة فوتوغرافية احترافية.",
-        "logic_trace": "SYNTHESIS ACTIVE v13.0"
+    function copyRaw(text) {
+        navigator.clipboard.writeText(text);
+        alert("تم نسخ برومبت المشهد!");
     }
+</script>
