@@ -14,30 +14,27 @@ from dominator_brain import strategic_intelligence_core, alchemy_fusion_core, WP
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-# ========= ترسانة Nebula لعام 2025 =========
-MODELS_POOL = ["gemini-1.5-flash", "gemini-2.0-flash-lite-001", "gemini-flash-latest"]
+# إعداد AI
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 APIFY_KEY = os.getenv("APIFY_API_KEY")
+MODELS = ["gemini-1.5-flash", "gemini-2.0-flash-lite-001", "gemini-flash-latest"]
 
 def get_ai_response_nebula(prompt: str) -> str:
-    for model_name in MODELS_POOL:
+    for m in MODELS:
         try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            return response.text
+            return genai.GenerativeModel(m).generate_content(prompt).text
         except: continue
-    return "🚨 كافة محركات الذكاء مشغولة حالياً."
+    return "🚨 كافة المحركات مشغولة حالياً."
 
 def fetch_live_dna(niche, target_data=None):
-    encoded_niche = urllib.parse.quote(niche)
-    search_url = f"https://x.com/search?q={encoded_niche}&f=live"
+    search_url = f"https://x.com/search?q={urllib.parse.quote(niche)}&f=live"
     if target_data and len(target_data.strip()) > 10:
         return [{"text": target_data, "engagement": "Confirmed", "author": "Target", "url": target_data, "is_live": True}]
     
     if APIFY_KEY:
         try:
             url = f"https://api.apify.com/v2/acts/apidojo~tweet-scraper/run-sync-get-dataset-items?token={APIFY_KEY}"
-            res = requests.post(url, json={"searchTerms": [niche], "maxTweets": 3, "searchMode": "latest"}, timeout=30)
+            res = requests.post(url, json={"searchTerms": [niche], "maxTweets": 3, "searchMode": "latest"}, timeout=28)
             if res.status_code in [200, 201]:
                 data = res.json()
                 return [{"text": i.get("full_text") or i.get("text"), "engagement": i.get("favorite_count", 0), "author": i.get("user", {}).get("screen_name", "user"), "url": f"https://x.com/i/status/{i.get('id_str')}"} for i in data if i.get("text")]
@@ -50,11 +47,10 @@ def robust_parse(text):
     tw = re.search(r"\[TWITTER\](.*?)(?=\[LINKEDIN\]|\[TIKTOK\]|\[VISUAL_PROMPT\]|$)", text, re.S | re.I)
     tk = re.search(r"\[TIKTOK\](.*?)(?=\[LINKEDIN\]|\[TWITTER\]|\[VISUAL_PROMPT\]|$)", text, re.S | re.I)
     vs = re.search(r"\[VISUAL_PROMPT\](.*?)$", text, re.S | re.I)
-    
     if ln: parts["linkedin"] = ln.group(1).strip()
     if tw: parts["twitter"] = tw.group(1).strip()
     if tk: parts["tiktok"] = tk.group(1).strip()
-    if vs: parts["visual"] = "High-end professional business photography, " + vs.group(1).strip()[:300]
+    if vs: parts["visual"] = "Professional business photography, " + vs.group(1).strip()[:200]
     if not parts["linkedin"]: parts["linkedin"] = text
     return parts
 
@@ -76,14 +72,11 @@ def generate():
     try:
         data = request.get_json(silent=True) or {}
         idea = data.get("text", "السيادة")
-        prompt = f"{WPIL_DOMINATOR_SYSTEM}\nتوليد حزمة سيادية كاملة (LinkedIn, X, TikTok) + وصف بصري للفكرة: {idea}\nيجب إنهاء الرد بـ [VISUAL_PROMPT]."
+        prompt = f"{WPIL_DOMINATOR_SYSTEM}\nتوليد حزمة سيادية كاملة (نص + صورة) للفكرة: {idea}\nيجب إنهاء الرد بـ [VISUAL_PROMPT]."
         raw = get_ai_response_nebula(prompt)
         parsed = robust_parse(raw)
-        
         seed = random.randint(1, 9999)
-        quoted_v = urllib.parse.quote(parsed['visual'])
-        image_url = f"https://image.pollinations.ai/prompt/{quoted_v}?seed={seed}&nologo=true"
-        
+        image_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(parsed['visual'])}?seed={seed}&nologo=true"
         brain = strategic_intelligence_core(idea)
         return jsonify({**parsed, "image_url": image_url, "video_blueprint": brain["video_segments"]}), 200
     except Exception as e: return jsonify({"error": str(e)}), 500
