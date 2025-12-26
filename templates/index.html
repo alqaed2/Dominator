@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR | GOLD v13.0</title>
+    <title>AI DOMINATOR | v13.1 IMPERIAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -13,21 +13,23 @@
         .dashboard-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
         .output-wrapper { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .cyber-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .image-vault { border: 2px solid var(--neon-blue); border-radius: 20px; overflow: hidden; background: #000; height: 450px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+        .image-vault { border: 2px solid var(--neon-blue); border-radius: 20px; overflow: hidden; background: #000; height: 450px; display: flex; align-items: center; justify-content: center; position: relative; }
         .image-vault img { width: 100%; height: 100%; object-fit: cover; }
         .tab-btn { padding: 12px 25px; background: #111; border: 1px solid #333; color: #888; cursor: pointer; border-radius: 12px 12px 0 0; }
         .tab-btn.active { background: var(--neon-blue); color: #000; }
         .tab-content { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; line-height: 1.8; border-radius: 0 15px 15px 15px; position: relative; }
         .tab-content.active { display: block; }
         .blueprint-card { background:rgba(0,0,0,0.3); padding:15px; border-radius:10px; border-right:3px solid var(--neon-red); margin-bottom:15px; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(15px); }
+        .modal-content { width: 90%; max-width: 950px; background: #080808; border: 1px solid var(--neon-blue); padding: 40px; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
         textarea, input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
         .copy-btn { position: absolute; top: 20px; left: 20px; background: var(--neon-red); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 700; }
     </style>
 </head>
 <body>
     <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid #222; padding-bottom:15px;">
-        <h1>AI DOMINATOR <span style="background:var(--neon-red); padding:2px 8px; border-radius:4px; font-size:12px;">GOLD v13.0</span></h1>
-        <div style="color:var(--neon-blue); font-weight:700;"><i class="fas fa-crown"></i> CINEMATIC EMPIRE LIVE</div>
+        <h1>AI DOMINATOR <span style="background:var(--neon-red); padding:2px 8px; border-radius:4px; font-size:12px;">GOLD v13.1</span></h1>
+        <div style="color:var(--neon-blue); font-weight:700;"><i class="fas fa-shield-alt"></i> IMPERIAL SYSTEM STABLE</div>
     </header>
 
     <div class="dashboard-grid">
@@ -76,19 +78,59 @@
         </div>
     </div>
 
+    <!-- Modal (المختبر) - هام جداً لعمل زر الاكتشاف -->
+    <div id="superPostModal" class="modal">
+        <div class="modal-content">
+            <h1 style="color:var(--neon-red);">🧬 مختبر التخليق الحي</h1>
+            <div id="superPostContent" style="white-space:pre-wrap; background:rgba(0,242,255,0.03); padding:25px; border-radius:15px; border:1px solid rgba(0,242,255,0.1); line-height:1.8; margin-bottom:20px;"></div>
+            <div id="sourcePosts" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;"></div>
+            <div style="margin-top:30px; display:flex; gap:15px;">
+                <button onclick="closeModal()" class="cyber-btn" style="background:none; border:1px solid #fff; color:#fff; width:auto; padding:10px 30px;">إغلاق</button>
+                <button onclick="useAsIdea()" class="cyber-btn">استخدام كفكرة</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let lastAlchemyResult = null;
         let activeTab = 'linkedin';
 
         async function triggerDiscovery() {
             const btn = document.getElementById('discoverBtn');
-            btn.disabled = true; btn.innerHTML = "جاري التخليق...";
+            btn.disabled = true; btn.innerHTML = "<i class='fas fa-sync fa-spin'></i> جاري التخليق...";
             try {
-                const res = await fetch('/alchemy/discover', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({niche: document.getElementById('niche').value, target_data: document.getElementById('targetData').value})});
+                const res = await fetch('/alchemy/discover', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({niche: document.getElementById('niche').value, target_data: document.getElementById('targetData').value})
+                });
                 lastAlchemyResult = await res.json();
-                document.getElementById('goldSuggestions').innerHTML = `<div class="cyber-card" style="padding:10px; margin-top:10px;">🌟 مرسوم جاهز <button onclick="openModal()" class="cyber-btn" style="padding:5px; margin-top:5px;">فتح</button></div>`;
+                document.getElementById('goldSuggestions').innerHTML = `
+                    <div class="cyber-card" style="padding:15px; margin-top:15px; background:rgba(0,242,255,0.05); border-color:var(--neon-blue);">
+                        <span style="font-size:13px; font-weight:700;">🌟 مرسوم سيادي جاهز</span>
+                        <button onclick="openModal()" class="cyber-btn" style="margin-top:10px; padding:8px; font-size:12px;">فتح المختبر</button>
+                    </div>`;
             } catch (e) { alert("خطأ في الاتصال"); }
             btn.disabled = false; btn.innerHTML = "اكتشاف / استهداف";
+        }
+
+        // دالة فتح المودال المفقودة التي سببت العطل
+        function openModal() {
+            if(!lastAlchemyResult) return;
+            document.getElementById('superPostModal').style.display = 'flex';
+            document.getElementById('superPostContent').innerText = lastAlchemyResult.super_post;
+            let h = "";
+            lastAlchemyResult.sources.forEach(s => {
+                h += `<div class="blueprint-card" style="border-color:var(--neon-blue);"><b>@${s.author}</b><p style="font-size:12px; margin-top:5px;">${s.text.substring(0,120)}...</p></div>`;
+            });
+            document.getElementById('sourcePosts').innerHTML = h;
+        }
+
+        function closeModal() { document.getElementById('superPostModal').style.display = 'none'; }
+        
+        function useAsIdea() { 
+            document.getElementById('inputText').value = lastAlchemyResult.super_post; 
+            closeModal(); 
         }
 
         async function startDominanceEngine() {
@@ -107,6 +149,33 @@
                 document.getElementById('twitterContent').innerText = data.twitter;
                 document.getElementById('tiktokScript').innerText = data.tiktok;
                 
-                let vHtml = "<h3 style='color:var(--neon-blue);'>🎬 المخطط السينمائي (9:16)</h3>";
+                let vHtml = "<h3 style='color:var(--neon-blue); border-bottom:1px solid #333; padding-bottom:10px;'>🎬 المخطط السينمائي (9:16)</h3>";
                 data.video_blueprint.forEach(s => {
-                    vHtml += `<div class="blueprint-card"><div style="color:var(--neon-re
+                    vHtml += `<div class="blueprint-card"><div>${s.time}</div><code style="font-size:11px; color:#aaa;">${s.prompt}</code></div>`;
+                });
+                document.getElementById('videoBlueprintArea').innerHTML = vHtml;
+                
+                const img = document.getElementById('finalImage');
+                img.src = data.image_url;
+                img.onload = () => { document.getElementById('imageLoader').style.display = 'none'; img.style.display = 'block'; };
+                document.getElementById('engineStatus').innerText = "✅ تم الإطلاق بنجاح!";
+            } catch(e) { alert("فشل التوليد"); }
+            document.getElementById('generateBtn').disabled = false;
+        }
+
+        function openTab(evt, p) {
+            activeTab = p;
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(p).style.display = 'block';
+            evt.currentTarget.classList.add('active');
+        }
+
+        function copyCurrentContent() {
+            const id = activeTab === 'tiktok' ? 'tiktokScript' : activeTab + 'Content';
+            navigator.clipboard.writeText(document.getElementById(id).innerText);
+            alert("تم النسخ!");
+        }
+    </script>
+</body>
+</html>
