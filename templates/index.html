@@ -1,166 +1,70 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>AI DOMINATOR | v12.8 ABSOLUTE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root { --neon-blue: #00f2ff; --neon-red: #ff0055; --bg: #050505; }
-        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
-        .cyber-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
-        .dashboard-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
-        .output-wrapper { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
-        .image-vault { border: 2px solid var(--neon-blue); border-radius: 20px; overflow: hidden; background: #000; height: 450px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
-        .image-vault img { width: 100%; height: 100%; object-fit: cover; }
-        .cyber-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
-        .cyber-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .tab-btn { padding: 12px 25px; background: #111; border: 1px solid #333; color: #888; cursor: pointer; border-radius: 12px 12px 0 0; }
-        .tab-btn.active { background: var(--neon-blue); color: #000; }
-        .tab-content { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 0 15px 15px 15px; }
-        .tab-content.active { display: block; }
-        textarea, input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
-    </style>
-</head>
-<body>
-    <header style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:15px; margin-bottom:20px;">
-        <h1>AI DOMINATOR <span style="background:var(--neon-red); padding:2px 8px; border-radius:4px; font-size:12px;">v12.8 ABSOLUTE</span></h1>
-        <div style="color:var(--neon-blue); font-weight:700;"><i class="fas fa-shield-alt"></i> VISUAL RESILIENCE ACTIVE</div>
-    </header>
-
-    <div class="dashboard-grid">
-        <div class="sidebar">
-            <div class="cyber-card" style="border:1px solid var(--neon-red);">
-                <h3><i class="fas fa-radiation"></i> رادار الهيمنة (Alchemy)</h3>
-                <textarea id="targetData" rows="3" placeholder="أدخل رابط هدف أو محتوى للمحاكاة..."></textarea>
-                <input id="niche" placeholder="النيش المستهدف..." value="التجارة الإلكترونية">
-                <button onclick="triggerDiscovery()" id="discoverBtn" class="cyber-btn" style="background:var(--neon-red); color:#fff;">اكتشاف / استهداف</button>
-                <div id="goldSuggestions"></div>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="cyber-card">
-                <h3>محرك الهيمنة الموحد</h3>
-                <textarea id="inputText" rows="5" placeholder="أدخل فكرتك هنا أو سيقوم محرك Alchemy بتعبئتها..."></textarea>
-                <button id="generateBtn" onclick="startDominanceEngine()" class="cyber-btn">إطلاق الحزمة المتكاملة</button>
-                <div id="engineStatus" style="margin-top:10px; color:var(--neon-blue); font-weight:700;"></div>
-            </div>
-
-            <div id="outputSection" style="display:none;">
-                <div class="output-wrapper">
-                    <div class="text-side">
-                        <div class="tabs-header">
-                            <button class="tab-btn active" onclick="openTab(event, 'linkedin')">LinkedIn</button>
-                            <button class="tab-btn" onclick="openTab(event, 'twitter')">X</button>
-                            <button class="tab-btn" onclick="openTab(event, 'tiktok')">TikTok</button>
-                        </div>
-                        <div id="linkedin" class="tab-content active"><div id="linkedinContent" style="white-space: pre-wrap;"></div></div>
-                        <div id="twitter" class="tab-content"><div id="twitterContent" style="white-space: pre-wrap;"></div></div>
-                        <div id="tiktok" class="tab-content"><div id="tiktokScript" style="white-space: pre-wrap;"></div></div>
-                    </div>
-                    <div class="image-side">
-                        <h3 style="color:var(--neon-blue);"><i class="fas fa-image"></i> الأصل البصري</h3>
-                        <div class="image-vault" onclick="refreshImage()">
-                            <div id="imageLoader">جاري التظهير...</div>
-                            <img id="finalImage" style="display:none;" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // دالة الاكتشاف / استهداف
-        async function triggerDiscovery() {
-            const btn = document.getElementById('discoverBtn');
-            const targetData = document.getElementById('targetData').value;
-            const niche = document.getElementById('niche').value;
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري استخلاص الجينات...';
-
-            try {
-                const response = await fetch('/alchemy/discover', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ niche: niche, target_data: targetData })
-                });
-                
-                const data = await response.json();
-                
-                if(data.status === 'success') {
-                    // حقن النتيجة مباشرة في مربع النص الرئيسي
-                    document.getElementById('inputText').value = data.super_post;
-                    document.getElementById('goldSuggestions').innerHTML = `
-                        <div class="cyber-card" style="padding:10px; margin-top:10px; border-color:var(--neon-blue);">
-                            <small style="color:var(--neon-blue)">تم تجهيز "المرسوم السيادي". انقر على زر التوليد في الأعلى.</small>
-                        </div>`;
-                } else {
-                    alert("فشل في الاكتشاف: " + data.error);
-                }
-            } catch (e) {
-                alert("خطأ تقني في الاتصال بمحرك Alchemy");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = "اكتشاف / استهداف";
+<!-- استبدل قسم الـ Script في ملف index.html بهذا الكود المحصن -->
+<script>
+    async function triggerDiscovery() {
+        const btn = document.getElementById('discoverBtn');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-brain fa-spin"></i> جاري التحليل...';
+        try {
+            const res = await fetch('/alchemy/discover', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({niche: document.getElementById('niche').value, target_data: document.getElementById('targetData').value})
+            });
+            const data = await res.json();
+            if(data.status === 'success') {
+                document.getElementById('inputText').value = data.super_post;
+                document.getElementById('goldSuggestions').innerHTML = '<div style="color:var(--neon-blue); margin-top:10px;">✅ تم استخلاص الجينات بنجاح!</div>';
             }
-        }
+        } catch (e) { alert("فشل الاتصال بمحرك Alchemy"); }
+        btn.disabled = false; btn.innerHTML = "اكتشاف / استهداف";
+    }
 
-        // دالة تشغيل المحرك الرئيسي
-        async function startDominanceEngine() {
-            const text = document.getElementById('inputText').value;
-            const btn = document.getElementById('generateBtn');
-            if(!text) return alert("يرجى إدخال فكرة أو استخدام زر الاكتشاف أولاً.");
-
-            btn.disabled = true;
-            btn.innerHTML = "جاري تفعيل الهيمنة...";
-            document.getElementById('outputSection').style.display = 'block';
-            document.getElementById('imageLoader').style.display = 'block';
-            document.getElementById('finalImage').style.display = 'none';
-
-            try {
-                const res = await fetch('/generate_all', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ text: text })
-                });
-                const data = await res.json();
-
-                document.getElementById('linkedinContent').innerText = data.linkedin;
-                document.getElementById('twitterContent').innerText = data.twitter;
-                document.getElementById('tiktokScript').innerText = data.tiktok;
-                
-                const img = document.getElementById('finalImage');
-                img.src = data.image_url;
-                img.onload = () => {
-                    document.getElementById('imageLoader').style.display = 'none';
-                    img.style.display = 'block';
-                };
-            } catch (e) {
-                alert("خطأ في التوليد");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = "إطلاق الحزمة المتكاملة";
-            }
-        }
-
-        function openTab(evt, tabName) {
-            let i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
-            tablinks = document.getElementsByClassName("tab-btn");
-            for (i = 0; i < tablinks.length; i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
+    async function startDominanceEngine() {
+        const text = document.getElementById('inputText').value;
+        if(!text) return alert("أدخل فكرة أولاً");
         
-        function refreshImage() {
+        const btn = document.getElementById('generateBtn');
+        btn.disabled = true; btn.innerHTML = "جاري الحوسبة السيادية...";
+        
+        document.getElementById('outputSection').style.display = 'block';
+        document.getElementById('imageLoader').style.display = 'block';
+        document.getElementById('finalImage').style.display = 'none';
+
+        try {
+            const res = await fetch('/generate_all', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ text: text })
+            });
+            const data = await res.json();
+
+            document.getElementById('linkedinContent').innerText = data.linkedin;
+            document.getElementById('twitterContent').innerText = data.twitter;
+            document.getElementById('tiktokScript').innerText = data.tiktok;
+            
+            // التعامل مع الصورة
             const img = document.getElementById('finalImage');
-            const currentSrc = img.src.split('?')[0];
-            img.src = currentSrc + "?seed=" + Math.floor(Math.random() * 10000) + "&nologo=true";
-        }
-    </script>
-</body>
-</html>
+            img.src = data.image_url;
+            img.onload = () => {
+                document.getElementById('imageLoader').style.display = 'none';
+                img.style.display = 'block';
+            };
+            img.onerror = () => {
+                // في حال فشل التحميل، محاولة أخيرة بتبديل السيرفر
+                console.log("Image failed, retrying...");
+                img.src = img.src + "&retry=true";
+            };
+
+        } catch (e) { alert("حدث خطأ في النظام"); }
+        btn.disabled = false; btn.innerHTML = "إطلاق الحزمة المتكاملة";
+    }
+
+    function openTab(evt, tabName) {
+        let i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+</script>
