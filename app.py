@@ -21,14 +21,12 @@ def get_ai_response_nebula(prompt: str) -> str:
             model = genai.GenerativeModel(model_name)
             return model.generate_content(prompt).text
         except: continue
-    return "🚨 المحرك مشغول."
+    return "🚨 المحرك مشغول حالياً. حاول مجدداً."
 
 def sanitize_visual_prompt(text):
-    """تحويل البرومبت الطويل إلى كلمات مفتاحية قصيرة جداً لضمان عمل الرابط"""
-    # استخراج الأسماء والصفات الأساسية فقط وحذف الكلمات الشائعة
-    clean = re.sub(r'\[.*?\]', '', text) # حذف أي تاغات
+    clean = re.sub(r'\[.*?\]', '', text)
     clean = clean.replace("Professional", "Pro").replace("Photography", "Photo")
-    keywords = clean.split()[:15] # الاكتفاء بأول 15 كلمة فقط
+    keywords = clean.split()[:15]
     return " ".join(keywords)
 
 def robust_parse_v12_8(text):
@@ -53,13 +51,19 @@ def home(): return render_template("index.html")
 def discover():
     try:
         data = request.get_json(silent=True) or {}
-        niche = data.get("niche", "السيادة")
+        niche = data.get("niche", "السيادة التقنية")
         target = data.get("target_data", "")
-        posts = [{"text": target if target else f"ترند {niche} 2026", "engagement": "Confirmed", "author": "Dominator"}]
+        
+        # محاكاة سحب البيانات الجينية (أو استبدالها بـ Apify)
+        posts = [{"text": target if target else f"ترند {niche} 2026", "engagement": "Confirmed", "author": "Target"}]
         fusion = alchemy_fusion_core(posts, niche)
-        output = get_ai_response_nebula(f"{WPIL_DOMINATOR_SYSTEM}\n{fusion['synthesis_task']}")
-        return jsonify({"super_post": output, "sources": posts}), 200
-    except Exception as e: return jsonify({"error": str(e)}), 500
+        
+        prompt = f"{WPIL_DOMINATOR_SYSTEM}\n{fusion['synthesis_task']}"
+        output = get_ai_response_nebula(prompt)
+        
+        return jsonify({"super_post": output, "status": "success"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/generate_all", methods=["POST"])
 def generate():
@@ -70,14 +74,13 @@ def generate():
         raw = get_ai_response_nebula(prompt)
         parsed = robust_parse_v12_8(raw)
         
-        # إنشاء رابط الصورة المختصر (v12.8)
         seed = random.randint(1, 9999)
         clean_prompt = urllib.parse.quote(parsed['visual'])
-        # استخدام رابط أبسط بدون معطيات معقدة لضمان التحميل
         image_url = f"https://image.pollinations.ai/prompt/{clean_prompt}?seed={seed}&nologo=true"
         
         return jsonify({**parsed, "image_url": image_url}), 200
-    except Exception as e: return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
