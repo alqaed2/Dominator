@@ -1,174 +1,44 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DOMINATOR | GOLD v12.8</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root { --neon-blue: #00f2ff; --neon-red: #ff0055; --bg: #050505; }
-        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
-        .cyber-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
-        .dashboard-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
-        .output-wrapper { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
-        .cyber-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .image-vault { border: 2px solid var(--neon-blue); border-radius: 20px; overflow: hidden; background: #000; height: 450px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
-        .image-vault img { width: 100%; height: 100%; object-fit: cover; }
-        .tab-btn { padding: 12px 25px; background: #111; border: 1px solid #333; color: #888; cursor: pointer; border-radius: 12px 12px 0 0; }
-        .tab-btn.active { background: var(--neon-blue); color: #000; }
-        .tab-content { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 0 15px 15px 15px; line-height: 1.8; position: relative; }
-        .tab-content.active { display: block; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(15px); }
-        .modal-content { width: 90%; max-width: 950px; background: #080808; border: 1px solid var(--neon-blue); padding: 40px; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
-        .source-item { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 15px; border-left: 4px solid var(--neon-red); margin-bottom: 15px; }
-        textarea, input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
-        .status-dot { width: 12px; height: 12px; background: var(--neon-red); border-radius: 50%; display: inline-block; margin-left: 10px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-    </style>
-</head>
-<body>
-    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid #222; padding-bottom:15px;">
-        <h1>AI DOMINATOR <span style="background:var(--neon-red); padding:2px 8px; border-radius:4px; font-size:12px;">GOLD v12.8</span></h1>
-        <div style="color:var(--neon-blue); font-weight:700;"><span class="status-dot"></span> SYSTEM LOCKDOWN LIVE</div>
-    </header>
+from __future__ import annotations
+from typing import Any, Dict, List
 
-    <div class="dashboard-grid">
-        <div class="sidebar">
-            <div class="cyber-card" style="border:1px solid var(--neon-red);">
-                <h3><i class="fas fa-radiation"></i> رادار الهيمنة</h3>
-                <textarea id="targetData" rows="3" placeholder="رابط هدف مباشر..."></textarea>
-                <input id="niche" value="ريادة الأعمال">
-                <button onclick="triggerDiscovery()" id="discoverBtn" class="cyber-btn" style="background:var(--neon-red); color:#fff;">اكتشاف / استهداف</button>
-                <div id="goldSuggestions"></div>
-            </div>
-        </div>
+# =========================================================
+# Strategic Intelligence Core (SIC) - V13.0 CINEMATIC EMPIRE
+# =========================================================
 
-        <div class="main-content">
-            <div class="cyber-card">
-                <h3>محرك الهيمنة الموحد</h3>
-                <textarea id="inputText" rows="6" placeholder="أدخل فكرتك هنا..."></textarea>
-                <button id="generateBtn" onclick="startDominanceEngine()" class="cyber-btn">إطلاق الحزمة المتكاملة</button>
-                <div id="engineStatus" style="margin-top:10px; color:var(--neon-blue); font-weight:700;"></div>
-            </div>
-            <div id="outputSection" style="display:none;">
-                <div class="output-wrapper">
-                    <div class="text-side">
-                        <div class="tabs-header">
-                            <button class="tab-btn active" onclick="openTab(event, 'linkedin')">LinkedIn</button>
-                            <button class="tab-btn" onclick="openTab(event, 'twitter')">X</button>
-                            <button class="tab-btn" onclick="openTab(event, 'tiktok')">TikTok</button>
-                        </div>
-                        <div id="linkedin" class="tab-content active"><div id="linkedinContent" style="white-space: pre-wrap;"></div></div>
-                        <div id="twitter" class="tab-content"><div id="twitterContent" style="white-space: pre-wrap;"></div></div>
-                        <div id="tiktok" class="tab-content">
-                            <div id="videoPrompt" style="background:#000; padding:15px; border-radius:10px; font-family:monospace; font-size:11px; color:var(--neon-blue); margin-bottom:15px; white-space:pre-wrap; border:1px solid #111;"></div>
-                            <div id="tiktokScript" style="white-space: pre-wrap;"></div>
-                        </div>
-                    </div>
-                    <div class="image-side">
-                        <h3 style="color:var(--neon-blue);"><i class="fas fa-image"></i> الأصل البصري</h3>
-                        <div class="image-vault" id="imageVault" onclick="refreshImage()">
-                            <div id="imageLoader">جاري التظهير...</div>
-                            <img id="finalImage" style="display:none;" />
-                        </div>
-                        <button onclick="copyCurrentContent()" class="cyber-btn" style="background:var(--neon-red); color:#fff;">نسخ النص 📋</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+WPIL_DOMINATOR_SYSTEM = """
+أنت 'الخيميائي الاستراتيجي الأعلى'. مهمتك تخليق حزمة سيادية (نص + صورة + مخطط فيديو سينمائي).
+لغة الفيديو [TIKTOK]: يجب أن تكون المشاهد واقعية (Hyper-Realistic)، تركز على الكاريزما القيادية، المكاتب الفاخرة، والبيانات الرقمية الهادئة.
+الرد الموحد: افصل المنصات بـ [LINKEDIN], [TWITTER], [TIKTOK] وأنهِ بـ [VISUAL_PROMPT].
+"""
 
-    <!-- Modal -->
-    <div id="superPostModal" class="modal">
-        <div class="modal-content">
-            <h1 style="color:var(--neon-red);">🧬 مختبر التخليق الحي</h1>
-            <div id="superPostContent" style="white-space:pre-wrap; background:rgba(0,242,255,0.03); padding:25px; border-radius:15px; border:1px solid rgba(0,242,255,0.1); line-height:1.8; margin-bottom:20px;"></div>
-            <div id="sourcePosts" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;"></div>
-            <div style="margin-top:30px; display:flex; gap:15px;">
-                <button onclick="document.getElementById('superPostModal').style.display='none'" class="cyber-btn" style="background:none; border:1px solid #fff; color:#fff; width:auto; padding:10px 30px;">إغلاق</button>
-                <button onclick="useAsIdea()" class="cyber-btn">استخدام كفكرة</button>
-            </div>
-        </div>
-    </div>
+def strategic_intelligence_core(idea: str = "") -> Dict[str, Any]:
+    # أوامر قهرية للفيديو السينمائي الفخم 9:16
+    v_force = "Vertical 9:16 portrait, ultra-realistic 8k cinematic, shot on 35mm lens, high-end studio lighting."
+    advisor_dna = "Elite Middle-Eastern strategic advisor, sharp features, tailored charcoal suit, authoritative presence."
 
-    <script>
-        let lastAlchemyResult = null;
-        let currentPrompt = "";
-        let activeTab = 'linkedin';
-
-        async function triggerDiscovery() {
-            const btn = document.getElementById('discoverBtn');
-            btn.disabled = true; btn.innerHTML = "جاري التخليق...";
-            try {
-                const res = await fetch('/alchemy/discover', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({niche: document.getElementById('niche').value, target_data: document.getElementById('targetData').value})});
-                lastAlchemyResult = await res.json();
-                document.getElementById('goldSuggestions').innerHTML = `
-                    <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-top:15px;">
-                        <span>🌟 مرسوم جاهز</span>
-                        <button onclick="openModal()" class="cyber-btn" style="position:static; margin-top:10px; width:100%;">فتح المختبر</button>
-                    </div>`;
-            } catch (e) { alert("خطأ في الاتصال"); }
-            btn.disabled = false; btn.innerHTML = "اكتشاف / استهداف";
+    scenes = [
+        {
+            "time": "0-10s (The Hook)",
+            "prompt": f"{v_force} Close-up of {advisor_dna} eyes reflecting holographic market data, intense gaze, blurred luxury office background."
+        },
+        {
+            "time": "10-20s (The Logic)",
+            "prompt": f"{v_force} Medium shot of {advisor_dna} standing by a floor-to-ceiling window overlooking a futuristic Riyadh/Dubai skyline, evening lighting."
+        },
+        {
+            "time": "20-30s (The Command)",
+            "prompt": f"{v_force} Hand shot of the advisor signing a digital glass tablet with a glowing gold stylus, extreme detail, 8k macro."
         }
+    ]
 
-        function openModal() {
-            document.getElementById('superPostModal').style.display = 'flex';
-            document.getElementById('superPostContent').innerText = lastAlchemyResult.super_post;
-            let h = "";
-            lastAlchemyResult.sources.forEach(s => {
-                h += `<div class="source-item"><b>@${s.author}</b><p style="font-size:12px; margin-top:10px;">${s.text.substring(0,120)}...</p></div>`;
-            });
-            document.getElementById('sourcePosts').innerHTML = h;
-        }
+    return {
+        "logic_trace": "SIC v13.0 | CINEMATIC BLUEPRINT ACTIVE",
+        "video_segments": scenes
+    }
 
-        function useAsIdea() { document.getElementById('inputText').value = lastAlchemyResult.super_post; document.getElementById('superPostModal').style.display = 'none'; }
-
-        async function startDominanceEngine() {
-            const idea = document.getElementById('inputText').value;
-            if(!idea) return alert("أدخل فكرة");
-            document.getElementById('generateBtn').disabled = true;
-            document.getElementById('outputSection').style.display = 'block';
-            document.getElementById('imageLoader').style.display = 'block';
-            document.getElementById('finalImage').style.display = 'none';
-            document.getElementById('engineStatus').innerText = "🚀 جاري التخليق الموحد...";
-            
-            try {
-                const res = await fetch('/generate_all', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text: idea})});
-                const data = await res.json();
-                document.getElementById('linkedinContent').innerText = data.linkedin;
-                document.getElementById('twitterContent').innerText = data.twitter;
-                document.getElementById('tiktokScript').innerText = data.tiktok;
-                currentPrompt = data.visual;
-                
-                const img = document.getElementById('finalImage');
-                img.src = data.image_url;
-                img.onload = () => { document.getElementById('imageLoader').style.display = 'none'; img.style.display = 'block'; };
-                img.onerror = () => { document.getElementById('imageLoader').innerText = "⚠️ فشل تحميل الصورة. انقر هنا للمحاولة."; };
-                
-                document.getElementById('engineStatus').innerText = "✅ تم الإطلاق بنجاح!";
-            } catch(e) { alert("فشل التوليد"); }
-            document.getElementById('generateBtn').disabled = false;
-        }
-
-        function refreshImage() {
-            document.getElementById('imageLoader').innerText = "جاري إعادة المحاولة...";
-            document.getElementById('finalImage').src = `https://image.pollinations.ai/prompt/${encodeURIComponent(currentPrompt)}?seed=${Math.random()}&nologo=true`;
-        }
-
-        function openTab(evt, p) {
-            activeTab = p;
-            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(p).style.display = 'block';
-            evt.currentTarget.classList.add('active');
-        }
-
-        function copyCurrentContent() {
-            const id = activeTab === 'tiktok' ? 'tiktokScript' : activeTab + 'Content';
-            navigator.clipboard.writeText(document.getElementById(id).innerText);
-            alert("تم النسخ!");
-        }
-    </script>
-</body>
-</html>
+def alchemy_fusion_core(gold_posts: List[Dict[str, Any]], niche: str) -> Dict[str, Any]:
+    dna = [f"Source: {p.get('text')[:100]}" for p in gold_posts]
+    return {
+        "synthesis_task": f"تخليق مرسوم سيادي لنيش {niche} بناءً على الجينات: {dna}\nصمم [VISUAL_PROMPT] لصورة فوتوغرافية احترافية.",
+        "logic_trace": "SYNTHESIS ACTIVE v13.0"
+    }
