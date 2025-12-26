@@ -7,13 +7,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root { --neon-blue: #00f2ff; --neon-red: #ff0055; --bg: #050505; }
-        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
+        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
         .cyber-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
         .dashboard-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
         .output-wrapper { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .image-vault { border: 2px solid var(--neon-blue); border-radius: 20px; overflow: hidden; background: #000; height: 450px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
         .image-vault img { width: 100%; height: 100%; object-fit: cover; }
-        .cyber-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .cyber-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--neon-blue); color: #000; font-weight: 900; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
+        .cyber-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .tab-btn { padding: 12px 25px; background: #111; border: 1px solid #333; color: #888; cursor: pointer; border-radius: 12px 12px 0 0; }
         .tab-btn.active { background: var(--neon-blue); color: #000; }
         .tab-content { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 0 15px 15px 15px; }
@@ -30,9 +31,9 @@
     <div class="dashboard-grid">
         <div class="sidebar">
             <div class="cyber-card" style="border:1px solid var(--neon-red);">
-                <h3><i class="fas fa-radiation"></i> رادار الهيمنة</h3>
-                <textarea id="targetData" rows="3" placeholder="رابط هدف..."></textarea>
-                <input id="niche" value="التجارة الإلكترونية">
+                <h3><i class="fas fa-radiation"></i> رادار الهيمنة (Alchemy)</h3>
+                <textarea id="targetData" rows="3" placeholder="أدخل رابط هدف أو محتوى للمحاكاة..."></textarea>
+                <input id="niche" placeholder="النيش المستهدف..." value="التجارة الإلكترونية">
                 <button onclick="triggerDiscovery()" id="discoverBtn" class="cyber-btn" style="background:var(--neon-red); color:#fff;">اكتشاف / استهداف</button>
                 <div id="goldSuggestions"></div>
             </div>
@@ -41,7 +42,7 @@
         <div class="main-content">
             <div class="cyber-card">
                 <h3>محرك الهيمنة الموحد</h3>
-                <textarea id="inputText" rows="5" placeholder="أدخل فكرتك هنا..."></textarea>
+                <textarea id="inputText" rows="5" placeholder="أدخل فكرتك هنا أو سيقوم محرك Alchemy بتعبئتها..."></textarea>
                 <button id="generateBtn" onclick="startDominanceEngine()" class="cyber-btn">إطلاق الحزمة المتكاملة</button>
                 <div id="engineStatus" style="margin-top:10px; color:var(--neon-blue); font-weight:700;"></div>
             </div>
@@ -56,19 +57,14 @@
                         </div>
                         <div id="linkedin" class="tab-content active"><div id="linkedinContent" style="white-space: pre-wrap;"></div></div>
                         <div id="twitter" class="tab-content"><div id="twitterContent" style="white-space: pre-wrap;"></div></div>
-                        <div id="tiktok" class="tab-content">
-                            <div id="videoPrompt" style="background:#000; padding:15px; border-radius:10px; font-family:monospace; font-size:11px; color:var(--neon-blue); margin-bottom:15px; white-space:pre-wrap; border:1px solid #111;"></div>
-                            <div id="tiktokScript" style="white-space: pre-wrap;"></div>
-                        </div>
+                        <div id="tiktok" class="tab-content"><div id="tiktokScript" style="white-space: pre-wrap;"></div></div>
                     </div>
                     <div class="image-side">
                         <h3 style="color:var(--neon-blue);"><i class="fas fa-image"></i> الأصل البصري</h3>
-                        <div class="image-vault" id="imageVault" onclick="refreshImage()">
+                        <div class="image-vault" onclick="refreshImage()">
                             <div id="imageLoader">جاري التظهير...</div>
                             <img id="finalImage" style="display:none;" />
                         </div>
-                        <button onclick="copyContent('linkedinContent')" class="cyber-btn" style="background:var(--neon-red); color:#fff;">نسخ النص 📋</button>
-                        <p style="font-size:11px; opacity:0.5; margin-top:10px;">* انقر على الصورة لإعادة المحاولة في حال فشل التحميل.</p>
                     </div>
                 </div>
             </div>
@@ -76,28 +72,95 @@
     </div>
 
     <script>
-        let lastAlchemyResult = null;
-        let currentPrompt = "";
-
+        // دالة الاكتشاف / استهداف
         async function triggerDiscovery() {
             const btn = document.getElementById('discoverBtn');
-            btn.disabled = true; btn.innerHTML = "جاري التخليق...";
+            const targetData = document.getElementById('targetData').value;
+            const niche = document.getElementById('niche').value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري استخلاص الجينات...';
+
             try {
-                const res = await fetch('/alchemy/discover', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({niche: document.getElementById('niche').value, target_data: document.getElementById('targetData').value})});
-                lastAlchemyResult = await res.json();
-                document.getElementById('goldSuggestions').innerHTML = `<div class="cyber-card" style="padding:10px; margin-top:10px;">🌟 مرسوم جاهز <button onclick="openModal()" class="cyber-btn" style="padding:5px; margin-top:5px;">فتح</button></div>`;
-            } catch (e) { alert("خطأ في الاتصال"); }
-            btn.disabled = false; btn.innerHTML = "اكتشاف / استهداف";
+                const response = await fetch('/alchemy/discover', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ niche: niche, target_data: targetData })
+                });
+                
+                const data = await response.json();
+                
+                if(data.status === 'success') {
+                    // حقن النتيجة مباشرة في مربع النص الرئيسي
+                    document.getElementById('inputText').value = data.super_post;
+                    document.getElementById('goldSuggestions').innerHTML = `
+                        <div class="cyber-card" style="padding:10px; margin-top:10px; border-color:var(--neon-blue);">
+                            <small style="color:var(--neon-blue)">تم تجهيز "المرسوم السيادي". انقر على زر التوليد في الأعلى.</small>
+                        </div>`;
+                } else {
+                    alert("فشل في الاكتشاف: " + data.error);
+                }
+            } catch (e) {
+                alert("خطأ تقني في الاتصال بمحرك Alchemy");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "اكتشاف / استهداف";
+            }
         }
 
+        // دالة تشغيل المحرك الرئيسي
         async function startDominanceEngine() {
-            const idea = document.getElementById('inputText').value;
-            if(!idea) return alert("أدخل فكرة");
-            document.getElementById('generateBtn').disabled = true;
+            const text = document.getElementById('inputText').value;
+            const btn = document.getElementById('generateBtn');
+            if(!text) return alert("يرجى إدخال فكرة أو استخدام زر الاكتشاف أولاً.");
+
+            btn.disabled = true;
+            btn.innerHTML = "جاري تفعيل الهيمنة...";
             document.getElementById('outputSection').style.display = 'block';
             document.getElementById('imageLoader').style.display = 'block';
-            document.getElementById('imageLoader').innerText = "جاري التظهير...";
             document.getElementById('finalImage').style.display = 'none';
-            
+
             try {
-                const res = await fetch('/generate_all', {method:'POST', headers:{'Content-Type':'
+                const res = await fetch('/generate_all', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ text: text })
+                });
+                const data = await res.json();
+
+                document.getElementById('linkedinContent').innerText = data.linkedin;
+                document.getElementById('twitterContent').innerText = data.twitter;
+                document.getElementById('tiktokScript').innerText = data.tiktok;
+                
+                const img = document.getElementById('finalImage');
+                img.src = data.image_url;
+                img.onload = () => {
+                    document.getElementById('imageLoader').style.display = 'none';
+                    img.style.display = 'block';
+                };
+            } catch (e) {
+                alert("خطأ في التوليد");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "إطلاق الحزمة المتكاملة";
+            }
+        }
+
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        
+        function refreshImage() {
+            const img = document.getElementById('finalImage');
+            const currentSrc = img.src.split('?')[0];
+            img.src = currentSrc + "?seed=" + Math.floor(Math.random() * 10000) + "&nologo=true";
+        }
+    </script>
+</body>
+</html>
